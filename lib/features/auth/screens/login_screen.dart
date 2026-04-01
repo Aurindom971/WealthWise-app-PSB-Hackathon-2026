@@ -1,92 +1,260 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
 import '../widgets/custom_textfield.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  bool isPassword = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF3F4F1),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "Login", 
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary)
+        child: Column(
+          children: [
+            // 🔥 HEADER (optimized height)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF1F5D3A),
+                    Color(0xFF2E7D5B),
+                  ],
                 ),
-                const SizedBox(height: 32),
-                Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      children: [
-                        const CustomTextField(
-                          labelText: "Ph no / Acc no",
-                          prefixIcon: Icons.person_outline,
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            const Expanded(
-                              child: CustomTextField(
-                                labelText: "Pass",
-                                prefixIcon: Icons.lock_outline,
-                                obscureText: true,
-                              ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(26),
+                  bottomRight: Radius.circular(26),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Row(
+                    children: [
+                      Icon(Icons.account_balance,
+                          color: Colors.white70, size: 14),
+                      SizedBox(width: 6),
+                      Text("Punjab & Sind Bank",
+                          style: TextStyle(
+                              color: Colors.white70, fontSize: 11)),
+                    ],
+                  ),
+                  SizedBox(height: 6),
+                  Text("Welcome Back",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w600)),
+                  SizedBox(height: 2),
+                  Text("Sign in to your account securely",
+                      style: TextStyle(
+                          color: Colors.white70, fontSize: 11)),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // 🔥 MAIN CONTENT
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("PHONE / ACCOUNT NUMBER",
+                      style: TextStyle(fontSize: 10, color: Colors.black54)),
+                  const SizedBox(height: 4),
+
+                  const CustomTextField(
+                    hintText: "Enter your account number",
+                    prefixIcon: Icons.person_outline,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  const Text("AUTHENTICATION METHOD",
+                      style: TextStyle(fontSize: 10, color: Colors.black54)),
+                  const SizedBox(height: 6),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => isPassword = true),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isPassword
+                                  ? const Color(0xFF1F5D3A)
+                                  : Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(22),
                             ),
-                            const SizedBox(width: 8),
-                            InkWell(
-                              onTap: () {},
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: AppColors.background,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.grey.shade300)
-                                ),
-                                child: const Icon(Icons.fingerprint, color: AppColors.primary),
-                              ),
-                            )
-                          ],
+                            alignment: Alignment.center,
+                            child: Text("Password",
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: isPassword
+                                        ? Colors.white
+                                        : Colors.black54)),
+                          ),
                         ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/home');
-                          },
-                          child: const Text("Login", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        )
-                      ],
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => isPassword = false),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: !isPassword
+                                  ? const Color(0xFF1F5D3A)
+                                  : Colors.grey.shade200,
+                              borderRadius: BorderRadius.circular(22),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text("PIN",
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: !isPassword
+                                        ? Colors.white
+                                        : Colors.black54)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  if (isPassword)
+                    const CustomTextField(
+                      hintText: "Enter password",
+                      prefixIcon: Icons.lock_outline,
+                      obscureText: true,
+                    )
+                  else
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: List.generate(
+                        5,
+                        (index) => Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: index < 3
+                                ? const Color(0xFF1F5D3A)
+                                : Colors.transparent,
+                            border: Border.all(color: Colors.grey),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: 12),
+
+                  // 🔥 SIGN IN
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/home');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1F5D3A),
+                        foregroundColor: Colors.white,
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 11),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text("Sign in",
+                          style: TextStyle(fontSize: 12)),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text("OR create a new Acc", style: TextStyle(color: AppColors.textSecondary)),
-                ),
-                const SizedBox(height: 48),
-                OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.support_agent),
-                  label: const Text("Customer Care AI"),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)
+
+                  const SizedBox(height: 6),
+
+                  const Center(
+                    child: Text("Create an account",
+                        style:
+                            TextStyle(fontSize: 11, color: Colors.black54)),
                   ),
-                )
-              ],
+
+                  const SizedBox(height: 6),
+
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: Colors.grey.shade300)),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 6),
+                        child: Text("OR", style: TextStyle(fontSize: 10)),
+                      ),
+                      Expanded(child: Divider(color: Colors.grey.shade300)),
+                    ],
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // 🔥 AI BUTTON (balanced spacing)
+                  Center(
+                    child: OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.smart_toy_outlined, size: 14),
+                      label: const Text(
+                        "Need help? AI Assistant",
+                        style: TextStyle(fontSize: 11),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF1F5D3A),
+                        side:
+                            const BorderSide(color: Color(0xFF1F5D3A)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10), // 🔥 KEY FIX GAP
+                ],
+              ),
             ),
-          ),
+
+            const Spacer(),
+
+            // 🔥 BOTTOM (now clearly separated)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: const [
+                  Column(children: [
+                    Icon(Icons.location_on_outlined,
+                        size: 16, color: Colors.black54),
+                    SizedBox(height: 2),
+                    Text("Locate Us", style: TextStyle(fontSize: 10)),
+                  ]),
+                  Column(children: [
+                    Icon(Icons.call_outlined,
+                        size: 16, color: Colors.black54),
+                    SizedBox(height: 2),
+                    Text("Call Us", style: TextStyle(fontSize: 10)),
+                  ]),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
