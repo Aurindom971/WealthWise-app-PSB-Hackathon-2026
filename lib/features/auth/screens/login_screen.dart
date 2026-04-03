@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/custom_textfield.dart';
+import 'package:securewealth_twin/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,6 +11,27 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool isPassword = true;
+  bool isObscure = true; // 👈 for eye toggle
+
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  final auth = AuthService();
+
+  void handleLogin() async {
+    final error = await auth.login(
+      emailController.text.trim(),
+      passwordController.text.trim(),
+    );
+
+    if (error == null) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // 🔥 HEADER (optimized height)
+            // HEADER
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
@@ -63,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
             const SizedBox(height: 10),
 
-            // 🔥 MAIN CONTENT
+            // MAIN CONTENT
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
@@ -73,9 +95,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(fontSize: 10, color: Colors.black54)),
                   const SizedBox(height: 4),
 
-                  const CustomTextField(
+                  CustomTextField(
                     hintText: "Enter your account number",
                     prefixIcon: Icons.person_outline,
+                    controller: emailController,
                   ),
 
                   const SizedBox(height: 12),
@@ -135,10 +158,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 10),
 
                   if (isPassword)
-                    const CustomTextField(
+                    CustomTextField(
                       hintText: "Enter password",
                       prefixIcon: Icons.lock_outline,
-                      obscureText: true,
+                      obscureText: isObscure,
+                      controller: passwordController,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          isObscure
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          size: 18,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isObscure = !isObscure;
+                          });
+                        },
+                      ),
                     )
                   else
                     Row(
@@ -161,13 +199,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 12),
 
-                  // 🔥 SIGN IN
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/home');
-                      },
+                      onPressed: handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1F5D3A),
                         foregroundColor: Colors.white,
@@ -180,60 +215,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(fontSize: 12)),
                     ),
                   ),
-
-                  const SizedBox(height: 6),
-
-                  const Center(
-                    child: Text("Create an account",
-                        style:
-                            TextStyle(fontSize: 11, color: Colors.black54)),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  Row(
-                    children: [
-                      Expanded(child: Divider(color: Colors.grey.shade300)),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 6),
-                        child: Text("OR", style: TextStyle(fontSize: 10)),
-                      ),
-                      Expanded(child: Divider(color: Colors.grey.shade300)),
-                    ],
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  // 🔥 AI BUTTON (balanced spacing)
-                  Center(
-                    child: OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.smart_toy_outlined, size: 14),
-                      label: const Text(
-                        "Need help? AI Assistant",
-                        style: TextStyle(fontSize: 11),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF1F5D3A),
-                        side:
-                            const BorderSide(color: Color(0xFF1F5D3A)),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 10), // 🔥 KEY FIX GAP
                 ],
               ),
             ),
 
             const Spacer(),
 
-            // 🔥 BOTTOM (now clearly separated)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Row(
