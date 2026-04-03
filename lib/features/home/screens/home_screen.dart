@@ -167,62 +167,192 @@ class _Bubble extends StatelessWidget {
 }
 
 // ─── STACKED CARDS ────────────────────────────────────────────────────────────
+// ─── STACKED CARDS ────────────────────────────────────────────────────────────
 class _CardStack extends StatefulWidget {
   const _CardStack();
   @override
   State<_CardStack> createState() => _CardStackState();
 }
 
-class _CardStackState extends State<_CardStack> {
-  bool _open = false;
+class _CardStackState extends State<_CardStack> with TickerProviderStateMixin {
+  late final AnimationController _releaseCtrl;
+  late final AnimationController _snapCtrl;
+  late Animation<double> _snapAnim;
 
-  static const double _loanH = 112;
-  static const double _savingsH = 164;
-  static const double _collapsedOffset = 36;
-  static const double _expandedOffset = _loanH + 12;
+  int _topIndex = 0;
+  double _dragY = 0.0;
+  double _startDragY = 0.0;
+  bool _isReleasing = false;
+  bool _obscureBalances = true;
 
-  double get _containerHeight {
-    final topOffset = _open ? _expandedOffset : _collapsedOffset;
-    // Added 2px buffer to prevent bleed/clipping
-    return topOffset + _savingsH + 6; 
+  static const int _cardCount = 3;
+  static const double _baseOffset = -12.0;
+  static const double _maxCardHeight = 164.0;
+  static const double _headroom = 36.0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _releaseCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 400));
+    _releaseCtrl.addListener(() => setState(() {}));
+    _releaseCtrl.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() {
+          _topIndex = (_topIndex + 1) % _cardCount;
+          _dragY = 0.0;
+          _isReleasing = false;
+        });
+        _releaseCtrl.reset();
+      }
+    });
+
+    _snapCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
+    _snapCtrl.addListener(() {
+      setState(() {
+        _dragY = _snapAnim.value;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _releaseCtrl.dispose();
+    _snapCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onPanStart(DragStartDetails details) {
+    if (_isReleasing || _snapCtrl.isAnimating) return;
+  }
+
+  void _onPanUpdate(DragUpdateDetails details) {
+    if (_isReleasing || _snapCtrl.isAnimating) return;
+    setState(() {
+      double resistance = 1.0 - (_dragY / 300.0).clamp(0.0, 0.8);
+      _dragY += details.delta.dy * resistance * 0.85;
+      if (_dragY < 0) _dragY = 0;
+    });
+  }
+
+  void _onPanEnd(DragEndDetails details) {
+    if (_isReleasing || _snapCtrl.isAnimating) return;
+
+    if (_dragY > 60 || details.velocity.pixelsPerSecond.dy > 300) {
+      _startDragY = _dragY;
+      _isReleasing = true;
+      _releaseCtrl.animateTo(1.0, curve: Curves.easeInCubic);
+    } else {
+      _snapAnim = Tween<double>(begin: _dragY, end: 0.0).animate(
+          CurvedAnimation(parent: _snapCtrl, curve: Curves.easeOutBack));
+      _snapCtrl.forward(from: 0.0);
+    }
+  }
+
+  void _toggleObscure() {
+    setState(() {
+      _obscureBalances = !_obscureBalances;
+    });
+  }
+
+  Widget _buildCard(int index) {
+    if (index == 0) return _SavingsCard(obscured: _obscureBalances, onToggle: _toggleObscure);
+    if (index == 1) return _PortfolioCard(obscured: _obscureBalances, onToggle: _toggleObscure);
+    if (index == 2) return _LoanCard(obscured: _obscureBalances, onToggle: _toggleObscure);
+    return const SizedBox.shrink();
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => setState(() => _open = !_open),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 420),
-        curve: Curves.easeInOut,
-        height: _containerHeight,
-        child: Stack(clipBehavior: Clip.none, children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: _LoanCard(),
-          ),
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 420),
-            curve: Curves.easeInOut,
-            top: _open ? _expandedOffset : _collapsedOffset,
-            left: 0,
-            right: 0,
-            child: const _SavingsCard(),
-          ),
-        ]),
+      onPanStart: _onPanStart,
+      onPanUpdate: _onPanUpdate,
+      onPanEnd: _onPanEnd,
+      child: Container(
+        color: Colors.transparent,
+        height: _maxCardHeight + _headroom,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: List.generate(_cardCount, (reverseIdx) {
+            int visualIdx = _cardCount - 1 - reverseIdx;
+            int cardIdx = (_topIndex + visualIdx) % _cardCount;
+            Widget card = _buildCard(cardIdx);
+
+            double dy = 0;
+            double scale = 1.0;
+            double opacity = 1.0;
+
+            if (_isReleasing) {
+              double t = _releaseCtrl.value;
+              if (visualIdx == 0) {
+                // Top card slides down to back
+                dy = _startDragY + (400.0 - _startDragY) * t;
+                opacity = (1.0 - (t * 1.5)).clamp(0.0, 1.0);
+              } else if (visualIdx == 1) {
+                // Next card moves up
+                double startDY = _baseOffset - (_startDragY * 0.08);
+                dy = startDY * (1.0 - t);
+                scale = 0.96 + (0.04 * t);
+              } else if (visualIdx == 2) {
+                double startDY = (_baseOffset * 2) - (_startDragY * 0.04);
+                dy = startDY + ((_baseOffset - startDY) * t);
+                scale = 0.92 + (0.04 * t);
+              } else {
+                dy = _baseOffset * visualIdx;
+                scale = 1.0 - (visualIdx * 0.04);
+              }
+            } else {
+              if (visualIdx == 0) {
+                dy = _dragY;
+              } else if (visualIdx == 1) {
+                dy = _baseOffset - (_dragY * 0.08);
+                scale = 0.96;
+              } else if (visualIdx == 2) {
+                dy = (_baseOffset * 2) - (_dragY * 0.04);
+                scale = 0.92;
+              } else {
+                dy = _baseOffset * visualIdx;
+                scale = 1.0 - (visualIdx * 0.04);
+              }
+            }
+
+            return Positioned(
+              top: _headroom,
+              left: 0,
+              right: 0,
+              child: Opacity(
+                opacity: opacity,
+                child: Transform.translate(
+                  offset: Offset(0, dy),
+                  child: Transform.scale(
+                    scale: scale,
+                    alignment: Alignment.topCenter,
+                    child: card,
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
       ),
     );
   }
 }
 
+
 class _LoanCard extends StatelessWidget {
+  final bool obscured;
+  final VoidCallback onToggle;
+  const _LoanCard({required this.obscured, required this.onToggle});
+
   @override
   Widget build(BuildContext context) {
     return ClipRect(
       child: Container(
-        height: 112,
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+        height: 164,
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFF6B4E2A), Color(0xFFA37848)],
@@ -238,41 +368,206 @@ class _LoanCard extends StatelessWidget {
           ],
         ),
         child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.18),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text('LOAN ACCOUNT · PEEK',
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const _Glass('LOAN ACCOUNT'),
+                const Spacer(),
+                _Dot(false),
+                const SizedBox(width: 4),
+                _Dot(false),
+                const SizedBox(width: 4),
+                _Dot(true),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text('•••• •••• •••• 9876',
+                style: TextStyle(
+                    color: Colors.white.withOpacity(0.65),
+                    fontSize: 13,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w500)),
+            const Spacer(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(
+                    children: [
+                      Text('OUTSTANDING BALANCE',
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.0)),
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: onToggle,
+                        child: Icon(
+                          obscured ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                          color: Colors.white.withOpacity(0.7),
+                          size: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(obscured ? '₹ ••••••' : '₹4,20,000',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5)),
+                ]),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.keyboard_arrow_down_rounded,
+                    color: Colors.white.withOpacity(0.35), size: 14),
+                const SizedBox(width: 4),
+                Text('pull down to reveal next',
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withOpacity(0.35),
                         fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.1)),
-              ),
-              const SizedBox(height: 10),
-              const Text('₹4,20,000',
+                        letterSpacing: 0.3)),
+              ]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PortfolioCard extends StatelessWidget {
+  final bool obscured;
+  final VoidCallback onToggle;
+  const _PortfolioCard({required this.obscured, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 164,
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1E3A5F), Color(0xFF3B5998)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+              color: const Color(0xFF1E3A5F).withOpacity(0.45),
+              blurRadius: 20,
+              offset: const Offset(0, 10))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const _Glass('PORTFOLIO'),
+              const Spacer(),
+              _Dot(false),
+              const SizedBox(width: 4),
+              _Dot(true),
+              const SizedBox(width: 4),
+              _Dot(false),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text('•••• •••• •••• 5678',
+              style: TextStyle(
+                  color: Colors.white.withOpacity(0.65),
+                  fontSize: 13,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.w500)),
+          const Spacer(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(
+                  children: [
+                    Text('TOTAL INVESTMENTS',
+                        style: TextStyle(
+                            color: Colors.white.withOpacity(0.5),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.0)),
+                    const SizedBox(width: 6),
+                    GestureDetector(
+                      onTap: onToggle,
+                      child: Icon(
+                        obscured ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                        color: Colors.white.withOpacity(0.7),
+                        size: 14,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(obscured ? '₹ ••••••' : '₹8,45,200',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5)),
+              ]),
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                Text('Rahul Kumar',
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                Row(
+                  children: [22.0, 14.0, 18.0, 10.0, 16.0]
+                      .map((h) => Padding(
+                            padding: const EdgeInsets.only(left: 2),
+                            child: Container(
+                                width: 3,
+                                height: h,
+                                decoration: BoxDecoration(
+                                    color: const Color(0xFF8AB4F8).withOpacity(0.85),
+                                    borderRadius: BorderRadius.circular(2))),
+                          ))
+                      .toList(),
+                ),
+              ]),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(Icons.keyboard_arrow_down_rounded,
+                  color: Colors.white.withOpacity(0.35), size: 14),
+              const SizedBox(width: 4),
+              Text('pull down to reveal next',
                   style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.5)),
-              Text('outstanding balance',
-                  style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
-                      fontSize: 11)),
+                      color: Colors.white.withOpacity(0.35),
+                      fontSize: 9,
+                      letterSpacing: 0.3)),
             ]),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _SavingsCard extends StatelessWidget {
-  const _SavingsCard();
+  final bool obscured;
+  final VoidCallback onToggle;
+  const _SavingsCard({required this.obscured, required this.onToggle});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -296,8 +591,6 @@ class _SavingsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            const _Glass('PORTFOLIO'),
-            const SizedBox(width: 6),
             const _Glass('SAVINGS'),
             const Spacer(),
             _Dot(true),
@@ -319,15 +612,28 @@ class _SavingsCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('TOTAL BALANCE',
-                    style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.0)),
+                Row(
+                  children: [
+                    Text('TOTAL BALANCE',
+                        style: TextStyle(
+                            color: Colors.white.withOpacity(0.5),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.0)),
+                    const SizedBox(width: 6),
+                    GestureDetector(
+                      onTap: onToggle,
+                      child: Icon(
+                        obscured ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                        color: Colors.white.withOpacity(0.7),
+                        size: 14,
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 3),
-                const Text('₹1,24,500',
-                    style: TextStyle(
+                Text(obscured ? '₹ ••••••' : '₹1,24,500',
+                    style: const TextStyle(
                         color: Colors.white,
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
@@ -357,9 +663,10 @@ class _SavingsCard extends StatelessWidget {
           const SizedBox(height: 8),
           Center(
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.keyboard_arrow_up_rounded,
+              Icon(Icons.keyboard_arrow_down_rounded,
                   color: Colors.white.withOpacity(0.35), size: 14),
-              Text('tap card to reveal loan',
+              const SizedBox(width: 4),
+              Text('pull down to reveal next',
                   style: TextStyle(
                       color: Colors.white.withOpacity(0.35),
                       fontSize: 9,
