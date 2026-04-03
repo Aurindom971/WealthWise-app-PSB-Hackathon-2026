@@ -15,3 +15,5 @@ Built using Flutter and Provider for State Management. Follows a Feature-First m
 1. Run `flutter pub get`.
 2. Ensure you have an Android/iOS emulator or device running.
 3. Run `flutter run`.
+
+## Updated authentication feature-dekho
