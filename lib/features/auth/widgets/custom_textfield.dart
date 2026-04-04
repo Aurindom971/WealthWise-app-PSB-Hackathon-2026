@@ -1,16 +1,31 @@
 import 'package:flutter/material.dart';
 
-class CustomTextField extends StatelessWidget {
+class CustomTextField extends StatefulWidget {
   final String hintText;
   final IconData prefixIcon;
   final bool obscureText;
+  final TextEditingController? controller;
 
   const CustomTextField({
     super.key,
     required this.hintText,
     required this.prefixIcon,
     this.obscureText = false,
+    this.controller,
   });
+
+  @override
+  State<CustomTextField> createState() => _CustomTextFieldState();
+}
+
+class _CustomTextFieldState extends State<CustomTextField> {
+  late bool _isObscured;
+
+  @override
+  void initState() {
+    super.initState();
+    _isObscured = widget.obscureText;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +37,26 @@ class CustomTextField extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: TextField(
-        obscureText: obscureText,
+        controller: widget.controller,
+        obscureText: _isObscured,
         style: const TextStyle(fontSize: 13),
         decoration: InputDecoration(
-          icon: Icon(prefixIcon, size: 18, color: Colors.grey),
-          hintText: hintText,
+          icon: Icon(widget.prefixIcon, size: 18, color: Colors.grey),
+          suffixIcon: widget.obscureText
+              ? IconButton(
+                  icon: Icon(
+                    _isObscured ? Icons.visibility_off : Icons.visibility,
+                    size: 18,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isObscured = !_isObscured;
+                    });
+                  },
+                )
+              : null,
+          hintText: widget.hintText,
           hintStyle: TextStyle(
             fontSize: 12,
             color: Colors.grey.shade500,

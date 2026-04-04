@@ -1,21 +1,5 @@
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(scaffoldBackgroundColor: const Color(0xFFF2F0EB)),
-      home: const HomeScreen(),
-    );
-  }
-}
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ─── PALETTE ─────────────────────────────────────────────────────────────────
 const _kForest = Color(0xFF1A3328);
@@ -35,6 +19,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _navIdx = 0;
+  bool _isShowingDashboard = true; 
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fade;
 
@@ -53,6 +38,40 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  void _handleLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: _kCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Logout', style: TextStyle(color: _kForest, fontWeight: FontWeight.bold)),
+        content: const Text('Are you sure you want to log out of your secure session?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: _kSub)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade800,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await Supabase.instance.client.auth.signOut();
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,43 +81,98 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Expanded(
             child: FadeTransition(
               opacity: _fade,
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    sliver: SliverList(
-                      delegate: SliverChildListDelegate([
-                        const SizedBox(height: 14),
-                        _TopBar(),
-                        const SizedBox(height: 20),
-                        const _CardStack(),
-                        const SizedBox(height: 16),
-                        const _AIBanner(),
-                        const SizedBox(height: 22),
-                        const _QuickActions(),
-                        const SizedBox(height: 28),
-                      ]),
-                    ),
-                  ),
-                ],
-              ),
+              child: _isShowingDashboard 
+                ? _buildDashboard() 
+                : _buildTabContent(),
             ),
           ),
           _BottomNav(
-              currentIndex: _navIdx,
-              onTap: (i) => setState(() => _navIdx = i)),
+            currentIndex: _isShowingDashboard ? -1 : _navIdx,
+            onTap: (i) => setState(() {
+              _navIdx = i;
+              _isShowingDashboard = false;
+            }),
+          ),
         ]),
       ),
+    );
+  }
+
+  Widget _buildDashboard() {
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              const SizedBox(height: 14),
+              _TopBar(
+                onHomeTap: () => setState(() => _isShowingDashboard = true),
+                onLogoutTap: _handleLogout,
+              ),
+              const SizedBox(height: 20),
+              const _CardStack(),
+              const SizedBox(height: 16),
+              const _AIBanner(),
+              const SizedBox(height: 22),
+              const _QuickActions(),
+              const SizedBox(height: 28),
+            ]),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabContent() {
+    final titles = ['Profile', 'Transactions', 'UPI', 'Investments', 'Smart Lock'];
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          child: _TopBar(
+            onHomeTap: () => setState(() => _isShowingDashboard = true),
+            onLogoutTap: _handleLogout,
+          ),
+        ),
+        Expanded(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.construction_rounded, size: 60, color: _kAccent.withOpacity(0.3)),
+                const SizedBox(height: 16),
+                Text(
+                  '${titles[_navIdx]} Module',
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _kForest),
+                ),
+                const SizedBox(height: 8),
+                const Text('Coming soon to SecureWealth Twin', style: TextStyle(color: _kSub)),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
 
 // ─── TOP BAR ──────────────────────────────────────────────────────────────────
 class _TopBar extends StatelessWidget {
+  final VoidCallback onHomeTap;
+  final VoidCallback onLogoutTap;
+
+  const _TopBar({required this.onHomeTap, required this.onLogoutTap});
+
   @override
   Widget build(BuildContext context) {
     return Row(children: [
+      _Bubble(
+        onTap: onHomeTap,
+        child: const Icon(Icons.home_rounded, color: _kForest, size: 22),
+      ),
+      const SizedBox(width: 8),
       Expanded(
         child: Container(
           height: 46,
@@ -138,31 +212,36 @@ class _TopBar extends StatelessWidget {
       ])),
       const SizedBox(width: 8),
       _Bubble(
+          onTap: onLogoutTap,
           child: const Icon(Icons.power_settings_new_rounded,
-              color: _kInk, size: 20)),
+              color: Color(0xFFE53935), size: 20)),
     ]);
   }
 }
 
 class _Bubble extends StatelessWidget {
   final Widget child;
-  const _Bubble({required this.child});
+  final VoidCallback? onTap;
+  const _Bubble({required this.child, this.onTap});
   @override
-  Widget build(BuildContext context) => Container(
-        width: 44,
-        height: 44,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: _kCard,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withOpacity(0.07),
-                blurRadius: 10,
-                offset: const Offset(0, 3))
-          ],
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 44,
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _kCard,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.07),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3))
+            ],
+          ),
+          child: child,
         ),
-        child: child,
       );
 }
 
