@@ -5,6 +5,7 @@ class CustomTextField extends StatefulWidget {
   final IconData prefixIcon;
   final bool obscureText;
   final TextEditingController? controller;
+  final Widget? suffixIcon;
 
   const CustomTextField({
     super.key,
@@ -12,6 +13,7 @@ class CustomTextField extends StatefulWidget {
     required this.prefixIcon,
     this.obscureText = false,
     this.controller,
+    this.suffixIcon,
   });
 
   @override
@@ -40,9 +42,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
         controller: widget.controller,
         obscureText: _isObscured,
         style: const TextStyle(fontSize: 13),
-        textAlignVertical: TextAlignVertical.center,
+        textAlignVertical: TextAlignVertical.center, // ✅ center text
         decoration: InputDecoration(
-          icon: Icon(widget.prefixIcon, size: 18, color: Colors.grey),
+          prefixIcon: Icon(widget.prefixIcon, size: 18, color: Colors.grey),
           suffixIcon: widget.obscureText
               ? IconButton(
                   icon: Icon(
@@ -56,15 +58,15 @@ class _CustomTextFieldState extends State<CustomTextField> {
                     });
                   },
                 )
-              : null,
+              : widget.suffixIcon,
           hintText: widget.hintText,
           hintStyle: TextStyle(
             fontSize: 12,
             color: Colors.grey.shade500,
           ),
           border: InputBorder.none,
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          isDense: true, // ✅ compact + centered
+          contentPadding: const EdgeInsets.symmetric(vertical: 12), // ✅ balance
         ),
       ),
     );
