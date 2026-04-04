@@ -26,6 +26,7 @@ class SecureWealthApp extends StatelessWidget {
           ? const HomeScreen()
           : const LoginScreen(),
       routes: {
+        '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
       },
     );

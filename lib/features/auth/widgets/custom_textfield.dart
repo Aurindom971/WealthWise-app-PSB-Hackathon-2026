@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
-class CustomTextField extends StatelessWidget {
+class CustomTextField extends StatefulWidget {
   final String hintText;
   final IconData prefixIcon;
   final bool obscureText;
   final TextEditingController? controller;
-  final Widget? suffixIcon;
 
   const CustomTextField({
     super.key,
@@ -13,8 +12,20 @@ class CustomTextField extends StatelessWidget {
     required this.prefixIcon,
     this.obscureText = false,
     this.controller,
-    this.suffixIcon,
   });
+
+  @override
+  State<CustomTextField> createState() => _CustomTextFieldState();
+}
+
+class _CustomTextFieldState extends State<CustomTextField> {
+  late bool _isObscured;
+
+  @override
+  void initState() {
+    super.initState();
+    _isObscured = widget.obscureText;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,21 +37,34 @@ class CustomTextField extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: TextField(
-        controller: controller,
-        obscureText: obscureText,
+        controller: widget.controller,
+        obscureText: _isObscured,
         style: const TextStyle(fontSize: 13),
-        textAlignVertical: TextAlignVertical.center, // ✅ center text
+        textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
-          prefixIcon: Icon(prefixIcon, size: 18, color: Colors.grey), // ✅ fixed
-          suffixIcon: suffixIcon,
-          hintText: hintText,
+          icon: Icon(widget.prefixIcon, size: 18, color: Colors.grey),
+          suffixIcon: widget.obscureText
+              ? IconButton(
+                  icon: Icon(
+                    _isObscured ? Icons.visibility_off : Icons.visibility,
+                    size: 18,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isObscured = !_isObscured;
+                    });
+                  },
+                )
+              : null,
+          hintText: widget.hintText,
           hintStyle: TextStyle(
             fontSize: 12,
             color: Colors.grey.shade500,
           ),
           border: InputBorder.none,
-          isDense: true, // ✅ compact + centered
-          contentPadding: const EdgeInsets.symmetric(vertical: 12), // ✅ balance
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
         ),
       ),
     );
