@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'features/auth/screens/login_screen.dart';
 import 'features/home/screens/home_screen.dart';
 
@@ -21,7 +22,9 @@ class SecureWealthApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const LoginScreen(),
+      home: Supabase.instance.client.auth.currentSession != null
+          ? const HomeScreen()
+          : const LoginScreen(),
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),

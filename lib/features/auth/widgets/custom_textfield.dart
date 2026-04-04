@@ -40,6 +40,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
         controller: widget.controller,
         obscureText: _isObscured,
         style: const TextStyle(fontSize: 13),
+        textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
           icon: Icon(widget.prefixIcon, size: 18, color: Colors.grey),
           suffixIcon: widget.obscureText
@@ -62,6 +63,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
             color: Colors.grey.shade500,
           ),
           border: InputBorder.none,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
         ),
       ),
     );
