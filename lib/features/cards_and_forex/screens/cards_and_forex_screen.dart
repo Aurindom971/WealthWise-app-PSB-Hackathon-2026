@@ -23,6 +23,7 @@ class CardsAndForexScreen extends StatefulWidget {
 }
 
 class _CardsAndForexScreenState extends State<CardsAndForexScreen> {
+  bool _isDraggingCard = false;
   bool _obscureBalances = true;
   int _activeCardIndex = 0;
   bool _showAllTransactions = false;
@@ -58,12 +59,19 @@ class _CardsAndForexScreenState extends State<CardsAndForexScreen> {
           children: [
             const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
             const SizedBox(width: 12),
-            Text('Freeze $cardType', style: GoogleFonts.inter(color: Colors.red, fontWeight: FontWeight.bold)),
+            Expanded(
+              child: Text(
+                'Freeze $cardType',
+                style: GoogleFonts.inter(color: Colors.red, fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         ),
-        content: Text(
-          'Are you sure you want to freeze your card ending in $last4? This will disable all domestic and international transactions for this account.',
-          style: GoogleFonts.inter(color: Colors.grey.shade700, height: 1.5),
+        content: SingleChildScrollView(
+          child: Text(
+            'Are you sure you want to freeze your card ending in $last4? This will disable all domestic and international transactions for this account.',
+            style: GoogleFonts.inter(color: Colors.grey.shade700, height: 1.5),
+          ),
         ),
         actions: [
           TextButton(
@@ -116,7 +124,7 @@ class _CardsAndForexScreenState extends State<CardsAndForexScreen> {
     final List<Map<String, dynamic>> displayTransactions = _showAllTransactions ? currentTransactions : currentTransactions.take(3).toList();
 
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+      physics: _isDraggingCard ? const NeverScrollableScrollPhysics() : const BouncingScrollPhysics(),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 24.0),
         child: Column(
@@ -139,6 +147,8 @@ class _CardsAndForexScreenState extends State<CardsAndForexScreen> {
             AnimatedCardStack(
               cards: myCards,
               onCardChanged: (index) => setState(() => _activeCardIndex = index),
+              onDragStart: () => setState(() => _isDraggingCard = true),
+              onDragEnd: () => setState(() => _isDraggingCard = false),
             ),
             
             const SizedBox(height: 32),
