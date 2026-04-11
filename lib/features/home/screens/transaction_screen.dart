@@ -37,32 +37,48 @@ void initState() {
   List<Transaction> _allTransactions = [];
   
   Future<void> fetchTransactions() async {
-  final response = await supabase
-      .from('transactions')
-      .select()
-      .order('transaction_id', ascending: false);
+  try {
+    final response = await supabase
+        .from('transactions')
+        .select()
+        .order('transaction_id', ascending: false);
 
+    print("RAW DATA: $response");
 
-  print(response); // debug
+    setState(() {
+      _allTransactions = (response as List)
+          .map((data) {
+            final createdAt = data['created_at'];
 
-  setState(() {
-    _allTransactions = ((response as List<dynamic>))
-        .map((data) => Transaction(
+            return Transaction(
               name: data['name'] ?? '',
-              amount: data['amount'] ?? 0,
+              amount: (data['amount'] ?? 0).toInt(), // ✅ FIXED
               type: data['transaction_type'] == 'debit'
                   ? 'sent'
                   : 'received',
               icon: '💸',
-              date: DateTime.now(),
-              time: 'Now',
+
+              // ✅ FIXED DATE
+              date: createdAt != null
+                  ? DateTime.parse(createdAt)
+                  : DateTime.now(),
+
+              time: createdAt != null
+                  ? DateFormat('hh:mm a').format(DateTime.parse(createdAt))
+                  : 'Now',
+
               mode: data['mode'] ?? '',
               status: data['status'] ?? '',
               category: data['category'] ?? '',
-            ))
-        .toList();
-  });
+            );
+          })
+          .toList();
+    });
+  } catch (e) {
+    print("ERROR FETCHING: $e");
+  }
 }
+
 
   bool _showSearch = false;
   String _search = '';
