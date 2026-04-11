@@ -1,14 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-// ─── PALETTE ─────────────────────────────────────────────────────────────────
-const _kForest = Color(0xFF1A3328);
-const _kMid = Color(0xFF245C3F);
-const _kAccent = Color(0xFF4CAF7A);
-const _kCream = Color(0xFFF2F0EB);
-const _kCard = Color(0xFFFFFFFF);
-const _kSub = Color(0xFF9A9A94);
-const _kInk = Color(0xFF1A1A18);
+import '../widgets/home_navigation_widgets.dart';
+import '../../loans/screens/loans_screen.dart';
+import '../../insurance/screens/insurance_screen.dart';
 
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
@@ -42,14 +36,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: _kCard,
+        backgroundColor: kCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Logout', style: TextStyle(color: _kForest, fontWeight: FontWeight.bold)),
+        title: const Text('Logout', style: TextStyle(color: kForest, fontWeight: FontWeight.bold)),
         content: const Text('Are you sure you want to log out of your secure session?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel', style: TextStyle(color: _kSub)),
+            child: const Text('Cancel', style: TextStyle(color: kSub)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -75,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _kCream,
+      backgroundColor: kCream,
       body: SafeArea(
         child: Column(children: [
           Expanded(
@@ -86,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 : _buildTabContent(),
             ),
           ),
-          _BottomNav(
+          BottomNav(
             currentIndex: _isShowingDashboard ? -1 : _navIdx,
             onTap: (i) => setState(() {
               _navIdx = i;
@@ -107,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               const SizedBox(height: 14),
-              _TopBar(
+              TopBar(
                 onHomeTap: () => setState(() => _isShowingDashboard = true),
                 onLogoutTap: _handleLogout,
               ),
@@ -131,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          child: _TopBar(
+          child: TopBar(
             onHomeTap: () => setState(() => _isShowingDashboard = true),
             onLogoutTap: _handleLogout,
           ),
@@ -141,14 +135,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.construction_rounded, size: 60, color: _kAccent.withOpacity(0.3)),
+                Icon(Icons.construction_rounded, size: 60, color: kAccent.withOpacity(0.3)),
                 const SizedBox(height: 16),
                 Text(
                   '${titles[_navIdx]} Module',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _kForest),
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: kForest),
                 ),
                 const SizedBox(height: 8),
-                const Text('Coming soon to SecureWealth Twin', style: TextStyle(color: _kSub)),
+                const Text('Coming soon to SecureWealth Twin', style: TextStyle(color: kSub)),
               ],
             ),
           ),
@@ -158,94 +152,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 }
 
-// ─── TOP BAR ──────────────────────────────────────────────────────────────────
-class _TopBar extends StatelessWidget {
-  final VoidCallback onHomeTap;
-  final VoidCallback onLogoutTap;
-
-  const _TopBar({required this.onHomeTap, required this.onLogoutTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(children: [
-      _Bubble(
-        onTap: onHomeTap,
-        child: const Icon(Icons.home_rounded, color: _kForest, size: 22),
-      ),
-      const SizedBox(width: 8),
-      Expanded(
-        child: Container(
-          height: 46,
-          decoration: BoxDecoration(
-            color: _kCard,
-            borderRadius: BorderRadius.circular(23),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3))
-            ],
-          ),
-          child: const Row(children: [
-            SizedBox(width: 16),
-            Icon(Icons.search_rounded, color: _kSub, size: 20),
-            SizedBox(width: 8),
-            Text('Search',
-                style: TextStyle(
-                    color: _kSub, fontSize: 14, fontWeight: FontWeight.w400)),
-          ]),
-        ),
-      ),
-      const SizedBox(width: 10),
-      _Bubble(
-          child: Stack(clipBehavior: Clip.none, children: [
-        const Icon(Icons.notifications_none_rounded, color: _kInk, size: 20),
-        Positioned(
-          top: -2,
-          right: -2,
-          child: Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                  color: Color(0xFFE53935), shape: BoxShape.circle)),
-        ),
-      ])),
-      const SizedBox(width: 8),
-      _Bubble(
-          onTap: onLogoutTap,
-          child: const Icon(Icons.power_settings_new_rounded,
-              color: Color(0xFFE53935), size: 20)),
-    ]);
-  }
-}
-
-class _Bubble extends StatelessWidget {
-  final Widget child;
-  final VoidCallback? onTap;
-  const _Bubble({required this.child, this.onTap});
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 44,
-          height: 44,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: _kCard,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withOpacity(0.07),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3))
-            ],
-          ),
-          child: child,
-        ),
-      );
-}
-
-// ─── STACKED CARDS ────────────────────────────────────────────────────────────
 // ─── STACKED CARDS ────────────────────────────────────────────────────────────
 class _CardStack extends StatefulWidget {
   const _CardStack();
@@ -453,11 +359,11 @@ class _LoanCard extends StatelessWidget {
               children: [
                 const _Glass('LOAN ACCOUNT'),
                 const Spacer(),
-                _Dot(false),
+                const _Dot(false),
                 const SizedBox(width: 4),
-                _Dot(false),
+                const _Dot(false),
                 const SizedBox(width: 4),
-                _Dot(true),
+                const _Dot(true),
               ],
             ),
             const SizedBox(height: 12),
@@ -553,11 +459,11 @@ class _PortfolioCard extends StatelessWidget {
             children: [
               const _Glass('PORTFOLIO'),
               const Spacer(),
-              _Dot(false),
+              const _Dot(false),
               const SizedBox(width: 4),
-              _Dot(true),
+              const _Dot(true),
               const SizedBox(width: 4),
-              _Dot(false),
+              const _Dot(false),
             ],
           ),
           const SizedBox(height: 12),
@@ -654,14 +560,14 @@ class _SavingsCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF1A3328), Color(0xFF245C3F)],
+          colors: [kForest, kMid],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-              color: _kForest.withOpacity(0.45),
+              color: kForest.withOpacity(0.45),
               blurRadius: 20,
               offset: const Offset(0, 10))
         ],
@@ -672,11 +578,11 @@ class _SavingsCard extends StatelessWidget {
           Row(children: [
             const _Glass('SAVINGS'),
             const Spacer(),
-            _Dot(true),
+            const _Dot(true),
             const SizedBox(width: 4),
-            _Dot(false),
+            const _Dot(false),
             const SizedBox(width: 4),
-            _Dot(false),
+            const _Dot(false),
           ]),
           const SizedBox(height: 12),
           Text('•••• •••• •••• 2345',
@@ -732,7 +638,7 @@ class _SavingsCard extends StatelessWidget {
                               width: 3,
                               height: h,
                               decoration: BoxDecoration(
-                                  color: _kAccent.withOpacity(0.85),
+                                  color: kAccent.withOpacity(0.85),
                                   borderRadius: BorderRadius.circular(2))),
                         ))
                     .toList()),
@@ -787,7 +693,7 @@ class _Dot extends StatelessWidget {
         width: a ? 14 : 6,
         height: 6,
         decoration: BoxDecoration(
-          color: a ? _kAccent : Colors.white.withOpacity(0.3),
+          color: a ? kAccent : Colors.white.withOpacity(0.3),
           borderRadius: BorderRadius.circular(3),
         ),
       );
@@ -801,12 +707,12 @@ class _AIBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
-        color: _kCard,
+        color: kCard,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _kAccent.withOpacity(0.22)),
+        border: Border.all(color: kAccent.withOpacity(0.22)),
         boxShadow: [
           BoxShadow(
-              color: _kForest.withOpacity(0.06),
+              color: kForest.withOpacity(0.06),
               blurRadius: 12,
               offset: const Offset(0, 4))
         ],
@@ -817,13 +723,13 @@ class _AIBanner extends StatelessWidget {
           height: 42,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-                colors: [_kMid, _kAccent],
+                colors: [kMid, kAccent],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                  color: _kAccent.withOpacity(0.3),
+                  color: kAccent.withOpacity(0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 3))
             ],
@@ -838,14 +744,14 @@ class _AIBanner extends StatelessWidget {
               children: [
                 Text('NEED HELP?',
                     style: TextStyle(
-                        color: _kAccent,
+                        color: kAccent,
                         fontSize: 9,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.2)),
                 SizedBox(height: 2),
                 Text('Secure Wealth AI',
                     style: TextStyle(
-                        color: _kForest,
+                        color: kForest,
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.3)),
@@ -855,11 +761,11 @@ class _AIBanner extends StatelessWidget {
           width: 30,
           height: 30,
           decoration: BoxDecoration(
-            color: _kForest.withOpacity(0.08),
+            color: kForest.withOpacity(0.08),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Icon(Icons.arrow_forward_ios_rounded,
-              size: 12, color: _kForest),
+              size: 12, color: kForest),
         ),
       ]),
     );
@@ -873,22 +779,21 @@ class _QuickActions extends StatelessWidget {
   static const _data = [
     _AData(Icons.send_rounded, 'Send /\nTransfer', Color(0xFFE3F5EC), Color(0xFFBBE8D0), Color(0xFF1B7A49)),
     _AData(Icons.receipt_long_rounded, 'Bills &\nRecharge', Color(0xFFFFF4E5), Color(0xFFFFE0B2), Color(0xFFD4820A)),
-    _AData(Icons.savings_rounded, 'Savings', Color(0xFFE8F0FE), Color(0xFFBBD0FB), Color(0xFF1A56C4)),
+    _AData(Icons.account_balance, 'Loans', Color(0xFFEAF6F0), Color(0xFFEAF6F0), Color(0xFF1F7A5A)),
     _AData(Icons.credit_card_rounded, 'Cards &\nForex', Color(0xFFF3E8FF), Color(0xFFE1BEFF), Color(0xFF7B2FBE)),
     _AData(Icons.tune_rounded, 'Services', Color(0xFFFFE8EC), Color(0xFFFFBBC8), Color(0xFFCE2D48)),
-    _AData(Icons.qr_code_scanner_rounded, 'UPI', Color(0xFFE5F9F2), Color(0xFFA8EDD3), Color(0xFF0E7C5B)),
+    _AData(Icons.shield_outlined, 'Insurance', Color(0xFFE6F0FA), Color(0xFFE6F0FA), Color(0xFF2F6FD6)),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      // FIX 1: Removed "More" button from the header row.
       const Text('QUICK ACTIONS',
           style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.3,
-              color: _kInk)),
+              color: kInk)),
       const SizedBox(height: 14),
       GridView.builder(
         shrinkWrap: true,
@@ -941,150 +846,61 @@ class _TileState extends State<_Tile> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _c.forward(),
-      onTapUp: (_) => _c.reverse(),
-      onTapCancel: () => _c.reverse(),
-      child: AnimatedBuilder(
-        animation: _s,
-        builder: (_, child) =>
-            Transform.scale(scale: _s.value, child: child),
-        child: Container(
-          decoration: BoxDecoration(
-            color: _kCard,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                  color: widget.d.ic.withOpacity(0.10),
-                  blurRadius: 12,
-                  offset: const Offset(0, 5))
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [widget.d.g1, widget.d.g2],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(17),
-                ),
-                child: Icon(widget.d.icon, size: 26, color: widget.d.ic),
-              ),
-              const SizedBox(height: 9),
-              Text(
-                widget.d.label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: _kInk,
-                    height: 1.3),
-              ),
-            ],
-          ),
+    return AnimatedBuilder(
+      animation: _s,
+      builder: (_, child) =>
+          Transform.scale(scale: _s.value, child: child),
+      child: Container(
+        decoration: BoxDecoration(
+          color: kCard,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+                color: widget.d.ic.withOpacity(0.10),
+                blurRadius: 12,
+                offset: const Offset(0, 5))
+          ],
         ),
-      ),
-    );
-  }
-}
-
-// ─── BOTTOM NAV ───────────────────────────────────────────────────────────────
-class _BottomNav extends StatelessWidget {
-  final int currentIndex;
-  final ValueChanged<int> onTap;
-  const _BottomNav({required this.currentIndex, required this.onTap});
-
-  // FIX 2: Items updated to Profile, Transactions, UPI, Investments, Smart Lock.
-  static const _items = [
-    (Icons.person_rounded, 'Profile', false),
-    (Icons.swap_horiz_rounded, 'Transactions', false),
-    (Icons.qr_code_scanner_rounded, 'UPI', true),
-    (Icons.bar_chart_rounded, 'Investments', false),
-    (Icons.lock_rounded, 'Smart Lock', false),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: _kCard,
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: const Offset(0, -4))
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(_items.length, (i) {
-              final (icon, label, isCenter) = _items[i];
-              final active = currentIndex == i;
-
-              if (isCenter) {
-                return GestureDetector(
-                  onTap: () => onTap(i),
-                  child: Container(
-                    width: 60,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                          colors: [_kForest, _kMid],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                            color: _kForest.withOpacity(0.35),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4))
-                      ],
-                    ),
-                    child: const Icon(Icons.qr_code_scanner_rounded,
-                        color: Colors.white, size: 22),
-                  ),
-                );
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onHighlightChanged: (h) => h ? _c.forward() : _c.reverse(),
+            onTap: () {
+              if (widget.d.label == 'Loans') {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const LoansScreen()));
+              } else if (widget.d.label == 'Insurance') {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const InsuranceScreen()));
               }
-
-              return GestureDetector(
-                onTap: () => onTap(i),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      width: active ? 28 : 0,
-                      height: active ? 3 : 0,
-                      margin: EdgeInsets.only(bottom: active ? 4 : 0),
-                      decoration: BoxDecoration(
-                        color: _kAccent,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+            },
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [widget.d.g1, widget.d.g2],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    Icon(icon,
-                        size: 22, color: active ? _kForest : _kSub),
-                    const SizedBox(height: 3),
-                    Text(label,
-                        style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: active
-                                ? FontWeight.w800
-                                : FontWeight.w500,
-                            color: active ? _kForest : _kSub)),
-                  ],
+                    borderRadius: BorderRadius.circular(17),
+                  ),
+                  child: Icon(widget.d.icon, size: 26, color: widget.d.ic),
                 ),
-              );
-            }),
+                const SizedBox(height: 9),
+                Text(
+                  widget.d.label,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: kInk,
+                      height: 1.3),
+                ),
+              ],
+            ),
           ),
         ),
       ),
