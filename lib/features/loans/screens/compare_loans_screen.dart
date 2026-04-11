@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
+import '../../home/screens/home_screen.dart';
+import '../widgets/loan_header.dart';
 import 'apply_loan_screen.dart';
 
 class CompareLoansScreen extends StatefulWidget {
-  const CompareLoansScreen({super.key});
+  final VoidCallback onBack;
+  final Function(String) onApply;
+  const CompareLoansScreen({super.key, required this.onBack, required this.onApply});
 
   @override
   State<CompareLoansScreen> createState() => _CompareLoansScreenState();
@@ -29,110 +33,44 @@ class _CompareLoansScreenState extends State<CompareLoansScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kCream,
-      body: Column(
-        children: [
-          _buildHeader(),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Select up to 3 loan types to compare',
-                    style: TextStyle(color: kSub, fontSize: 13, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildSelectionChips(),
-                  const SizedBox(height: 32),
-                  _buildComparisonTable(),
-                  const SizedBox(height: 40),
-                  const Text(
-                    'Which loan is best for you?',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kInk),
-                  ),
-                  const SizedBox(height: 16),
-                  ..._allLoanTypes.map((type) => _buildRecommendationCard(type)),
-                ],
-              ),
+    return Column(
+      children: [
+        LoanHeader(
+          title: 'Compare Loans',
+          subtitle: 'Best rates and terms',
+          icon: Icons.compare_arrows_rounded,
+          onBack: widget.onBack,
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Select up to 3 loan types to compare',
+                  style: TextStyle(color: kSub, fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 12),
+                _buildSelectionChips(),
+                const SizedBox(height: 32),
+                _buildComparisonTable(),
+                const SizedBox(height: 40),
+                const Text(
+                  'Which loan is best for you?',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kInk),
+                ),
+                const SizedBox(height: 16),
+                ..._allLoanTypes.map((type) => _buildRecommendationCard(type)),
+              ],
             ),
           ),
-          BottomNav(
-            currentIndex: -1,
-            onTap: (index) => Navigator.pop(context),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 50, 18, 30),
-      decoration: const BoxDecoration(
-        color: kMid,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.compare_arrows, color: Colors.white, size: 30),
-              ),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Compare Loans',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  Text(
-                    'Find the best option for you',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSelectionChips() {
     return Wrap(
@@ -252,12 +190,7 @@ class _CompareLoansScreenState extends State<CompareLoansScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => ApplyLoanScreen(initialLoanType: type)),
-                );
-              },
+              onPressed: () => widget.onApply(type),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2D5A47),
                 foregroundColor: Colors.white,

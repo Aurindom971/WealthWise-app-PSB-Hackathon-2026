@@ -23,7 +23,6 @@ class CardsAndForexScreen extends StatefulWidget {
 }
 
 class _CardsAndForexScreenState extends State<CardsAndForexScreen> {
-  bool _isDraggingCard = false;
   bool _obscureBalances = true;
   int _activeCardIndex = 0;
   bool _showAllTransactions = false;
@@ -124,7 +123,7 @@ class _CardsAndForexScreenState extends State<CardsAndForexScreen> {
     final List<Map<String, dynamic>> displayTransactions = _showAllTransactions ? currentTransactions : currentTransactions.take(3).toList();
 
     return CustomScrollView(
-      physics: _isDraggingCard ? const NeverScrollableScrollPhysics() : const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 24.0),
@@ -137,8 +136,6 @@ class _CardsAndForexScreenState extends State<CardsAndForexScreen> {
                 cards: myCards,
                 maxCardHeight: 210.0,
                 onCardChanged: (index) => setState(() => _activeCardIndex = index),
-                onDragStart: () => setState(() => _isDraggingCard = true),
-                onDragEnd: () => setState(() => _isDraggingCard = false),
               ),
               
               const SizedBox(height: 32),
