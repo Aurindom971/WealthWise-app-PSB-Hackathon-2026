@@ -22,6 +22,11 @@ class SecureWealthApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      showPerformanceOverlay: false,
+      showSemanticsDebugger: false,
+      debugShowMaterialGrid: false,
+      checkerboardRasterCacheImages: false,
+      checkerboardOffscreenLayers: false,
       home: Supabase.instance.client.auth.currentSession != null
           ? const HomeScreen()
           : const LoginScreen(),
