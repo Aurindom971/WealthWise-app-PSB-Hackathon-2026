@@ -1,3 +1,5 @@
+import 'smart_lock_screen.dart';
+import 'transaction_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:securewealth_twin/features/cards_and_forex/screens/cards_and_forex_screen.dart';
@@ -299,6 +301,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
         ),
+),
       ],
     );
   }
