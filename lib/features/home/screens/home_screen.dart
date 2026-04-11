@@ -281,6 +281,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildTabContent() {
+    if (_navIdx == 1) return TransactionScreen(onBack: () => setState(() => _isShowingDashboard = true));
+    if (_navIdx == 4) return SmartLockScreen(onBack: () => setState(() => _isShowingDashboard = true));
+
     final titles = ['Profile', 'Transactions', 'UPI', 'Investments', 'Smart Lock'];
     return Column(
       children: [
@@ -301,7 +304,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
         ),
-),
       ],
     );
   }

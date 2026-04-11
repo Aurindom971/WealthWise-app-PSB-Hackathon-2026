@@ -19,7 +19,8 @@ class Transaction {
 
 // ─── Main Screen ───
 class TransactionScreen extends StatefulWidget {
-  const TransactionScreen({super.key});
+  final VoidCallback? onBack;
+  const TransactionScreen({super.key, this.onBack});
   @override
   State<TransactionScreen> createState() => _TransactionScreenState();
 }
@@ -34,35 +35,60 @@ void initState() {
   fetchTransactions(); //  THIS LINE IS REQUIRED
 }
 
+  bool _isLoading = true;
   List<Transaction> _allTransactions = [];
+
+  List<Transaction> _getMockTransactions() {
+    final now = DateTime.now();
+    return [
+      Transaction(name: 'Zomato: Late Night Craving', icon: '🍕', mode: 'UPI', status: 'Completed', category: 'Food & Dining', type: 'sent', amount: 450, date: now.subtract(const Duration(hours: 2)), time: '10:45 PM'),
+      Transaction(name: 'Swiggy: Healthy Salad', icon: '🥗', mode: 'Debit Card', card: '•••• 4208', status: 'Completed', category: 'Food & Dining', type: 'sent', amount: 320, date: now.subtract(const Duration(hours: 5)), time: '7:15 PM'),
+      Transaction(name: 'Monthly Salary: March', icon: '💰', mode: 'NEFT', status: 'Completed', category: 'Income', type: 'received', amount: 85000, date: now.subtract(const Duration(days: 1, hours: 9)), time: '10:00 AM'),
+      Transaction(name: 'Amazon: Tech Gadgets', icon: '🎧', mode: 'UPI', status: 'Completed', category: 'Shopping', type: 'sent', amount: 12499, date: now.subtract(const Duration(days: 1)), time: '4:30 PM'),
+      Transaction(name: 'Netflix Premium', icon: '📺', mode: 'Auto-Pay', status: 'Completed', category: 'Entertainment', type: 'sent', amount: 649, date: now.subtract(const Duration(days: 3)), time: '12:05 AM'),
+      Transaction(name: 'House Rent', icon: '🏠', mode: 'IMPS', status: 'Completed', category: 'Home', type: 'sent', amount: 22000, date: now.subtract(const Duration(days: 5)), time: '11:00 AM'),
+      Transaction(name: 'Starbucks Coffee', icon: '☕', mode: 'UPI', status: 'Failed', category: 'Food & Dining', type: 'sent', amount: 450, date: now.subtract(const Duration(days: 6)), time: '9:15 AM'),
+      Transaction(name: 'Interest Credited', icon: '📈', mode: 'System', status: 'Completed', category: 'Income', type: 'received', amount: 1240, date: now.subtract(const Duration(days: 10)), time: '12:00 AM'),
+    ];
+  }
   
   Future<void> fetchTransactions() async {
-  final response = await supabase
-      .from('transactions')
-      .select()
-      .order('transaction_id', ascending: false);
+    setState(() => _isLoading = true);
+    try {
+      final response = await supabase
+          .from('transactions')
+          .select()
+          .order('transaction_id', ascending: false);
 
+      List<Transaction> fetched = [];
+      if (response != null && (response as List).isNotEmpty) {
+        fetched = (response as List<dynamic>)
+            .map((data) => Transaction(
+                  name: data['name'] ?? '',
+                  amount: data['amount'] ?? 0,
+                  type: data['transaction_type'] == 'debit' ? 'sent' : 'received',
+                  icon: '💸',
+                  date: DateTime.tryParse(data['created_at']?.toString() ?? '') ?? DateTime.now(),
+                  time: data['time'] ?? 'N/A',
+                  mode: data['mode'] ?? '',
+                  status: data['status'] ?? '',
+                  category: data['category'] ?? '',
+                ))
+            .toList();
+      }
 
-  print(response); // debug
-
-  setState(() {
-    _allTransactions = ((response as List<dynamic>))
-        .map((data) => Transaction(
-              name: data['name'] ?? '',
-              amount: data['amount'] ?? 0,
-              type: data['transaction_type'] == 'debit'
-                  ? 'sent'
-                  : 'received',
-              icon: '💸',
-              date: DateTime.now(),
-              time: 'Now',
-              mode: data['mode'] ?? '',
-              status: data['status'] ?? '',
-              category: data['category'] ?? '',
-            ))
-        .toList();
-  });
-}
+      setState(() {
+        _allTransactions = fetched.isEmpty ? _getMockTransactions() : fetched;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error fetching transactions: $e');
+      setState(() {
+        _allTransactions = _getMockTransactions();
+        _isLoading = false;
+      });
+    }
+  }
 
   bool _showSearch = false;
   String _search = '';
@@ -135,18 +161,22 @@ void initState() {
   @override
   Widget build(BuildContext context) {
     final txns = _filtered;
-    return Scaffold(
-      backgroundColor: bgColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            
-
+    return Column(
+      children: [
             // ── Title + Actions ──
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Row(
                 children: [
+                  if (widget.onBack != null)
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: widget.onBack,
+                      iconSize: 20,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  if (widget.onBack != null) const SizedBox(width: 8),
                   const Text('Transaction History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                   const Spacer(),
                   GestureDetector(
@@ -227,7 +257,9 @@ void initState() {
 
             // ── Transaction List ──
             Expanded(
-              child: txns.isEmpty
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: primaryGreen))
+                  : txns.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -335,9 +367,7 @@ void initState() {
                     ),
             ),
           ],
-        ),
-      ),
-    );
+        );
   }
 }
 

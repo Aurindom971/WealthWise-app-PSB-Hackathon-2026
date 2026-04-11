@@ -1,33 +1,6 @@
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-
- @override
-Widget build(BuildContext context) {
-  return MaterialApp(
-    debugShowCheckedModeBanner: false,
-    theme: ThemeData(
-      useMaterial3: false,
-
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF2E9461),
-        primary: const Color(0xFF2E9461),
-        secondary: const Color(0xFF2E9461),
-        background: const Color(0xFFF1FAF6),
-      ),
-
-      scaffoldBackgroundColor: const Color(0xFFF1FAF6),
-      primaryColor: const Color(0xFF2E9461),
-
-      textTheme: GoogleFonts.plusJakartaSansTextTheme(),
-    ),
-
-    home: const SmartLockScreen(), // ⭐ YOU FORGOT THIS
-  );
-}
-
 
 // ─── DATA MODEL ─────────────────────────────────────────────
 class LockFeature {
@@ -46,7 +19,8 @@ class LockFeature {
 
 // ─── MAIN SCREEN ────────────────────────────────────────────
 class SmartLockScreen extends StatefulWidget {
-  const SmartLockScreen({super.key});
+  final VoidCallback? onBack;
+  const SmartLockScreen({super.key, this.onBack});
 
   @override
   State<SmartLockScreen> createState() => _SmartLockScreenState();
@@ -154,294 +128,275 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
     });
   }
 
-  final int _currentNavIndex = 2; // Lock tab active
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── HEADER ──
-              Padding(
-  padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-  child: Stack(
-    alignment: Alignment.center,
-    children: [
-      // 🔙 Back button (left)
-      Row(
-        mainAxisAlignment: MainAxisAlignment.start,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 100),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _iconButton(Icons.arrow_back, cs),
-        ],
-      ),
+          // ── HEADER ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // 🔙 Back button (left)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    GestureDetector(
+                      onTap: widget.onBack,
+                      child: _iconButton(Icons.arrow_back, cs),
+                    ),
+                  ],
+                ),
 
-      // 🎯 PERFECTLY CENTERED TITLE
-      Text(
-        'Smart Lock',
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: cs.onSurface,
-        ),
-      ),
-    ],
-  ),
-),
-
-              // ── LOCK STATUS CARD ──
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color:const Color(0xFF2E9461),
-                    borderRadius: BorderRadius.circular(20),
+                // 🎯 PERFECTLY CENTERED TITLE
+                Text(
+                  'Smart Lock',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: cs.onSurface,
                   ),
-                  child: Stack(
+                ),
+              ],
+            ),
+          ),
+
+          // ── LOCK STATUS CARD ──
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2E9461),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Stack(
+                children: [
+                  // Decorative circles
+                  Positioned(
+                    top: -32,
+                    right: -32,
+                    child: Container(
+                      width: 128,
+                      height: 128,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.1),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -16,
+                    left: -16,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.05),
+                      ),
+                    ),
+                  ),
+                  // Content
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Decorative circles
-                      Positioned(
-                        top: -32,
-                        right: -32,
-                        child: Container(
-                          width: 128,
-                          height: 128,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.1),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: -16,
-                        left: -16,
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.05),
-                          ),
-                        ),
-                      ),
-                      // Content
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Account Status',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.white70,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      _accountLocked ? 'Account Frozen' : 'Account Active',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      _accountLocked
-                                          ? 'All transactions are blocked'
-                                          : 'All services are running normally',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 13,
-                                        color: Colors.white60,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: _handleAccountToggle,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  width: 64,
-                                  height: 64,
-                                  decoration: BoxDecoration(
-                                    color: _accountLocked
-                                        ? cs.error
-                                        : Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Icon(
-                                    _accountLocked
-                                        ? Icons.shield_outlined
-                                        : Icons.shield,
-                                    color: Colors.white,
-                                    size: 28,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              _PulsingDot(
-                                color: _accountLocked ? cs.error : Colors.white,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _accountLocked
-                                      ? 'Protection active — tap shield to unfreeze'
-                                      : 'Tap shield to freeze account',
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Account Status',
                                   style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 11,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w500,
                                     color: Colors.white70,
                                   ),
                                 ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _accountLocked ? 'Account Frozen' : 'Account Active',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _accountLocked ? 'All transactions are blocked' : 'All services are running normally',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    color: Colors.white60,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: _handleAccountToggle,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              width: 64,
+                              height: 64,
+                              decoration: BoxDecoration(
+                                color: _accountLocked ? cs.error : Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                            ],
+                              child: Icon(
+                                _accountLocked ? Icons.shield_outlined : Icons.shield,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          _PulsingDot(
+                            color: _accountLocked ? cs.error : Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _accountLocked ? 'Protection active — tap shield to unfreeze' : 'Tap shield to freeze account',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white70,
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
-
-              // ── EMERGENCY FREEZE BUTTON ──
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _showEmergencySheet(context),
-                    icon: const Icon(Icons.warning_amber_rounded, size: 18),
-                    label: Text(
-                      'Emergency Freeze',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: cs.error,
-                      foregroundColor: cs.onError,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
-              ),
-
-              // ── SECURITY CONTROLS HEADING ──
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                child: Text(
-                  'SECURITY CONTROLS',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF6B7F74),
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-
-              // ── TOGGLE LIST ──
-              ...List.generate(_features.length, (i) {
-                final f = _features[i];
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFFE0E8E4),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: _toggles[f.id]!
-    ? const Color(0xFF2E9461).withOpacity(0.1)
-    : const Color(0xFFEAF3EF),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            f.icon,
-                            
-                            size: 20,
-                            color: _toggles[f.id]!
-    ? const Color(0xFF2E9461)
-    : const Color(0xFF6B7F74),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                f.title,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: cs.onSurface,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                f.description,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12,
-                                  color: const Color(0xFF6B7F74),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Switch.adaptive(
-  value: _toggles[f.id]!,
-  onChanged: (_) => _handleFeatureToggle(f.id),
-
-  activeColor: const Color(0xFF2E9461), // ✅ FORCE GREEN
-  activeTrackColor: const Color(0xFF2E9461).withOpacity(0.4), // ✅ ADD
-),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ],
+            ),
           ),
-        ),
-      ),
 
-      
+          // ── EMERGENCY FREEZE BUTTON ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+            child: SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: () => _showEmergencySheet(context),
+                icon: const Icon(Icons.warning_amber_rounded, size: 18),
+                label: Text(
+                  'Emergency Freeze',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cs.error,
+                  foregroundColor: cs.onError,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ),
+
+          // ── SECURITY CONTROLS HEADING ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+            child: Text(
+              'SECURITY CONTROLS',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF6B7F74),
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+
+          // ── TOGGLE LIST ──
+          ...List.generate(_features.length, (i) {
+            final f = _features[i];
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFFE0E8E4),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: _toggles[f.id]! ? const Color(0xFF2E9461).withOpacity(0.1) : const Color(0xFFEAF3EF),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        f.icon,
+                        size: 20,
+                        color: _toggles[f.id]! ? const Color(0xFF2E9461) : const Color(0xFF6B7F74),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            f.title,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: cs.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            f.description,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              color: const Color(0xFF6B7F74),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: _toggles[f.id]!,
+                      onChanged: (_) => _handleFeatureToggle(f.id),
+                      activeColor: const Color(0xFF2E9461),
+                      activeTrackColor: const Color(0xFF2E9461).withOpacity(0.4),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 
@@ -464,7 +419,6 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
     );
   }
 
-  // ── EMERGENCY FREEZE BOTTOM SHEET ──
   void _showEmergencySheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -480,7 +434,6 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
   }
 }
 
-// ─── PULSING DOT ────────────────────────────────────────────
 class _PulsingDot extends StatefulWidget {
   final Color color;
   const _PulsingDot({required this.color});
@@ -489,8 +442,7 @@ class _PulsingDot extends StatefulWidget {
   State<_PulsingDot> createState() => _PulsingDotState();
 }
 
-class _PulsingDotState extends State<_PulsingDot>
-    with SingleTickerProviderStateMixin {
+class _PulsingDotState extends State<_PulsingDot> with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
 
   @override
@@ -524,7 +476,6 @@ class _PulsingDotState extends State<_PulsingDot>
   }
 }
 
-// ─── EMERGENCY FREEZE SHEET ─────────────────────────────────
 class _EmergencyFreezeSheet extends StatefulWidget {
   final VoidCallback onConfirm;
   const _EmergencyFreezeSheet({required this.onConfirm});
@@ -582,7 +533,6 @@ class _EmergencyFreezeSheetState extends State<_EmergencyFreezeSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -609,8 +559,6 @@ class _EmergencyFreezeSheetState extends State<_EmergencyFreezeSheet> {
             ],
           ),
           const SizedBox(height: 20),
-
-          // Bullet points
           ...bulletPoints.map((text) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
@@ -631,8 +579,6 @@ class _EmergencyFreezeSheetState extends State<_EmergencyFreezeSheet> {
                 ),
               )),
           const SizedBox(height: 12),
-
-          // Hold-to-freeze button
           GestureDetector(
             onLongPressStart: (_) => _startHold(),
             onLongPressEnd: (_) => _stopHold(),
@@ -647,7 +593,6 @@ class _EmergencyFreezeSheetState extends State<_EmergencyFreezeSheet> {
               clipBehavior: Clip.antiAlias,
               child: Stack(
                 children: [
-                  // Progress fill
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 30),
                     width: (MediaQuery.of(context).size.width - 48) *
