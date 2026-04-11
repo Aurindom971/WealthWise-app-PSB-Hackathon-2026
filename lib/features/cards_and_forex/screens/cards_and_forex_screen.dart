@@ -123,102 +123,93 @@ class _CardsAndForexScreenState extends State<CardsAndForexScreen> {
     final List<Map<String, dynamic>> currentTransactions = _activeCardIndex == 0 ? _creditTransactions : _debitTransactions;
     final List<Map<String, dynamic>> displayTransactions = _showAllTransactions ? currentTransactions : currentTransactions.take(3).toList();
 
-    return SingleChildScrollView(
+    return CustomScrollView(
       physics: _isDraggingCard ? const NeverScrollableScrollPhysics() : const BouncingScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Centered Title for this section since we are inside HomeScreen Scaffold
-             Center(
-              child: Text(
-                'Cards & Forex',
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1A3328),
-                ),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 24.0),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              const SizedBox(height: 10),
+              
+              // Animated Card Stack
+              AnimatedCardStack(
+                cards: myCards,
+                maxCardHeight: 210.0,
+                onCardChanged: (index) => setState(() => _activeCardIndex = index),
+                onDragStart: () => setState(() => _isDraggingCard = true),
+                onDragEnd: () => setState(() => _isDraggingCard = false),
               ),
-            ),
-            const SizedBox(height: 20),
-            
-            // Animated Card Stack
-            AnimatedCardStack(
-              cards: myCards,
-              onCardChanged: (index) => setState(() => _activeCardIndex = index),
-              onDragStart: () => setState(() => _isDraggingCard = true),
-              onDragEnd: () => setState(() => _isDraggingCard = false),
-            ),
-            
-            const SizedBox(height: 32),
-            
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                if (widget.showFreezeCard)
+              
+              const SizedBox(height: 32),
+              
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (widget.showFreezeCard)
+                    FeatureActionButton(
+                      icon: Icons.ac_unit_rounded,
+                      label: 'Freeze Card',
+                      onTap: _showFreezeWarning,
+                    ),
                   FeatureActionButton(
-                    icon: Icons.ac_unit_rounded, // Snowflake for "Freeze"
-                    label: 'Freeze Card',
-                    onTap: _showFreezeWarning,
+                    icon: Icons.description_outlined,
+                    label: 'Statement',
+                    onTap: () => _showModal(context, const StatementModal()),
                   ),
-                FeatureActionButton(
-                  icon: Icons.description_outlined,
-                  label: 'Statement',
-                  onTap: () => _showModal(context, const StatementModal()),
-                ),
-                FeatureActionButton(
-                  icon: Icons.settings_outlined,
-                  label: 'Settings',
-                  onTap: () => _showModal(context, const SettingsModal(), isScrollControlled: true),
-                ),
-                FeatureActionButton(
-                  icon: Icons.swap_horiz_rounded,
-                  label: 'Forex',
-                  onTap: () => _showModal(context, const ForexModal()),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 40),
-            
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Latest Transactions',
-                  style: GoogleFonts.inter(
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1A1A1A),
+                  FeatureActionButton(
+                    icon: Icons.settings_outlined,
+                    label: 'Settings',
+                    onTap: () => _showModal(context, const SettingsModal(), isScrollControlled: true),
                   ),
-                ),
-                TextButton(
-                  onPressed: () => setState(() => _showAllTransactions = !_showAllTransactions),
-                  child: Text(
-                    _showAllTransactions ? 'Show Less' : 'See All',
+                  FeatureActionButton(
+                    icon: Icons.swap_horiz_rounded,
+                    label: 'Forex',
+                    onTap: () => _showModal(context, const ForexModal()),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 40),
+              
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Latest Transactions',
                     style: GoogleFonts.inter(
-                      color: const Color(0xFF2ECC71),
+                      fontSize: 19,
                       fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1A1A1A),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
-            ...displayTransactions.map((tx) => TransactionTile(
-              icon: tx['positive'] ? Icons.arrow_forward_rounded : Icons.shopping_bag_outlined,
-              title: tx['title'],
-              subtitle: tx['sub'],
-              amount: tx['amount'],
-              isCompleted: true,
-              isPositive: tx['positive'],
-            )),
-            const SizedBox(height: 20),
-          ],
+                  TextButton(
+                    onPressed: () => setState(() => _showAllTransactions = !_showAllTransactions),
+                    child: Text(
+                      _showAllTransactions ? 'Show Less' : 'See All',
+                      style: GoogleFonts.inter(
+                        color: const Color(0xFF2ECC71),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              
+              ...displayTransactions.map((tx) => TransactionTile(
+                icon: tx['positive'] ? Icons.arrow_forward_rounded : Icons.shopping_bag_outlined,
+                title: tx['title'],
+                subtitle: tx['sub'],
+                amount: tx['amount'],
+                isCompleted: true,
+                isPositive: tx['positive'],
+              )),
+              const SizedBox(height: 40),
+            ]),
+          ),
         ),
-      ),
+      ],
     );
   }
 

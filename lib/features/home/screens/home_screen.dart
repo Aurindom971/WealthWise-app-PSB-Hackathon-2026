@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../cards_and_forex/screens/cards_and_forex_screen.dart';
-
-// ─── PALETTE ─────────────────────────────────────────────────────────────────
-const _kForest = Color(0xFF1A3328);
-const _kMid = Color(0xFF245C3F);
-const _kAccent = Color(0xFF4CAF7A);
-const _kCream = Color(0xFFF2F0EB);
-const _kCard = Color(0xFFFFFFFF);
-const _kSub = Color(0xFF9A9A94);
-const _kInk = Color(0xFF1A1A18);
+import 'package:securewealth_twin/features/cards_and_forex/screens/cards_and_forex_screen.dart';
+import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
+import 'package:securewealth_twin/features/loans/screens/loans_screen.dart';
+import 'package:securewealth_twin/features/insurance/screens/insurance_screen.dart';
 
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
@@ -46,12 +40,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       builder: (ctx) => AlertDialog(
         backgroundColor: kCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Logout', style: TextStyle(color: kForest, fontWeight: FontWeight.bold)),
+        title: Text('Logout', style: TextStyle(color: kForest, fontWeight: FontWeight.bold)),
         content: const Text('Are you sure you want to log out of your secure session?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel', style: TextStyle(color: kSub)),
+            child: Text('Cancel', style: TextStyle(color: kSub)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -82,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         child: Column(children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-            child: _TopBar(
+            child: TopBar(
               onHomeTap: () => setState(() {
                 _isShowingDashboard = true;
                 _isShowingCardsAndForex = false;
@@ -153,10 +147,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 const SizedBox(height: 16),
                 Text(
                   '${titles[_navIdx]} Module',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: kForest),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: kForest),
                 ),
                 const SizedBox(height: 8),
-                const Text('Coming soon to SecureWealth Twin', style: TextStyle(color: kSub)),
+                Text('Coming soon to SecureWealth Twin', style: TextStyle(color: kSub)),
               ],
             ),
           ),
@@ -573,7 +567,7 @@ class _SavingsCard extends StatelessWidget {
       height: 164,
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [kForest, kMid],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -736,7 +730,7 @@ class _AIBanner extends StatelessWidget {
           width: 42,
           height: 42,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
                 colors: [kMid, kAccent],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight),
@@ -876,11 +870,10 @@ class _TileState extends State<_Tile> with SingleTickerProviderStateMixin {
       },
       child: AnimatedBuilder(
         animation: _s,
-        builder: (_, child) =>
-            Transform.scale(scale: _s.value, child: child),
+        builder: (_, child) => Transform.scale(scale: _s.value, child: child),
         child: Container(
           decoration: BoxDecoration(
-            color: _kCard,
+            color: kCard,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -889,74 +882,48 @@ class _TileState extends State<_Tile> with SingleTickerProviderStateMixin {
                   offset: const Offset(0, 5))
             ],
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [widget.d.g1, widget.d.g2],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(17),
-                ),
-                child: Icon(widget.d.icon, size: 26, color: widget.d.ic),
-              ),
-              const SizedBox(height: 9),
-              Text(
-                widget.d.label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: _kInk,
-                    height: 1.3),
-              ),
-            ],
-          ),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onHighlightChanged: (h) => h ? _c.forward() : _c.reverse(),
-            onTap: () {
-              if (widget.d.label == 'Loans') {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const LoansScreen()));
-              } else if (widget.d.label == 'Insurance') {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const InsuranceScreen()));
-              }
-            },
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [widget.d.g1, widget.d.g2],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onHighlightChanged: (h) => h ? _c.forward() : _c.reverse(),
+              onTap: () {
+                if (widget.onTap != null) {
+                  widget.onTap!();
+                } else if (widget.d.label == 'Loans') {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const LoansScreen()));
+                } else if (widget.d.label == 'Insurance') {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const InsuranceScreen()));
+                }
+              },
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [widget.d.g1, widget.d.g2],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(17),
                     ),
-                    borderRadius: BorderRadius.circular(17),
+                    child: Icon(widget.d.icon, size: 26, color: widget.d.ic),
                   ),
-                  child: Icon(widget.d.icon, size: 26, color: widget.d.ic),
-                ),
-                const SizedBox(height: 9),
-                Text(
-                  widget.d.label,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: kInk,
-                      height: 1.3),
-                ),
-              ],
+                  const SizedBox(height: 9),
+                  Text(
+                    widget.d.label.replaceAll('\n', ' '),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: kInk,
+                        height: 1.3),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

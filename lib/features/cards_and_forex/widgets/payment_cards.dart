@@ -27,20 +27,20 @@ class PaymentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 164,
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+      height: 210,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: gradient,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
             color: gradient.first.withOpacity(0.4),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           )
         ],
       ),
@@ -58,13 +58,13 @@ class PaymentCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
           Text(
             number,
             style: TextStyle(
               color: Colors.white.withOpacity(0.65),
-              fontSize: 13,
-              letterSpacing: 2,
+              fontSize: 14,
+              letterSpacing: 2.5,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -82,28 +82,28 @@ class PaymentCard extends StatelessWidget {
                         'AVAILABLE BALANCE',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.5),
-                          fontSize: 9,
+                          fontSize: 10,
                           fontWeight: FontWeight.w700,
-                          letterSpacing: 1.0,
+                          letterSpacing: 1.2,
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 8),
                       GestureDetector(
                         onTap: onToggle,
                         child: Icon(
                           obscured ? Icons.visibility_off_rounded : Icons.visibility_rounded,
                           color: Colors.white.withOpacity(0.7),
-                          size: 14,
+                          size: 16,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 6),
                   Text(
                     obscured ? '₹ ••••••' : balance,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 28,
+                      fontSize: 34,
                       fontWeight: FontWeight.bold,
                       letterSpacing: -0.5,
                     ),
@@ -113,20 +113,20 @@ class PaymentCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                   Text(
+                  Text(
                     holder,
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.8),
-                      fontSize: 12,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   const Text(
                     'VISA',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 14,
+                      fontSize: 18,
                       fontWeight: FontWeight.w900,
                       fontStyle: FontStyle.italic,
                     ),
@@ -135,19 +135,19 @@ class PaymentCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Center(
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white.withOpacity(0.35), size: 14),
-                const SizedBox(width: 4),
+                Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white.withOpacity(0.4), size: 16),
+                const SizedBox(width: 6),
                 Text(
                   'pull down to reveal next',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.35),
-                    fontSize: 9,
-                    letterSpacing: 0.3,
+                    color: Colors.white.withOpacity(0.4),
+                    fontSize: 10,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],
