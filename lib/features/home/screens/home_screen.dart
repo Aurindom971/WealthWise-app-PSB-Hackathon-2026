@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../widgets/home_navigation_widgets.dart';
-import '../../loans/screens/loans_screen.dart';
-import '../../insurance/screens/insurance_screen.dart';
+import '../../cards_and_forex/screens/cards_and_forex_screen.dart';
+
+// ─── PALETTE ─────────────────────────────────────────────────────────────────
+const _kForest = Color(0xFF1A3328);
+const _kMid = Color(0xFF245C3F);
+const _kAccent = Color(0xFF4CAF7A);
+const _kCream = Color(0xFFF2F0EB);
+const _kCard = Color(0xFFFFFFFF);
+const _kSub = Color(0xFF9A9A94);
+const _kInk = Color(0xFF1A1A18);
 
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
@@ -14,6 +21,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _navIdx = 0;
   bool _isShowingDashboard = true; 
+  bool _isShowingCardsAndForex = false;
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fade;
 
@@ -72,12 +80,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       backgroundColor: kCream,
       body: SafeArea(
         child: Column(children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            child: _TopBar(
+              onHomeTap: () => setState(() {
+                _isShowingDashboard = true;
+                _isShowingCardsAndForex = false;
+              }),
+              onLogoutTap: _handleLogout,
+            ),
+          ),
           Expanded(
             child: FadeTransition(
               opacity: _fade,
-              child: _isShowingDashboard 
-                ? _buildDashboard() 
-                : _buildTabContent(),
+              child: _isShowingCardsAndForex 
+                ? CardsAndForexScreen(
+                    showFreezeCard: true, 
+                    onBack: () => setState(() => _isShowingCardsAndForex = false),
+                  )
+                : (_isShowingDashboard 
+                  ? _buildDashboard() 
+                  : _buildTabContent()),
             ),
           ),
           BottomNav(
@@ -85,6 +108,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             onTap: (i) => setState(() {
               _navIdx = i;
               _isShowingDashboard = false;
+              _isShowingCardsAndForex = false;
             }),
           ),
         ]),
@@ -100,17 +124,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           padding: const EdgeInsets.symmetric(horizontal: 18),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              const SizedBox(height: 14),
-              TopBar(
-                onHomeTap: () => setState(() => _isShowingDashboard = true),
-                onLogoutTap: _handleLogout,
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 6),
               const _CardStack(),
               const SizedBox(height: 16),
               const _AIBanner(),
               const SizedBox(height: 22),
-              const _QuickActions(),
+              _QuickActions(
+                onCardsForexTap: () => setState(() => _isShowingCardsAndForex = true),
+              ),
               const SizedBox(height: 28),
             ]),
           ),
@@ -123,13 +144,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final titles = ['Profile', 'Transactions', 'UPI', 'Investments', 'Smart Lock'];
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          child: TopBar(
-            onHomeTap: () => setState(() => _isShowingDashboard = true),
-            onLogoutTap: _handleLogout,
-          ),
-        ),
         Expanded(
           child: Center(
             child: Column(
@@ -774,7 +788,8 @@ class _AIBanner extends StatelessWidget {
 
 // ─── QUICK ACTIONS ────────────────────────────────────────────────────────────
 class _QuickActions extends StatelessWidget {
-  const _QuickActions();
+  final VoidCallback onCardsForexTap;
+  const _QuickActions({required this.onCardsForexTap});
 
   static const _data = [
     _AData(Icons.send_rounded, 'Send /\nTransfer', Color(0xFFE3F5EC), Color(0xFFBBE8D0), Color(0xFF1B7A49)),
@@ -805,7 +820,10 @@ class _QuickActions extends StatelessWidget {
           crossAxisSpacing: 12,
           childAspectRatio: 0.97,
         ),
-        itemBuilder: (_, i) => _Tile(d: _data[i]),
+        itemBuilder: (_, i) => _Tile(
+          d: _data[i],
+          onTap: _data[i].label == 'Cards &\nForex' ? onCardsForexTap : null,
+        ),
       ),
     ]);
   }
@@ -820,7 +838,8 @@ class _AData {
 
 class _Tile extends StatefulWidget {
   final _AData d;
-  const _Tile({required this.d});
+  final VoidCallback? onTap;
+  const _Tile({required this.d, this.onTap});
   @override
   State<_Tile> createState() => _TileState();
 }
@@ -846,20 +865,58 @@ class _TileState extends State<_Tile> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _s,
-      builder: (_, child) =>
-          Transform.scale(scale: _s.value, child: child),
-      child: Container(
-        decoration: BoxDecoration(
-          color: kCard,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-                color: widget.d.ic.withOpacity(0.10),
-                blurRadius: 12,
-                offset: const Offset(0, 5))
-          ],
+    return GestureDetector(
+      onTapDown: (_) => _c.forward(),
+      onTapUp: (_) => _c.reverse(),
+      onTapCancel: () => _c.reverse(),
+      onTap: () {
+        if (widget.onTap != null) {
+          widget.onTap!();
+        }
+      },
+      child: AnimatedBuilder(
+        animation: _s,
+        builder: (_, child) =>
+            Transform.scale(scale: _s.value, child: child),
+        child: Container(
+          decoration: BoxDecoration(
+            color: _kCard,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                  color: widget.d.ic.withOpacity(0.10),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5))
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [widget.d.g1, widget.d.g2],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(17),
+                ),
+                child: Icon(widget.d.icon, size: 26, color: widget.d.ic),
+              ),
+              const SizedBox(height: 9),
+              Text(
+                widget.d.label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: _kInk,
+                    height: 1.3),
+              ),
+            ],
+          ),
         ),
         child: Material(
           color: Colors.transparent,
