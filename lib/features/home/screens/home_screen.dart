@@ -4,6 +4,11 @@ import 'package:securewealth_twin/features/cards_and_forex/screens/cards_and_for
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
 import 'package:securewealth_twin/features/loans/screens/loans_screen.dart';
 import 'package:securewealth_twin/features/insurance/screens/insurance_screen.dart';
+import 'package:securewealth_twin/features/bill_and_recharge/screens/bill_and_recharge_screen.dart';
+import 'package:securewealth_twin/features/bill_and_recharge/models/bill_models.dart';
+import 'package:securewealth_twin/features/bill_and_recharge/screens/utility_payment_screen.dart';
+import 'package:securewealth_twin/features/bill_and_recharge/screens/all_upcoming_bills_screen.dart';
+import 'package:securewealth_twin/features/bill_and_recharge/screens/payment_gateway_screen.dart';
 
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
@@ -16,8 +21,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _navIdx = 0;
   bool _isShowingDashboard = true; 
   bool _isShowingCardsAndForex = false;
+  bool _isShowingBillAndRecharge = false;
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fade;
+
+  // Sub-navigation state for Bill & Recharge
+  BillRechargeSubState _billSubState = BillRechargeSubState.main;
+  UtilityProvider? _selectedUtility;
+  Bill? _selectedBill;
 
   @override
   void initState() {
@@ -80,6 +91,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               onHomeTap: () => setState(() {
                 _isShowingDashboard = true;
                 _isShowingCardsAndForex = false;
+                _isShowingBillAndRecharge = false;
               }),
               onLogoutTap: _handleLogout,
             ),
@@ -92,9 +104,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     showFreezeCard: true, 
                     onBack: () => setState(() => _isShowingCardsAndForex = false),
                   )
-                : (_isShowingDashboard 
-                  ? _buildDashboard() 
-                  : _buildTabContent()),
+                : (_isShowingBillAndRecharge
+                    ? _buildBillAndRechargeContent()
+                    : (_isShowingDashboard 
+                      ? _buildDashboard() 
+                      : _buildTabContent())),
             ),
           ),
           BottomNav(
@@ -103,6 +117,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               _navIdx = i;
               _isShowingDashboard = false;
               _isShowingCardsAndForex = false;
+              _isShowingBillAndRecharge = false;
             }),
           ),
         ]),
@@ -125,6 +140,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               const SizedBox(height: 22),
               _QuickActions(
                 onCardsForexTap: () => setState(() => _isShowingCardsAndForex = true),
+                onBillRechargeTap: () => setState(() => _isShowingBillAndRecharge = true),
               ),
               const SizedBox(height: 28),
             ]),
@@ -132,6 +148,52 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
       ],
     );
+  }
+
+  Widget _buildBillAndRechargeContent() {
+    switch (_billSubState) {
+      case BillRechargeSubState.main:
+        return BillAndRechargeScreen(
+          onBack: () => setState(() => _isShowingBillAndRecharge = false),
+          onSelectUtility: (provider) => setState(() {
+            _selectedUtility = provider;
+            _billSubState = BillRechargeSubState.utilityDetails;
+          }),
+          onViewAllUpcoming: () => setState(() {
+            _billSubState = BillRechargeSubState.upcomingBills;
+          }),
+          onPayBill: (bill) => setState(() {
+            _selectedBill = bill;
+            _billSubState = BillRechargeSubState.paymentGateway;
+          }),
+        );
+      case BillRechargeSubState.utilityDetails:
+        return UtilityPaymentScreen(
+          provider: _selectedUtility!,
+          onBack: () => setState(() => _billSubState = BillRechargeSubState.main),
+          onProceedToPay: (bill) => setState(() {
+            _selectedBill = bill;
+            _billSubState = BillRechargeSubState.paymentGateway;
+          }),
+        );
+      case BillRechargeSubState.upcomingBills:
+        return AllUpcomingBillsScreen(
+          onBack: () => setState(() => _billSubState = BillRechargeSubState.main),
+          onPayBill: (bill) => setState(() {
+            _selectedBill = bill;
+            _billSubState = BillRechargeSubState.paymentGateway;
+          }),
+        );
+      case BillRechargeSubState.paymentGateway:
+        return PaymentGatewayScreen(
+          bill: _selectedBill!,
+          onBack: () => setState(() => _billSubState = BillRechargeSubState.utilityDetails),
+          onSuccess: () => setState(() {
+            _billSubState = BillRechargeSubState.main;
+            _isShowingBillAndRecharge = false; 
+          }),
+        );
+    }
   }
 
   Widget _buildTabContent() {
@@ -783,7 +845,8 @@ class _AIBanner extends StatelessWidget {
 // ─── QUICK ACTIONS ────────────────────────────────────────────────────────────
 class _QuickActions extends StatelessWidget {
   final VoidCallback onCardsForexTap;
-  const _QuickActions({required this.onCardsForexTap});
+  final VoidCallback onBillRechargeTap;
+  const _QuickActions({required this.onCardsForexTap, required this.onBillRechargeTap});
 
   static const _data = [
     _AData(Icons.send_rounded, 'Send /\nTransfer', Color(0xFFE3F5EC), Color(0xFFBBE8D0), Color(0xFF1B7A49)),
@@ -816,7 +879,9 @@ class _QuickActions extends StatelessWidget {
         ),
         itemBuilder: (_, i) => _Tile(
           d: _data[i],
-          onTap: _data[i].label == 'Cards &\nForex' ? onCardsForexTap : null,
+          onTap: _data[i].label == 'Cards &\nForex'
+              ? onCardsForexTap
+              : (_data[i].label == 'Bills &\nRecharge' ? onBillRechargeTap : null),
         ),
       ),
     ]);
