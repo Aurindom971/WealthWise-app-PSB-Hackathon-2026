@@ -1,3 +1,5 @@
+import 'smart_lock_screen.dart';
+import 'transaction_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -137,22 +139,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
         Expanded(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.construction_rounded, size: 60, color: _kAccent.withOpacity(0.3)),
-                const SizedBox(height: 16),
-                Text(
-                  '${titles[_navIdx]} Module',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _kForest),
-                ),
-                const SizedBox(height: 8),
-                const Text('Coming soon to SecureWealth Twin', style: TextStyle(color: _kSub)),
-              ],
-            ),
+  child: _navIdx == 1
+      ? const TransactionScreen()
+      : _navIdx == 4
+          ? const SmartLockScreen()
+          : Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.construction_rounded, size: 60, color: _kAccent.withOpacity(0.3)),
+              const SizedBox(height: 16),
+              Text(
+                '${titles[_navIdx]} Module',
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _kForest),
+              ),
+              const SizedBox(height: 8),
+              const Text('Coming soon to SecureWealth Twin', style: TextStyle(color: _kSub)),
+            ],
           ),
         ),
+),
       ],
     );
   }
