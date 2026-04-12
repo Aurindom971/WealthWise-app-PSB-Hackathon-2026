@@ -9,13 +9,10 @@ import 'application_status_screen.dart';
 class ActiveLoansScreen extends StatelessWidget {
   final VoidCallback onBack;
   final Function(String, String) onViewStatement;
-  final Function(String, String) onTrackStatus;
-
   const ActiveLoansScreen({
     super.key, 
     required this.onBack, 
     required this.onViewStatement,
-    required this.onTrackStatus,
   });
 
   @override
@@ -78,7 +75,6 @@ class ActiveLoansScreen extends StatelessWidget {
                         tenure: '20 months',
                         startDate: 'Jul 2024',
                         onViewStatement: () => onViewStatement('Personal Loan', 'PL-2024-00891'),
-                        onTrackStatus: () => onTrackStatus('Personal Loan', 'PL-2024-00891'),
                       ),
                       const SizedBox(height: 16),
                       ActiveLoanCard(
@@ -94,7 +90,6 @@ class ActiveLoansScreen extends StatelessWidget {
                         tenure: '60 months',
                         startDate: 'Oct 2023',
                         onViewStatement: () => onViewStatement('Car Loan', 'CL-2023-01234'),
-                        onTrackStatus: () => onTrackStatus('Car Loan', 'CL-2023-01234'),
                       ),
                       const SizedBox(height: 16),
                       ActiveLoanCard(
@@ -110,7 +105,6 @@ class ActiveLoansScreen extends StatelessWidget {
                         tenure: '36 months',
                         startDate: 'Jun 2023',
                         onViewStatement: () => onViewStatement('Education Loan', 'EL-2023-00567'),
-                        onTrackStatus: () => onTrackStatus('Education Loan', 'EL-2023-00567'),
                       ),
                       const SizedBox(height: 32),
                     ],

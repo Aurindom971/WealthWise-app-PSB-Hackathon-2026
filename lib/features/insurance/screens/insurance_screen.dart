@@ -118,10 +118,10 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                   children: [
                     // Insurance Header Banner (Loans Style)
                     Container(
-                      margin: const EdgeInsets.fromLTRB(18, 0, 18, 24),
+                      margin: const EdgeInsets.fromLTRB(18, 0, 18, 16),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 24,
+                        horizontal: 18,
+                        vertical: 16,
                       ),
                       decoration: BoxDecoration(
                         color: kMid.withOpacity(0.9),
@@ -140,7 +140,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(10),
+                                padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.15),
                                   shape: BoxShape.circle,
@@ -148,26 +148,26 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                                 child: const Icon(
                                   Icons.shield_outlined,
                                   color: Colors.white,
-                                  size: 24,
+                                  size: 22,
                                 ),
                               ),
-                              const SizedBox(width: 14),
+                              const SizedBox(width: 12),
                               const Text(
                                 'Insurance',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 24,
+                                  fontSize: 22,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
                           const Text(
                             'Protect what matters most with our curated plans',
                             style: TextStyle(
                               color: Colors.white70,
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.w400,
                             ),
                           ),
@@ -191,7 +191,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 18),
                       child: Container(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: kCard,
                           borderRadius: BorderRadius.circular(24),
@@ -221,7 +221,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 16),
                             SizedBox(
                               width: double.infinity,
                               height: 48,
@@ -367,7 +367,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Container(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: kCard,
                           borderRadius: BorderRadius.circular(24),
@@ -671,7 +671,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: kCard,
         borderRadius: BorderRadius.circular(24),
@@ -892,10 +892,10 @@ class _BrowseCategoriesSection extends StatelessWidget {
     Color iconColor,
   ) {
     return Container(
-      width: 190,
-      height: 220,
+      width: 170,
+      height: 200,
       margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: kCard,
         borderRadius: BorderRadius.circular(32),

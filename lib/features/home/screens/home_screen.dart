@@ -139,7 +139,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               _isShowingBillAndRecharge = false;
               _isShowingLoans = false;
             }),
-            onLogoutTap: _handleLogout,
           ),
         ]),
       ),
@@ -243,11 +242,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             _selectedLoanType = type;
             _selectedLoanId = id;
             _loanSubState = LoanSubState.statement;
-          }),
-          onTrackStatus: (type, id) => setState(() {
-            _selectedLoanType = type;
-            _selectedLoanId = id;
-            _loanSubState = LoanSubState.status;
           }),
         );
       case LoanSubState.statement:

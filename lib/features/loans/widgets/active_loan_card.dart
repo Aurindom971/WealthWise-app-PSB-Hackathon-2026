@@ -14,7 +14,6 @@ class ActiveLoanCard extends StatelessWidget {
   final String? tenure;
   final String? startDate;
   final VoidCallback onViewStatement;
-  final VoidCallback? onTrackStatus;
 
   const ActiveLoanCard({
     super.key,
@@ -30,7 +29,6 @@ class ActiveLoanCard extends StatelessWidget {
     this.tenure,
     this.startDate,
     required this.onViewStatement,
-    this.onTrackStatus,
   });
 
   @override
@@ -200,33 +198,6 @@ class ActiveLoanCard extends StatelessWidget {
                   child: const Text('View Statement', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 ),
               ),
-              const SizedBox(height: 10),
-              if (onTrackStatus != null) ...[
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: onTrackStatus,
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: kSub.withOpacity(0.2)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('Track Status',
-                            style: TextStyle(
-                                color: kMid.withOpacity(0.8),
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 6),
-                        Icon(Icons.arrow_forward_ios_rounded,
-                            size: 14, color: kMid.withOpacity(0.8)),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         ],
