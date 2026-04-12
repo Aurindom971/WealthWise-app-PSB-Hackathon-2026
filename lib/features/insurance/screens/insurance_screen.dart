@@ -367,10 +367,10 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Container(
-                        padding: const EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: kCard,
-                          borderRadius: BorderRadius.circular(44),
+                          borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.03),
@@ -436,25 +436,25 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
                             _buildCalcLabel('Age'),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 6),
                             _buildCalInput(_ageController, 'Enter your age'),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
                             _buildCalcLabel('Coverage Amount (₹)'),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 6),
                             _buildCalInput(
                               null,
                               'Enter coverage amount',
                             ), // Placeholder for new field
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
                             _buildCalcLabel('Duration (Years)'),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 6),
                             _buildCalInput(
                               _durationController,
                               'Enter duration in years',
                             ),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 24),
                             if (_calculatedPremium != null) ...[
                               Container(
                                 width: double.infinity,
@@ -490,13 +490,13 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                             ],
                             SizedBox(
                               width: double.infinity,
-                              height: 56,
+                              height: 48,
                               child: ElevatedButton(
                                 onPressed: _calculatePremium,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: kMid,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                                    borderRadius: BorderRadius.circular(24),
                                   ),
                                   elevation: 0,
                                 ),
@@ -504,7 +504,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                                   'Calculate Premium',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 18,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w800,
                                   ),
                                 ),
@@ -615,7 +615,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
 
   Widget _buildConnector() {
     return Container(
-      margin: const EdgeInsets.only(top: 24),
+      margin: const EdgeInsets.only(top: 18),
       width: 20,
       height: 1.5,
       color: Colors.grey.withOpacity(0.3),
@@ -627,7 +627,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
       text,
       style: const TextStyle(
         color: kInk,
-        fontSize: 17,
+        fontSize: 14,
         fontWeight: FontWeight.bold,
       ),
     );
@@ -635,24 +635,26 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
 
   Widget _buildCalInput(TextEditingController? controller, String hint) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
       decoration: BoxDecoration(
         color: const Color(0xFFF2F2F2),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: TextField(
         controller: controller,
         keyboardType: TextInputType.number,
         style: const TextStyle(
           color: kInk,
-          fontSize: 16,
+          fontSize: 15,
           fontWeight: FontWeight.w600,
         ),
         decoration: InputDecoration(
           border: InputBorder.none,
           hintText: hint,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
           hintStyle: TextStyle(
             color: kInk.withOpacity(0.35),
+            fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -669,10 +671,10 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: kCard,
-        borderRadius: BorderRadius.circular(44),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -692,7 +694,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                 title,
                 style: const TextStyle(
                   color: kInk,
-                  fontSize: 22,
+                  fontSize: 18,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
                 ),
@@ -700,25 +702,25 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
               if (isPopular)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+                    horizontal: 12,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF4E5),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Text(
                     'Popular',
                     style: TextStyle(
                       color: Color(0xFFD68E24),
-                      fontSize: 13,
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 6),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
@@ -727,42 +729,42 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                 price,
                 style: const TextStyle(
                   color: Color(0xFFD68E24),
-                  fontSize: 32,
+                  fontSize: 26,
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
               Text(
                 unit,
                 style: TextStyle(
                   color: kInk.withOpacity(0.4),
-                  fontSize: 18,
+                  fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           ...features.map(
             (f) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: kMid, width: 1.5),
+                      border: Border.all(color: kMid, width: 1.2),
                     ),
-                    child: const Icon(Icons.check, color: kMid, size: 14),
+                    child: const Icon(Icons.check, color: kMid, size: 10),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       f,
                       style: TextStyle(
                         color: kInk.withOpacity(0.75),
-                        fontSize: 17,
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                         letterSpacing: -0.2,
                       ),
@@ -772,16 +774,16 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            height: 56,
+            height: 48,
             child: ElevatedButton(
               onPressed: () {},
               style: ElevatedButton.styleFrom(
                 backgroundColor: kMid,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 elevation: 0,
               ),
@@ -789,7 +791,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                 'Buy Now',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -890,13 +892,13 @@ class _BrowseCategoriesSection extends StatelessWidget {
     Color iconColor,
   ) {
     return Container(
-      width: 220,
-      height: 320,
-      margin: const EdgeInsets.only(right: 20),
-      padding: const EdgeInsets.all(28),
+      width: 190,
+      height: 220,
+      margin: const EdgeInsets.only(right: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: kCard,
-        borderRadius: BorderRadius.circular(50),
+        borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.035),
@@ -909,48 +911,50 @@ class _BrowseCategoriesSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 72,
-            height: 72,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: bubbleColor,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: iconColor, size: 32),
+            child: Icon(icon, color: iconColor, size: 24),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 12),
           Text(
             name,
             style: const TextStyle(
               color: kInk,
-              fontSize: 20,
+              fontSize: 16,
               fontWeight: FontWeight.w900,
               height: 1.1,
               letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 4),
           Text(
             desc,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: kInk.withOpacity(0.45),
-              fontSize: 14,
-              height: 1.3,
+              fontSize: 12,
+              height: 1.2,
             ),
           ),
           const Spacer(),
           GestureDetector(
             onTap: () => onExplore(name),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 13),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               decoration: BoxDecoration(
-                color: kMid,
-                borderRadius: BorderRadius.circular(24),
+                color: kMid.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: const Text(
                 'Explore',
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
+                  color: kMid,
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
               ),
