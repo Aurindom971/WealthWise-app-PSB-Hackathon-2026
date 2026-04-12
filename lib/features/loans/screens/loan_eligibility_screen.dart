@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
+import '../widgets/loan_header.dart';
+import '../../home/screens/home_screen.dart';
 
 class LoanEligibilityScreen extends StatefulWidget {
-  const LoanEligibilityScreen({super.key});
+  final VoidCallback onBack;
+  const LoanEligibilityScreen({super.key, required this.onBack});
 
   @override
   State<LoanEligibilityScreen> createState() => _LoanEligibilityScreenState();
@@ -86,104 +89,32 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kCream,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  children: [
-                    _buildStepIndicator(),
-                    const SizedBox(height: 24),
-                    _buildStepContent(),
-                  ],
-                ),
-              ),
-            ),
-            BottomNav(
-              currentIndex: -1,
-              onTap: (i) => Navigator.pop(context),
-            ),
-          ],
+    return Column(
+      children: [
+        LoanHeader(
+          title: 'Eligibility Check',
+          subtitle: 'Instant approval check',
+          icon: Icons.shield_outlined,
+          onBack: widget.onBack,
         ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.only(bottom: 30),
-      decoration: const BoxDecoration(
-        color: kMid,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
+        Expanded(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.all(18),
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
+            child: Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.shield_outlined,
-                      color: Colors.white, size: 28),
-                ),
-                const SizedBox(width: 16),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Check Eligibility',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'Instant approval check in 30 seconds',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
+                _buildStepIndicator(),
+                const SizedBox(height: 24),
+                _buildStepContent(),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
+
 
   Widget _buildStepIndicator() {
     return Container(
