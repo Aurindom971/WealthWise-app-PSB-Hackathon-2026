@@ -29,7 +29,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _navIdx = 0;
-  bool _isShowingDashboard = true; 
+  bool _isShowingDashboard = true;
   bool _isShowingCardsAndForex = false;
   bool _isShowingBillAndRecharge = false;
   late final AnimationController _fadeCtrl;
@@ -139,6 +139,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               _isShowingBillAndRecharge = false;
               _isShowingLoans = false;
             }),
+            onLogoutTap: _handleLogout,
           ),
         ]),
       ),
@@ -374,9 +375,7 @@ class _CardStackState extends State<_CardStack> with TickerProviderStateMixin {
     if (_isReleasing) return;
     setState(() {
       _dragY += details.delta.dy;
-      // Allow drag down up to 150px
       if (_dragY > 150) _dragY = 150;
-      // If drag up beyond small threshold, snap it back (not a swipe up)
       if (_dragY < -20) _dragY = -20;
     });
   }
@@ -432,11 +431,9 @@ class _CardStackState extends State<_CardStack> with TickerProviderStateMixin {
             if (_isReleasing) {
               double t = _releaseCtrl.value;
               if (visualIdx == 0) {
-                // Top card slides down to back
                 dy = _startDragY + (400.0 - _startDragY) * t;
                 opacity = (1.0 - (t * 1.5)).clamp(0.0, 1.0);
               } else if (visualIdx == 1) {
-                // Next card moves up
                 double startDY = _baseOffset - (_startDragY * 0.08);
                 dy = startDY * (1.0 - t);
                 scale = 0.96 + (0.04 * t);
@@ -485,7 +482,6 @@ class _CardStackState extends State<_CardStack> with TickerProviderStateMixin {
     );
   }
 }
-
 
 class _LoanCard extends StatelessWidget {
   final bool obscured;
