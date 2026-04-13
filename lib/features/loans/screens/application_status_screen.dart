@@ -1,51 +1,50 @@
 import 'package:flutter/material.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
-import 'loan_statement_screen.dart';
+import '../../home/screens/home_screen.dart';
+import '../widgets/loan_header.dart';
 
 class ApplicationStatusScreen extends StatelessWidget {
   final String loanType;
   final String loanId;
+  final VoidCallback onBack;
 
   const ApplicationStatusScreen({
     super.key,
     required this.loanType,
     required this.loanId,
+    required this.onBack,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kCream,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(18),
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Track Your Application',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: kInk),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTrackerCard(),
-                    const SizedBox(height: 32),
-                    _buildBottomButton(context),
-                  ],
-                ),
-              ),
-            ),
-            BottomNav(
-              currentIndex: -1,
-              onTap: (i) => Navigator.pop(context),
-            ),
-          ],
+    return Column(
+      children: [
+        LoanHeader(
+          title: 'Application Status',
+          subtitle: loanType,
+          icon: Icons.analytics_outlined,
+          onBack: onBack,
         ),
-      ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(18),
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Track Your Application',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: kInk),
+                ),
+                const SizedBox(height: 16),
+                _buildTrackerCard(),
+                const SizedBox(height: 32),
+                _buildBottomButton(context),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -207,17 +206,7 @@ class ApplicationStatusScreen extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => LoanStatementScreen(
-                loanType: loanType,
-                loanId: loanId,
-              ),
-            ),
-          );
-        },
+        onPressed: onBack,
         style: OutlinedButton.styleFrom(
           side: BorderSide(color: kSub.withValues(alpha: 0.2)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -228,11 +217,12 @@ class ApplicationStatusScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              'View Loan Details',
+              'Back to Dashboard',
               style: TextStyle(color: kMid, fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(width: 8),
             Icon(Icons.arrow_forward_ios_rounded, size: 14, color: kMid.withValues(alpha: 0.8)),
+            Icon(Icons.arrow_back_ios_rounded, size: 14, color: kMid.withOpacity(0.8)),
           ],
         ),
       ),

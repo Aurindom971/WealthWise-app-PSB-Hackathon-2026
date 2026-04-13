@@ -5,8 +5,6 @@ class AnimatedCardStack extends StatefulWidget {
   final double maxCardHeight;
   final double headroom;
   final Function(int)? onCardChanged;
-  final VoidCallback? onDragStart;
-  final VoidCallback? onDragEnd;
 
   const AnimatedCardStack({
     super.key,
@@ -14,8 +12,6 @@ class AnimatedCardStack extends StatefulWidget {
     this.maxCardHeight = 164.0,
     this.headroom = 36.0,
     this.onCardChanged,
-    this.onDragStart,
-    this.onDragEnd,
   });
 
   @override
@@ -71,12 +67,11 @@ class _AnimatedCardStackState extends State<AnimatedCardStack> with TickerProvid
     super.dispose();
   }
 
-  void _onPanStart(DragStartDetails details) {
+  void _onVerticalDragStart(DragStartDetails details) {
     if (_isReleasing || _snapCtrl.isAnimating) return;
-    widget.onDragStart?.call();
   }
 
-  void _onPanUpdate(DragUpdateDetails details) {
+  void _onVerticalDragUpdate(DragUpdateDetails details) {
     if (_isReleasing || _snapCtrl.isAnimating) return;
     setState(() {
       double resistance = 1.0 - (_dragY / 300.0).clamp(0.0, 0.8);
@@ -85,8 +80,7 @@ class _AnimatedCardStackState extends State<AnimatedCardStack> with TickerProvid
     });
   }
 
-  void _onPanEnd(DragEndDetails details) {
-    widget.onDragEnd?.call();
+  void _onVerticalDragEnd(DragEndDetails details) {
     if (_isReleasing || _snapCtrl.isAnimating) return;
 
     if (_dragY > 60 || details.velocity.pixelsPerSecond.dy > 300) {
@@ -104,9 +98,10 @@ class _AnimatedCardStackState extends State<AnimatedCardStack> with TickerProvid
   Widget build(BuildContext context) {
     int cardCount = widget.cards.length;
     return GestureDetector(
-      onPanStart: _onPanStart,
-      onPanUpdate: _onPanUpdate,
-      onPanEnd: _onPanEnd,
+      behavior: HitTestBehavior.opaque,
+      onVerticalDragStart: _onVerticalDragStart,
+      onVerticalDragUpdate: _onVerticalDragUpdate,
+      onVerticalDragEnd: _onVerticalDragEnd,
       child: Container(
         color: Colors.transparent,
         height: widget.maxCardHeight + widget.headroom,

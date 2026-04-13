@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import '../../home/screens/home_screen.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
 import '../../home/screens/notifications_screen.dart';
 import '../widgets/active_loan_card.dart';
@@ -10,7 +11,10 @@ import 'apply_loan_screen.dart';
 import 'compare_loans_screen.dart';
 
 class LoansScreen extends StatefulWidget {
-  const LoansScreen({super.key});
+  final VoidCallback onBack;
+  final Function(LoanSubState, {String? loanType, String? loanId}) onNavigate;
+
+  const LoansScreen({super.key, required this.onBack, required this.onNavigate});
 
   @override
   State<LoansScreen> createState() => _LoansScreenState();
@@ -158,16 +162,22 @@ class _LoansScreenState extends State<LoansScreen> {
             ),
             
             Expanded(
+    return Container(
+      color: kCream,
+      child: Column(
+        children: [
+          Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Column(
                   children: [
-                    const _EligibilityBanner(),
-                    const _ActiveLoansSection(),
-                    const _AvailableOptionsSection(),
-                    const _CompareOptionsCard(),
+                    _EligibilityBanner(onNavigate: widget.onNavigate),
+                    const SizedBox(height: 24),
+                    _ActiveLoansSection(onNavigate: widget.onNavigate),
+                    const SizedBox(height: 24),
+                    _AvailableOptionsSection(onNavigate: widget.onNavigate),
+                    _CompareOptionsCard(onNavigate: widget.onNavigate),
                     
-                    // Payment Planning Section with controllers
                     _PaymentPlanningSection(
                       amtController: _amtController,
                       tenureController: _tenureController,
@@ -186,24 +196,16 @@ class _LoansScreenState extends State<LoansScreen> {
               ),
             ),
             
-            // Sticky Apply Button above Bottom Nav
-            const _StickyApplyButton(),
-            
-            // Bottom Nav matching Home
-            BottomNav(
-              currentIndex: -1,
-              onTap: (i) => Navigator.pop(context),
-            ),
-          ],
-        ),
+          _StickyApplyButton(onNavigate: widget.onNavigate),
+        ],
       ),
     );
   }
 }
 
-// ─── ELIGIBILITY BANNER ───────────────────────────────────────────────────────
 class _EligibilityBanner extends StatelessWidget {
-  const _EligibilityBanner();
+  final Function(LoanSubState, {String? loanType, String? loanId}) onNavigate;
+  const _EligibilityBanner({required this.onNavigate});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -239,10 +241,7 @@ class _EligibilityBanner extends StatelessWidget {
             ),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const LoanEligibilityScreen()),
-            ),
+            onPressed: () => onNavigate(LoanSubState.eligibility),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: kMid,
@@ -264,9 +263,9 @@ class _EligibilityBanner extends StatelessWidget {
   }
 }
 
-// ─── ACTIVE LOANS SECTION ───────────────────────────────────────────────────
 class _ActiveLoansSection extends StatelessWidget {
-  const _ActiveLoansSection();
+  final Function(LoanSubState, {String? loanType, String? loanId}) onNavigate;
+  const _ActiveLoansSection({required this.onNavigate});
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -283,10 +282,7 @@ class _ActiveLoansSection extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       color: kInk)),
               TextButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ActiveLoansScreen()),
-                ),
+                onPressed: () => onNavigate(LoanSubState.activeLoans),
                 child: const Row(
                   children: [
                     Text('View All',
@@ -310,11 +306,10 @@ class _ActiveLoansSection extends StatelessWidget {
             nextDue: '5 Apr 2026',
             paidText: '9 of 20 EMIs paid',
             progress: 0.45,
-            onViewStatement: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const LoanStatementScreen(
-                      loanType: 'Personal Loan', loanId: 'PL-2024-00891')),
+            onViewStatement: () => onNavigate(
+              LoanSubState.statement,
+              loanType: 'Personal Loan',
+              loanId: 'PL-2024-00891',
             ),
           ),
           const SizedBox(height: 16),
@@ -327,11 +322,10 @@ class _ActiveLoansSection extends StatelessWidget {
             nextDue: '10 Apr 2026',
             paidText: '18 of 60 EMIs paid',
             progress: 0.30,
-            onViewStatement: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) => const LoanStatementScreen(
-                      loanType: 'Car Loan', loanId: 'CL-2023-01234')),
+            onViewStatement: () => onNavigate(
+              LoanSubState.statement,
+              loanType: 'Car Loan',
+              loanId: 'CL-2023-01234',
             ),
           ),
           const SizedBox(height: 24),
@@ -341,11 +335,9 @@ class _ActiveLoansSection extends StatelessWidget {
   }
 }
 
-// (Removed _ActiveLoanCard and _InfoBox as they are now in a separate file)
-
-// ─── AVAILABLE OPTIONS SECTION ────────────────────────────────────────────────
 class _AvailableOptionsSection extends StatelessWidget {
-  const _AvailableOptionsSection();
+  final Function(LoanSubState, {String? loanType, String? loanId}) onNavigate;
+  const _AvailableOptionsSection({required this.onNavigate});
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -355,8 +347,8 @@ class _AvailableOptionsSection extends StatelessWidget {
         children: [
           const Text('Available Loan Options', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kInk)),
           const SizedBox(height: 16),
-          const _LoanOptionCard(
-            type: 'Personal Loan',
+          _LoanOptionCard(
+            title: 'Personal Loan',
             desc: 'Quick funds for your personal needs',
             emiStart: '₹8,850/month',
             amount: '₹5 Lakh',
@@ -364,10 +356,11 @@ class _AvailableOptionsSection extends StatelessWidget {
             tag: 'Best Offer',
             tagColor: Colors.orange,
             icon: Icons.person_outline,
+            onNavigate: onNavigate,
           ),
           const SizedBox(height: 16),
-          const _LoanOptionCard(
-            type: 'Home Loan',
+          _LoanOptionCard(
+            title: 'Home Loan',
             desc: 'Fulfill your dream of owning a home',
             emiStart: '₹7,689/month',
             amount: '₹50 Lakh',
@@ -375,19 +368,21 @@ class _AvailableOptionsSection extends StatelessWidget {
             tag: 'Popular',
             tagColor: Colors.orangeAccent,
             icon: Icons.home_outlined,
+            onNavigate: onNavigate,
           ),
           const SizedBox(height: 16),
-          const _LoanOptionCard(
-            type: 'Education Loan',
+          _LoanOptionCard(
+            title: 'Education Loan',
             desc: 'Invest in your future education',
             emiStart: '₹12,668/month',
             amount: '₹10 Lakh',
             interest: '9.0% p.a.',
             icon: Icons.school_outlined,
+            onNavigate: onNavigate,
           ),
           const SizedBox(height: 16),
-          const _LoanOptionCard(
-            type: 'Car Loan',
+          _LoanOptionCard(
+            title: 'Car Loan',
             desc: 'Drive home your dream car today',
             emiStart: '₹10,455/month',
             amount: '₹8 Lakh',
@@ -395,6 +390,7 @@ class _AvailableOptionsSection extends StatelessWidget {
             tag: 'Low Rate',
             tagColor: Colors.redAccent,
             icon: Icons.directions_car_outlined,
+            onNavigate: onNavigate,
           ),
           const SizedBox(height: 24),
         ],
@@ -404,7 +400,7 @@ class _AvailableOptionsSection extends StatelessWidget {
 }
 
 class _LoanOptionCard extends StatelessWidget {
-  final String type;
+  final String title;
   final String desc;
   final String emiStart;
   final String amount;
@@ -412,8 +408,19 @@ class _LoanOptionCard extends StatelessWidget {
   final String? tag;
   final Color? tagColor;
   final IconData icon;
+  final Function(LoanSubState, {String? loanType, String? loanId}) onNavigate;
 
-  const _LoanOptionCard({required this.type, required this.desc, required this.emiStart, required this.amount, required this.interest, this.tag, this.tagColor, required this.icon});
+  const _LoanOptionCard({
+    required this.title, 
+    required this.desc, 
+    required this.emiStart, 
+    required this.amount, 
+    required this.interest, 
+    this.tag, 
+    this.tagColor, 
+    required this.icon,
+    required this.onNavigate,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -441,7 +448,7 @@ class _LoanOptionCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(type, style: const TextStyle(color: kInk, fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(title, style: const TextStyle(color: kInk, fontSize: 16, fontWeight: FontWeight.bold)),
                     Text(desc, style: const TextStyle(color: kSub, fontSize: 13)),
                   ],
                 ),
@@ -475,11 +482,9 @@ class _LoanOptionCard extends StatelessWidget {
                 ],
               ),
               ElevatedButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ApplyLoanScreen(initialLoanType: type),
-                  ),
+                onPressed: () => onNavigate(
+                  LoanSubState.apply,
+                  loanType: title,
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kMid,
@@ -521,7 +526,8 @@ class _AmountBox extends StatelessWidget {
 
 // ─── COMPARE OPTIONS CARD ─────────────────────────────────────────────────────
 class _CompareOptionsCard extends StatelessWidget {
-  const _CompareOptionsCard();
+  final Function(LoanSubState, {String? loanType, String? loanId}) onNavigate;
+  const _CompareOptionsCard({required this.onNavigate});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -552,12 +558,7 @@ class _CompareOptionsCard extends StatelessWidget {
             ),
           ),
           OutlinedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CompareLoansScreen()),
-              );
-            },
+            onPressed: () => onNavigate(LoanSubState.compare),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: kInk.withValues(alpha: 0.2)),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -814,6 +815,8 @@ class _TrackApplicationSectionState extends State<_TrackApplicationSection> {
         color: kCard,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: kMid.withValues(alpha: 0.1)),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: kMid.withOpacity(0.1)),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
@@ -826,7 +829,7 @@ class _TrackApplicationSectionState extends State<_TrackApplicationSection> {
               _isExpanded = !_isExpanded;
               if (!_isExpanded) _selectedAppIndex = null;
             }),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(24),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               child: Row(
@@ -1106,7 +1109,8 @@ class _StatusStep extends StatelessWidget {
 
 // ─── STICKY APPLY BUTTON ─────────────────────────────────────────────────────
 class _StickyApplyButton extends StatelessWidget {
-  const _StickyApplyButton();
+  final Function(LoanSubState, {String? loanType, String? loanId}) onNavigate;
+  const _StickyApplyButton({required this.onNavigate});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1119,10 +1123,7 @@ class _StickyApplyButton extends StatelessWidget {
         width: double.infinity,
         height: 56,
         child: ElevatedButton(
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ApplyLoanScreen()),
-          ),
+          onPressed: () => onNavigate(LoanSubState.apply),
           style: ElevatedButton.styleFrom(
             backgroundColor: kMid,
             foregroundColor: Colors.white,

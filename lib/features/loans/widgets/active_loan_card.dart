@@ -14,7 +14,6 @@ class ActiveLoanCard extends StatelessWidget {
   final String? tenure;
   final String? startDate;
   final VoidCallback onViewStatement;
-  final VoidCallback? onTrackStatus;
 
   const ActiveLoanCard({
     super.key,
@@ -30,7 +29,6 @@ class ActiveLoanCard extends StatelessWidget {
     this.tenure,
     this.startDate,
     required this.onViewStatement,
-    this.onTrackStatus,
   });
 
   @override

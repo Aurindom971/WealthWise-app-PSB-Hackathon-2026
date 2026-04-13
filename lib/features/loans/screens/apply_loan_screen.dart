@@ -1,10 +1,14 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
+import 'dart:math';
 import '../../home/widgets/home_navigation_widgets.dart';
+import '../../home/screens/home_screen.dart';
+import '../widgets/loan_header.dart';
 
 class ApplyLoanScreen extends StatefulWidget {
   final String? initialLoanType;
-  const ApplyLoanScreen({super.key, this.initialLoanType});
+  final VoidCallback onBack;
+  final VoidCallback onSuccess;
+  const ApplyLoanScreen({super.key, this.initialLoanType, required this.onBack, required this.onSuccess});
 
   @override
   State<ApplyLoanScreen> createState() => _ApplyLoanScreenState();
@@ -119,49 +123,13 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kCream,
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  children: [
-                    if (_currentStep < 4) ...[
-                      _buildStepIndicator(),
-                      const SizedBox(height: 24),
-                    ],
-                    _buildStepContent(),
-                  ],
-                ),
-              ),
-            ),
-            if (_currentStep < 4)
-              BottomNav(
-                currentIndex: -1,
-                onTap: (i) => Navigator.pop(context),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.only(bottom: 30),
-      decoration: const BoxDecoration(
-        color: kMid,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
+    return Column(
+      children: [
+        LoanHeader(
+          title: 'Loan Application',
+          subtitle: 'Apply for a new loan',
+          icon: Icons.assignment_outlined,
+          onBack: widget.onBack,
         ),
       ),
       child: Column(
@@ -183,8 +151,12 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
+        Expanded(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.all(18),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'Apply for Loan',
@@ -203,13 +175,19 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
                     fontSize: 14,
                   ),
                 ),
+                if (_currentStep < 4) ...[
+                  _buildStepIndicator(),
+                  const SizedBox(height: 24),
+                ],
+                _buildStepContent(),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
+
 
   Widget _buildStepIndicator() {
     return Container(
@@ -629,19 +607,19 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
             style: TextStyle(fontSize: 12, color: kSub),
           ),
           const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kMid,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              ),
-              child: const Text('Back to Home', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: widget.onBack,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kMid,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
+            child: const Text('Back to Home', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           ),
+        ),
         ],
       ),
     );

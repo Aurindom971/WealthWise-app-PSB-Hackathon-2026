@@ -1,3 +1,5 @@
+import 'smart_lock_screen.dart';
+import 'transaction_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:securewealth_twin/features/cards_and_forex/screens/cards_and_forex_screen.dart';
@@ -5,6 +7,19 @@ import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.
 import 'package:securewealth_twin/features/loans/screens/loans_screen.dart';
 import 'package:securewealth_twin/features/insurance/screens/insurance_screen.dart';
 import 'package:securewealth_twin/features/home/screens/notifications_screen.dart';
+import 'package:securewealth_twin/features/bill_and_recharge/screens/bill_and_recharge_screen.dart';
+import 'package:securewealth_twin/features/bill_and_recharge/models/bill_models.dart';
+import 'package:securewealth_twin/features/bill_and_recharge/screens/utility_payment_screen.dart';
+import 'package:securewealth_twin/features/bill_and_recharge/screens/all_upcoming_bills_screen.dart';
+import 'package:securewealth_twin/features/bill_and_recharge/screens/payment_gateway_screen.dart';
+import 'package:securewealth_twin/features/loans/screens/loan_eligibility_screen.dart';
+import 'package:securewealth_twin/features/loans/screens/loan_statement_screen.dart';
+import 'package:securewealth_twin/features/loans/screens/active_loans_screen.dart';
+import 'package:securewealth_twin/features/loans/screens/apply_loan_screen.dart';
+import 'package:securewealth_twin/features/loans/screens/compare_loans_screen.dart';
+import 'package:securewealth_twin/features/loans/screens/application_status_screen.dart';
+
+enum LoanSubState { main, eligibility, activeLoans, statement, apply, compare, status }
 
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
@@ -15,10 +30,22 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _navIdx = 0;
-  bool _isShowingDashboard = true; 
+  bool _isShowingDashboard = true;
   bool _isShowingCardsAndForex = false;
+  bool _isShowingBillAndRecharge = false;
   late final AnimationController _fadeCtrl;
   late final Animation<double> _fade;
+
+  // Sub-navigation state for Bill & Recharge
+  BillRechargeSubState _billSubState = BillRechargeSubState.main;
+  UtilityProvider? _selectedUtility;
+  Bill? _selectedBill;
+
+  // Sub-navigation state for Loans
+  bool _isShowingLoans = false;
+  LoanSubState _loanSubState = LoanSubState.main;
+  String? _selectedLoanType;
+  String? _selectedLoanId;
 
   @override
   void initState() {
@@ -81,6 +108,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               onHomeTap: () => setState(() {
                 _isShowingDashboard = true;
                 _isShowingCardsAndForex = false;
+                _isShowingBillAndRecharge = false;
+                _isShowingLoans = false;
               }),
               onLogoutTap: _handleLogout,
               onNotificationTap: () => showNotifications(context),
@@ -94,9 +123,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     showFreezeCard: true, 
                     onBack: () => setState(() => _isShowingCardsAndForex = false),
                   )
-                : (_isShowingDashboard 
-                  ? _buildDashboard() 
-                  : _buildTabContent()),
+                : (_isShowingBillAndRecharge
+                    ? _buildBillAndRechargeContent()
+                    : (_isShowingLoans
+                        ? _buildLoansContent()
+                        : (_isShowingDashboard 
+                          ? _buildDashboard() 
+                          : _buildTabContent()))),
             ),
           ),
           BottomNav(
@@ -105,6 +138,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               _navIdx = i;
               _isShowingDashboard = false;
               _isShowingCardsAndForex = false;
+              _isShowingBillAndRecharge = false;
+              _isShowingLoans = false;
             }),
           ),
         ]),
@@ -127,6 +162,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               const SizedBox(height: 22),
               _QuickActions(
                 onCardsForexTap: () => setState(() => _isShowingCardsAndForex = true),
+                onBillRechargeTap: () => setState(() => _isShowingBillAndRecharge = true),
+                onLoansTap: () => setState(() {
+                  _isShowingLoans = true;
+                  _loanSubState = LoanSubState.main;
+                }),
               ),
               const SizedBox(height: 28),
             ]),
@@ -136,7 +176,111 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildBillAndRechargeContent() {
+    switch (_billSubState) {
+      case BillRechargeSubState.main:
+        return BillAndRechargeScreen(
+          onBack: () => setState(() => _isShowingBillAndRecharge = false),
+          onSelectUtility: (provider) => setState(() {
+            _selectedUtility = provider;
+            _billSubState = BillRechargeSubState.utilityDetails;
+          }),
+          onViewAllUpcoming: () => setState(() {
+            _billSubState = BillRechargeSubState.upcomingBills;
+          }),
+          onPayBill: (bill) => setState(() {
+            _selectedBill = bill;
+            _billSubState = BillRechargeSubState.paymentGateway;
+          }),
+        );
+      case BillRechargeSubState.utilityDetails:
+        return UtilityPaymentScreen(
+          provider: _selectedUtility!,
+          onBack: () => setState(() => _billSubState = BillRechargeSubState.main),
+          onProceedToPay: (bill) => setState(() {
+            _selectedBill = bill;
+            _billSubState = BillRechargeSubState.paymentGateway;
+          }),
+        );
+      case BillRechargeSubState.upcomingBills:
+        return AllUpcomingBillsScreen(
+          onBack: () => setState(() => _billSubState = BillRechargeSubState.main),
+          onPayBill: (bill) => setState(() {
+            _selectedBill = bill;
+            _billSubState = BillRechargeSubState.paymentGateway;
+          }),
+        );
+      case BillRechargeSubState.paymentGateway:
+        return PaymentGatewayScreen(
+          bill: _selectedBill!,
+          onBack: () => setState(() => _billSubState = BillRechargeSubState.utilityDetails),
+          onSuccess: () => setState(() {
+            _billSubState = BillRechargeSubState.main;
+            _isShowingBillAndRecharge = false; 
+          }),
+        );
+    }
+  }
+
+  Widget _buildLoansContent() {
+    switch (_loanSubState) {
+      case LoanSubState.main:
+        return LoansScreen(
+          onBack: () => setState(() => _isShowingLoans = false),
+          onNavigate: (state, {loanType, loanId}) => setState(() {
+            _loanSubState = state as LoanSubState;
+            if (loanType != null) _selectedLoanType = loanType;
+            if (loanId != null) _selectedLoanId = loanId;
+          }),
+        );
+      case LoanSubState.eligibility:
+        return LoanEligibilityScreen(
+          onBack: () => setState(() => _loanSubState = LoanSubState.main),
+        );
+      case LoanSubState.activeLoans:
+        return ActiveLoansScreen(
+          onBack: () => setState(() => _loanSubState = LoanSubState.main),
+          onViewStatement: (type, id) => setState(() {
+            _selectedLoanType = type;
+            _selectedLoanId = id;
+            _loanSubState = LoanSubState.statement;
+          }),
+        );
+      case LoanSubState.statement:
+        return LoanStatementScreen(
+          loanType: _selectedLoanType ?? 'Personal Loan',
+          loanId: _selectedLoanId ?? 'PL-000',
+          onBack: () => setState(() => _loanSubState = LoanSubState.activeLoans),
+        );
+      case LoanSubState.apply:
+        return ApplyLoanScreen(
+          initialLoanType: _selectedLoanType,
+          onBack: () => setState(() => _loanSubState = LoanSubState.main),
+          onSuccess: () => setState(() {
+            _loanSubState = LoanSubState.status;
+          }),
+        );
+      case LoanSubState.compare:
+        return CompareLoansScreen(
+          onBack: () => setState(() => _loanSubState = LoanSubState.main),
+          onApply: (type) => setState(() {
+            _selectedLoanType = type;
+            _loanSubState = LoanSubState.apply;
+          }),
+        );
+      case LoanSubState.status:
+        return ApplicationStatusScreen(
+          loanType: _selectedLoanType ?? 'Loan',
+          loanId: _selectedLoanId ?? '',
+          onBack: () => setState(() => _loanSubState = LoanSubState.main),
+        );
+    }
+  }
+
   Widget _buildTabContent() {
+    if (_navIdx == 1) return TransactionScreen(onBack: () => setState(() => _isShowingDashboard = true));
+    if (_navIdx == 4) return SmartLockScreen(onBack: () => setState(() => _isShowingDashboard = true));
+
     final titles = ['Profile', 'Transactions', 'UPI', 'Investments', 'Smart Lock'];
     return Column(
       children: [
@@ -219,20 +363,20 @@ class _CardStackState extends State<_CardStack> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  void _onPanStart(DragStartDetails details) {
+  void _onVerticalDragStart(DragStartDetails details) {
     if (_isReleasing || _snapCtrl.isAnimating) return;
   }
 
-  void _onPanUpdate(DragUpdateDetails details) {
-    if (_isReleasing || _snapCtrl.isAnimating) return;
+  void _onVerticalDragUpdate(DragUpdateDetails details) {
+    if (_isReleasing) return;
     setState(() {
-      double resistance = 1.0 - (_dragY / 300.0).clamp(0.0, 0.8);
-      _dragY += details.delta.dy * resistance * 0.85;
-      if (_dragY < 0) _dragY = 0;
+      _dragY += details.delta.dy;
+      if (_dragY > 150) _dragY = 150;
+      if (_dragY < -20) _dragY = -20;
     });
   }
 
-  void _onPanEnd(DragEndDetails details) {
+  void _onVerticalDragEnd(DragEndDetails details) {
     if (_isReleasing || _snapCtrl.isAnimating) return;
 
     if (_dragY > 60 || details.velocity.pixelsPerSecond.dy > 300) {
@@ -262,9 +406,10 @@ class _CardStackState extends State<_CardStack> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onPanStart: _onPanStart,
-      onPanUpdate: _onPanUpdate,
-      onPanEnd: _onPanEnd,
+      behavior: HitTestBehavior.opaque,
+      onVerticalDragStart: _onVerticalDragStart,
+      onVerticalDragUpdate: _onVerticalDragUpdate,
+      onVerticalDragEnd: _onVerticalDragEnd,
       child: Container(
         color: Colors.transparent,
         height: _maxCardHeight + _headroom,
@@ -282,11 +427,9 @@ class _CardStackState extends State<_CardStack> with TickerProviderStateMixin {
             if (_isReleasing) {
               double t = _releaseCtrl.value;
               if (visualIdx == 0) {
-                // Top card slides down to back
                 dy = _startDragY + (400.0 - _startDragY) * t;
                 opacity = (1.0 - (t * 1.5)).clamp(0.0, 1.0);
               } else if (visualIdx == 1) {
-                // Next card moves up
                 double startDY = _baseOffset - (_startDragY * 0.08);
                 dy = startDY * (1.0 - t);
                 scale = 0.96 + (0.04 * t);
@@ -335,7 +478,6 @@ class _CardStackState extends State<_CardStack> with TickerProviderStateMixin {
     );
   }
 }
-
 
 class _LoanCard extends StatelessWidget {
   final bool obscured;
@@ -785,7 +927,9 @@ class _AIBanner extends StatelessWidget {
 // ─── QUICK ACTIONS ────────────────────────────────────────────────────────────
 class _QuickActions extends StatelessWidget {
   final VoidCallback onCardsForexTap;
-  const _QuickActions({required this.onCardsForexTap});
+  final VoidCallback onBillRechargeTap;
+  final VoidCallback onLoansTap;
+  const _QuickActions({required this.onCardsForexTap, required this.onBillRechargeTap, required this.onLoansTap});
 
   static const _data = [
     _AData(Icons.send_rounded, 'Send /\nTransfer', Color(0xFFE3F5EC), Color(0xFFBBE8D0), Color(0xFF1B7A49)),
@@ -818,7 +962,11 @@ class _QuickActions extends StatelessWidget {
         ),
         itemBuilder: (_, i) => _Tile(
           d: _data[i],
-          onTap: _data[i].label == 'Cards &\nForex' ? onCardsForexTap : null,
+          onTap: _data[i].label == 'Cards &\nForex'
+              ? onCardsForexTap
+              : (_data[i].label == 'Bills &\nRecharge' 
+                ? onBillRechargeTap 
+                : (_data[i].label == 'Loans' ? onLoansTap : null)),
         ),
       ),
     ]);
