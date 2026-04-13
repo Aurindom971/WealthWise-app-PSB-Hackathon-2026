@@ -94,7 +94,7 @@ class _SettingsModalState extends State<SettingsModal> {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: isDomestic ? [
                           BoxShadow(
-                            color: const Color(0xFF2ECC71).withOpacity(0.3),
+                            color: const Color(0xFF2ECC71).withValues(alpha: 0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           )
@@ -123,7 +123,7 @@ class _SettingsModalState extends State<SettingsModal> {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: !isDomestic ? [
                           BoxShadow(
-                            color: const Color(0xFF2ECC71).withOpacity(0.3),
+                            color: const Color(0xFF2ECC71).withValues(alpha: 0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           )
@@ -225,7 +225,7 @@ class _SettingsModalState extends State<SettingsModal> {
         border: Border.all(color: Colors.grey.shade100),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -284,7 +284,7 @@ class _SettingsModalState extends State<SettingsModal> {
               thumbColor: Colors.white,
               trackHeight: 6,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10, elevation: 5),
-              overlayColor: const Color(0xFF2ECC71).withOpacity(0.1),
+              overlayColor: const Color(0xFF2ECC71).withValues(alpha: 0.1),
               trackShape: const RoundedRectSliderTrackShape(),
             ),
             child: Slider(

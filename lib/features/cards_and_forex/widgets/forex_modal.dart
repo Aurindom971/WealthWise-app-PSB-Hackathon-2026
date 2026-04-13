@@ -161,7 +161,7 @@ class _ForexModalState extends State<ForexModal> {
                   decoration: BoxDecoration(
                     color: const Color(0xFFE8F5E9),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFF2ECC71).withOpacity(0.1)),
+                    border: Border.all(color: const Color(0xFF2ECC71).withValues(alpha: 0.1)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

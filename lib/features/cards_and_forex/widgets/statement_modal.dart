@@ -237,7 +237,7 @@ class _StatementModalState extends State<StatementModal> {
           color: isSelected ? const Color(0xFFDCF0E5) : const Color(0xFFF5F7F5),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF2ECC71).withOpacity(0.3) : Colors.transparent,
+            color: isSelected ? const Color(0xFF2ECC71).withValues(alpha: 0.3) : Colors.transparent,
           ),
         ),
         child: Text(
@@ -290,7 +290,7 @@ class _StatementModalState extends State<StatementModal> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: isSelected ? [
             BoxShadow(
-              color: const Color(0xFF2ECC71).withOpacity(0.3),
+              color: const Color(0xFF2ECC71).withValues(alpha: 0.3),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )

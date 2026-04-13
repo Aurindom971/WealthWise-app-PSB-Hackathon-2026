@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
+import '../../home/screens/notifications_screen.dart';
 import '../widgets/active_loan_card.dart';
 import 'loan_statement_screen.dart';
 import 'application_status_screen.dart';
@@ -20,6 +21,7 @@ class ActiveLoansScreen extends StatelessWidget {
               child: TopBar(
                 onHomeTap: () => Navigator.pop(context),
                 onLogoutTap: () => Navigator.pop(context),
+                onNotificationTap: () => showNotifications(context),
               ),
             ),
 
@@ -69,9 +71,9 @@ class ActiveLoansScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
+                              color: Colors.white.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.white.withOpacity(0.1)),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                             ),
                             child: Row(
                               children: [
@@ -80,7 +82,7 @@ class ActiveLoansScreen extends StatelessWidget {
                                 Expanded(
                                   child: Text(
                                     'You have 3 loans currently active and being tracked.',
-                                    style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13, fontWeight: FontWeight.w500),
+                                    style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13, fontWeight: FontWeight.w500),
                                   ),
                                 ),
                               ],

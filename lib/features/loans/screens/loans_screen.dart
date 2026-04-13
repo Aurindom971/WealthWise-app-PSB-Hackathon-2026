@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import '../../home/widgets/home_navigation_widgets.dart';
+import '../../home/screens/notifications_screen.dart';
 import '../widgets/active_loan_card.dart';
 import 'active_loans_screen.dart';
 import 'loan_statement_screen.dart';
@@ -152,6 +153,7 @@ class _LoansScreenState extends State<LoansScreen> {
               child: TopBar(
                 onHomeTap: () => Navigator.pop(context),
                 onLogoutTap: () => Navigator.pop(context),
+                onNotificationTap: () => showNotifications(context),
               ),
             ),
             
@@ -208,7 +210,7 @@ class _EligibilityBanner extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(18, 0, 18, 24),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: kMid.withOpacity(0.9),
+        color: kMid.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
         image: const DecorationImage(
           image: NetworkImage('https://www.transparenttextures.com/patterns/carbon-fibre.png'),
@@ -221,7 +223,7 @@ class _EligibilityBanner extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.shield_outlined, color: Colors.white, size: 24),
@@ -421,7 +423,7 @@ class _LoanOptionCard extends StatelessWidget {
         color: kCard,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -504,7 +506,7 @@ class _AmountBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: const Color(0xFFEAF6F0).withOpacity(0.4), borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: const Color(0xFFEAF6F0).withValues(alpha: 0.4), borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -529,7 +531,7 @@ class _CompareOptionsCard extends StatelessWidget {
         color: kCard,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Row(
@@ -557,7 +559,7 @@ class _CompareOptionsCard extends StatelessWidget {
               );
             },
             style: OutlinedButton.styleFrom(
-              side: BorderSide(color: kInk.withOpacity(0.2)),
+              side: BorderSide(color: kInk.withValues(alpha: 0.2)),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               padding: const EdgeInsets.symmetric(horizontal: 20),
             ),
@@ -643,7 +645,7 @@ class _EMICalculatorCard extends StatelessWidget {
         color: kCard,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -711,7 +713,7 @@ class _EligibilityCheckCard extends StatelessWidget {
         color: kCard,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -775,7 +777,7 @@ class _SmallInput extends StatelessWidget {
             decoration: InputDecoration(
               border: InputBorder.none,
               hintText: hint,
-              hintStyle: TextStyle(color: kSub.withOpacity(0.5), fontSize: 12),
+              hintStyle: TextStyle(color: kSub.withValues(alpha: 0.5), fontSize: 12),
             ),
           ),
         ),
@@ -811,9 +813,9 @@ class _TrackApplicationSectionState extends State<_TrackApplicationSection> {
       decoration: BoxDecoration(
         color: kCard,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: kMid.withOpacity(0.1)),
+        border: Border.all(color: kMid.withValues(alpha: 0.1)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -840,7 +842,7 @@ class _TrackApplicationSectionState extends State<_TrackApplicationSection> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                            color: kAccent.withOpacity(0.3),
+                            color: kAccent.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: const Offset(0, 3))
                       ],
@@ -875,7 +877,7 @@ class _TrackApplicationSectionState extends State<_TrackApplicationSection> {
                       width: 30,
                       height: 30,
                       decoration: BoxDecoration(
-                        color: kForest.withOpacity(0.08),
+                        color: kForest.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: kForest),
@@ -909,10 +911,10 @@ class _TrackApplicationSectionState extends State<_TrackApplicationSection> {
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: isSelected ? kMid.withOpacity(0.05) : Colors.transparent,
+                              color: isSelected ? kMid.withValues(alpha: 0.05) : Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isSelected ? kMid.withOpacity(0.2) : Colors.transparent,
+                                color: isSelected ? kMid.withValues(alpha: 0.2) : Colors.transparent,
                               ),
                             ),
                             child: Row(
@@ -920,7 +922,7 @@ class _TrackApplicationSectionState extends State<_TrackApplicationSection> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: kMid.withOpacity(0.1),
+                                    color: kMid.withValues(alpha: 0.1),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
@@ -963,7 +965,7 @@ class _TrackApplicationSectionState extends State<_TrackApplicationSection> {
                       if (index < _applications.length - 1)
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: Divider(color: kSub.withOpacity(0.1), height: 1),
+                          child: Divider(color: kSub.withValues(alpha: 0.1), height: 1),
                         ),
                     ],
                   );
@@ -1062,7 +1064,7 @@ class _StatusStep extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: isCompleted ? const Color(0xFF2E5B4B) : (isActive ? const Color(0xFF2E5B4B).withOpacity(0.8) : const Color(0xFFF0F4F2)),
+                  color: isCompleted ? const Color(0xFF2E5B4B) : (isActive ? const Color(0xFF2E5B4B).withValues(alpha: 0.8) : const Color(0xFFF0F4F2)),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: isCompleted || isActive ? Colors.white : kSub, size: 22),
@@ -1111,7 +1113,7 @@ class _StickyApplyButton extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       decoration: BoxDecoration(
         color: kCream,
-        border: Border(top: BorderSide(color: Colors.black.withOpacity(0.05))),
+        border: Border(top: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
       ),
       child: SizedBox(
         width: double.infinity,
@@ -1125,7 +1127,7 @@ class _StickyApplyButton extends StatelessWidget {
             backgroundColor: kMid,
             foregroundColor: Colors.white,
             elevation: 4,
-            shadowColor: kMid.withOpacity(0.4),
+            shadowColor: kMid.withValues(alpha: 0.4),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
           child: const Text('Apply for Loan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 0.5)),

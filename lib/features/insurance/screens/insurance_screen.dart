@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
+import '../../home/screens/notifications_screen.dart';
 
 class InsuranceScreen extends StatelessWidget {
   const InsuranceScreen({super.key});
@@ -17,6 +18,7 @@ class InsuranceScreen extends StatelessWidget {
               child: TopBar(
                 onHomeTap: () => Navigator.pop(context),
                 onLogoutTap: () => Navigator.pop(context),
+                onNotificationTap: () => showNotifications(context),
               ),
             ),
             

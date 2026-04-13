@@ -67,7 +67,7 @@ class ApplicationStatusScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -79,7 +79,7 @@ class ApplicationStatusScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.analytics_outlined, color: Colors.white, size: 28),
@@ -94,7 +94,7 @@ class ApplicationStatusScreen extends StatelessWidget {
                   ),
                   Text(
                     loanId,
-                    style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
                   ),
                 ],
               ),
@@ -112,7 +112,7 @@ class ApplicationStatusScreen extends StatelessWidget {
         color: kCard,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -168,7 +168,7 @@ class ApplicationStatusScreen extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 22),
@@ -177,7 +177,7 @@ class ApplicationStatusScreen extends StatelessWidget {
               Container(
                 width: 2,
                 height: 40,
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
               ),
           ],
         ),
@@ -219,7 +219,7 @@ class ApplicationStatusScreen extends StatelessWidget {
           );
         },
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: kSub.withOpacity(0.2)),
+          side: BorderSide(color: kSub.withValues(alpha: 0.2)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(vertical: 16),
           backgroundColor: Colors.white,
@@ -232,7 +232,7 @@ class ApplicationStatusScreen extends StatelessWidget {
               style: TextStyle(color: kMid, fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: kMid.withOpacity(0.8)),
+            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: kMid.withValues(alpha: 0.8)),
           ],
         ),
       ),

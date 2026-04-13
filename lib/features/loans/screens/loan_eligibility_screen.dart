@@ -136,7 +136,7 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -150,7 +150,7 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.shield_outlined,
@@ -193,7 +193,7 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -274,7 +274,7 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -334,7 +334,7 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -409,10 +409,10 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
       decoration: BoxDecoration(
         color: kCard,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.red.withOpacity(0.2), width: 1.5),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -423,7 +423,7 @@ class _LoanEligibilityScreenState extends State<LoanEligibilityScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.1),
+              color: Colors.red.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.close, color: Colors.red, size: 40),

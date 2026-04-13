@@ -88,7 +88,7 @@ class _CompareLoansScreenState extends State<CompareLoansScreen> {
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -100,7 +100,7 @@ class _CompareLoansScreenState extends State<CompareLoansScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.compare_arrows, color: Colors.white, size: 30),
@@ -121,7 +121,7 @@ class _CompareLoansScreenState extends State<CompareLoansScreen> {
                   Text(
                     'Find the best option for you',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 14,
                     ),
                   ),
@@ -149,7 +149,7 @@ class _CompareLoansScreenState extends State<CompareLoansScreen> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: isSelected ? kMid : const Color(0xFFDEDBD2)),
               boxShadow: isSelected
-                  ? [BoxShadow(color: kMid.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))]
+                  ? [BoxShadow(color: kMid.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4))]
                   : null,
             ),
             child: Text(
@@ -173,7 +173,7 @@ class _CompareLoansScreenState extends State<CompareLoansScreen> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFEAF5F0)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: ClipRRect(
@@ -184,11 +184,12 @@ class _CompareLoansScreenState extends State<CompareLoansScreen> {
             horizontalMargin: 16,
             columnSpacing: 24,
             headingRowHeight: 50,
-            dataRowHeight: 48,
-            headingRowColor: MaterialStateProperty.all(const Color(0xFFEAF5F0)),
+            dataRowMinHeight: 48,
+            dataRowMaxHeight: 48,
+            headingRowColor: WidgetStateProperty.all(const Color(0xFFEAF5F0)),
             border: TableBorder(
               horizontalInside: BorderSide(color: const Color(0xFFF2F0EB), width: 1),
-              verticalInside: BorderSide(color: const Color(0xFFF2F0EB).withOpacity(0.5), width: 1),
+              verticalInside: BorderSide(color: const Color(0xFFF2F0EB).withValues(alpha: 0.5), width: 1),
             ),
             columns: [
               const DataColumn(label: Text('Feature', style: TextStyle(color: kSub, fontSize: 13, fontWeight: FontWeight.bold))),
@@ -239,7 +240,7 @@ class _CompareLoansScreenState extends State<CompareLoansScreen> {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFF2F0EB)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
