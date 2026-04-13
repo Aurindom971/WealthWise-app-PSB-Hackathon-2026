@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'features/auth/screens/login_screen.dart';
 import 'features/home/screens/home_screen.dart';
-import 'Send/Transfer/send_transfer_screen.dart';
+import 'features/send/screens/send_transfer_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

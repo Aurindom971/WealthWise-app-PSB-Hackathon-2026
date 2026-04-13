@@ -146,31 +146,13 @@ class _LoansScreenState extends State<LoansScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kCream,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Top Bar matching Home
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              child: TopBar(
-                onHomeTap: () => Navigator.pop(context),
-                onLogoutTap: () => Navigator.pop(context),
-                onNotificationTap: () => showNotifications(context),
-              ),
-            ),
-            
-            Expanded(
-    return Container(
-      color: kCream,
-      child: Column(
-        children: [
-          Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  children: [
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              children: [
                     _EligibilityBanner(onNavigate: widget.onNavigate),
                     const SizedBox(height: 24),
                     _ActiveLoansSection(onNavigate: widget.onNavigate),
@@ -195,11 +177,9 @@ class _LoansScreenState extends State<LoansScreen> {
                 ),
               ),
             ),
-            
-          _StickyApplyButton(onNavigate: widget.onNavigate),
-        ],
-      ),
-    );
+            _StickyApplyButton(onNavigate: widget.onNavigate),
+          ],
+        );
   }
 }
 
@@ -813,8 +793,6 @@ class _TrackApplicationSectionState extends State<_TrackApplicationSection> {
       margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
       decoration: BoxDecoration(
         color: kCard,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: kMid.withValues(alpha: 0.1)),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: kMid.withOpacity(0.1)),
         boxShadow: [

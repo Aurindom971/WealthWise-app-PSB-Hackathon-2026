@@ -48,61 +48,6 @@ class ApplicationStatusScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 30),
-      decoration: const BoxDecoration(
-        color: kMid,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.analytics_outlined, color: Colors.white, size: 28),
-              ),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    loanType,
-                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    loanId,
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildTrackerCard() {
     return Container(
@@ -216,13 +161,12 @@ class ApplicationStatusScreen extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Icon(Icons.arrow_back_ios_rounded, size: 14, color: kMid.withOpacity(0.8)),
+            const SizedBox(width: 8),
             const Text(
               'Back to Dashboard',
               style: TextStyle(color: kMid, fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            const SizedBox(width: 8),
-            Icon(Icons.arrow_forward_ios_rounded, size: 14, color: kMid.withValues(alpha: 0.8)),
-            Icon(Icons.arrow_back_ios_rounded, size: 14, color: kMid.withOpacity(0.8)),
           ],
         ),
       ),

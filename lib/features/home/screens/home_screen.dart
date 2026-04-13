@@ -1043,7 +1043,10 @@ class _TileState extends State<_Tile> with SingleTickerProviderStateMixin {
                 } else if (widget.d.label == 'Send /\nTransfer') {
                   Navigator.pushNamed(context, '/send_transfer');
                 } else if (widget.d.label == 'Loans') {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const LoansScreen()));
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => LoansScreen(
+                    onBack: () => Navigator.pop(context),
+                    onNavigate: (state, {loanType, loanId}) => Navigator.pop(context),
+                  )));
                 } else if (widget.d.label == 'Insurance') {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const InsuranceScreen()));
                 }
