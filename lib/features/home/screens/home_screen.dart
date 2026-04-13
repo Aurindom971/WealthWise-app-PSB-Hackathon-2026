@@ -6,6 +6,7 @@ import 'package:securewealth_twin/features/cards_and_forex/screens/cards_and_for
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
 import 'package:securewealth_twin/features/loans/screens/loans_screen.dart';
 import 'package:securewealth_twin/features/insurance/screens/insurance_screen.dart';
+import 'package:securewealth_twin/features/home/screens/notifications_screen.dart';
 import 'package:securewealth_twin/features/bill_and_recharge/screens/bill_and_recharge_screen.dart';
 import 'package:securewealth_twin/features/bill_and_recharge/models/bill_models.dart';
 import 'package:securewealth_twin/features/bill_and_recharge/screens/utility_payment_screen.dart';
@@ -111,6 +112,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 _isShowingLoans = false;
               }),
               onLogoutTap: _handleLogout,
+              onNotificationTap: () => showNotifications(context),
             ),
           ),
           Expanded(
@@ -287,7 +289,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.construction_rounded, size: 60, color: kAccent.withOpacity(0.3)),
+                Icon(Icons.construction_rounded, size: 60, color: kAccent.withValues(alpha: 0.3)),
                 const SizedBox(height: 16),
                 Text(
                   '${titles[_navIdx]} Module',
@@ -497,7 +499,7 @@ class _LoanCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-                color: const Color(0xFF6B4E2A).withOpacity(0.4),
+                color: const Color(0xFF6B4E2A).withValues(alpha: 0.4),
                 blurRadius: 16,
                 offset: const Offset(0, 8))
           ],
@@ -519,7 +521,7 @@ class _LoanCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text('•••• •••• •••• 9876',
                 style: TextStyle(
-                    color: Colors.white.withOpacity(0.65),
+                    color: Colors.white.withValues(alpha: 0.65),
                     fontSize: 13,
                     letterSpacing: 2,
                     fontWeight: FontWeight.w500)),
@@ -533,7 +535,7 @@ class _LoanCard extends StatelessWidget {
                     children: [
                       Text('OUTSTANDING BALANCE',
                           style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.0)),
@@ -542,7 +544,7 @@ class _LoanCard extends StatelessWidget {
                         onTap: onToggle,
                         child: Icon(
                           obscured ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           size: 14,
                         ),
                       ),
@@ -562,11 +564,11 @@ class _LoanCard extends StatelessWidget {
             Center(
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Icon(Icons.keyboard_arrow_down_rounded,
-                    color: Colors.white.withOpacity(0.35), size: 14),
+                    color: Colors.white.withValues(alpha: 0.35), size: 14),
                 const SizedBox(width: 4),
                 Text('pull down to reveal next',
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.35),
+                        color: Colors.white.withValues(alpha: 0.35),
                         fontSize: 9,
                         letterSpacing: 0.3)),
               ]),
@@ -597,7 +599,7 @@ class _PortfolioCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-              color: const Color(0xFF1E3A5F).withOpacity(0.45),
+              color: const Color(0xFF1E3A5F).withValues(alpha: 0.45),
               blurRadius: 20,
               offset: const Offset(0, 10))
         ],
@@ -619,7 +621,7 @@ class _PortfolioCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text('•••• •••• •••• 5678',
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.65),
+                  color: Colors.white.withValues(alpha: 0.65),
                   fontSize: 13,
                   letterSpacing: 2,
                   fontWeight: FontWeight.w500)),
@@ -633,7 +635,7 @@ class _PortfolioCard extends StatelessWidget {
                   children: [
                     Text('TOTAL INVESTMENTS',
                         style: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.0)),
@@ -642,7 +644,7 @@ class _PortfolioCard extends StatelessWidget {
                       onTap: onToggle,
                       child: Icon(
                         obscured ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         size: 14,
                       ),
                     ),
@@ -659,7 +661,7 @@ class _PortfolioCard extends StatelessWidget {
               Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Text('Rahul Kumar',
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 12,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 6),
@@ -671,7 +673,7 @@ class _PortfolioCard extends StatelessWidget {
                                 width: 3,
                                 height: h,
                                 decoration: BoxDecoration(
-                                    color: const Color(0xFF8AB4F8).withOpacity(0.85),
+                                    color: const Color(0xFF8AB4F8).withValues(alpha: 0.85),
                                     borderRadius: BorderRadius.circular(2))),
                           ))
                       .toList(),
@@ -683,11 +685,11 @@ class _PortfolioCard extends StatelessWidget {
           Center(
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               Icon(Icons.keyboard_arrow_down_rounded,
-                  color: Colors.white.withOpacity(0.35), size: 14),
+                  color: Colors.white.withValues(alpha: 0.35), size: 14),
               const SizedBox(width: 4),
               Text('pull down to reveal next',
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.35),
+                      color: Colors.white.withValues(alpha: 0.35),
                       fontSize: 9,
                       letterSpacing: 0.3)),
             ]),
@@ -717,7 +719,7 @@ class _SavingsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-              color: kForest.withOpacity(0.45),
+              color: kForest.withValues(alpha: 0.45),
               blurRadius: 20,
               offset: const Offset(0, 10))
         ],
@@ -737,7 +739,7 @@ class _SavingsCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text('•••• •••• •••• 2345',
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.65),
+                  color: Colors.white.withValues(alpha: 0.65),
                   fontSize: 13,
                   letterSpacing: 2,
                   fontWeight: FontWeight.w500)),
@@ -751,7 +753,7 @@ class _SavingsCard extends StatelessWidget {
                   children: [
                     Text('TOTAL BALANCE',
                         style: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.0)),
@@ -760,7 +762,7 @@ class _SavingsCard extends StatelessWidget {
                       onTap: onToggle,
                       child: Icon(
                         obscured ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         size: 14,
                       ),
                     ),
@@ -777,7 +779,7 @@ class _SavingsCard extends StatelessWidget {
               Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Text('Rahul Kumar',
                     style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 12,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 6),
@@ -788,7 +790,7 @@ class _SavingsCard extends StatelessWidget {
                               width: 3,
                               height: h,
                               decoration: BoxDecoration(
-                                  color: kAccent.withOpacity(0.85),
+                                  color: kAccent.withValues(alpha: 0.85),
                                   borderRadius: BorderRadius.circular(2))),
                         ))
                     .toList()),
@@ -799,11 +801,11 @@ class _SavingsCard extends StatelessWidget {
           Center(
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               Icon(Icons.keyboard_arrow_down_rounded,
-                  color: Colors.white.withOpacity(0.35), size: 14),
+                  color: Colors.white.withValues(alpha: 0.35), size: 14),
               const SizedBox(width: 4),
               Text('pull down to reveal next',
                   style: TextStyle(
-                      color: Colors.white.withOpacity(0.35),
+                      color: Colors.white.withValues(alpha: 0.35),
                       fontSize: 9,
                       letterSpacing: 0.3)),
             ]),
@@ -821,9 +823,9 @@ class _Glass extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.12),
+          color: Colors.white.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.white.withOpacity(0.15)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
         ),
         child: Text(t,
             style: const TextStyle(
@@ -843,7 +845,7 @@ class _Dot extends StatelessWidget {
         width: a ? 14 : 6,
         height: 6,
         decoration: BoxDecoration(
-          color: a ? kAccent : Colors.white.withOpacity(0.3),
+          color: a ? kAccent : Colors.white.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(3),
         ),
       );
@@ -859,10 +861,10 @@ class _AIBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCard,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: kAccent.withOpacity(0.22)),
+        border: Border.all(color: kAccent.withValues(alpha: 0.22)),
         boxShadow: [
           BoxShadow(
-              color: kForest.withOpacity(0.06),
+              color: kForest.withValues(alpha: 0.06),
               blurRadius: 12,
               offset: const Offset(0, 4))
         ],
@@ -879,7 +881,7 @@ class _AIBanner extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                  color: kAccent.withOpacity(0.3),
+                  color: kAccent.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 3))
             ],
@@ -911,7 +913,7 @@ class _AIBanner extends StatelessWidget {
           width: 30,
           height: 30,
           decoration: BoxDecoration(
-            color: kForest.withOpacity(0.08),
+            color: kForest.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(10),
           ),
           child: const Icon(Icons.arrow_forward_ios_rounded,
@@ -1025,7 +1027,7 @@ class _TileState extends State<_Tile> with SingleTickerProviderStateMixin {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                  color: widget.d.ic.withOpacity(0.10),
+                  color: widget.d.ic.withValues(alpha: 0.10),
                   blurRadius: 12,
                   offset: const Offset(0, 5))
             ],
@@ -1038,6 +1040,10 @@ class _TileState extends State<_Tile> with SingleTickerProviderStateMixin {
               onTap: () {
                 if (widget.onTap != null) {
                   widget.onTap!();
+                } else if (widget.d.label == 'Send /\nTransfer') {
+                  Navigator.pushNamed(context, '/send_transfer');
+                } else if (widget.d.label == 'Loans') {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const LoansScreen()));
                 } else if (widget.d.label == 'Insurance') {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const InsuranceScreen()));
                 }

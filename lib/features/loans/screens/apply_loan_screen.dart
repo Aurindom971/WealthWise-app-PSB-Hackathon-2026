@@ -131,6 +131,26 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
           icon: Icons.assignment_outlined,
           onBack: widget.onBack,
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 50, 18, 18),
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
         Expanded(
           child: SingleChildScrollView(
             controller: _scrollController,
@@ -138,6 +158,23 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
             padding: const EdgeInsets.all(18),
             child: Column(
               children: [
+                const Text(
+                  'Apply for Loan',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Quick and easy application',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 14,
+                  ),
+                ),
                 if (_currentStep < 4) ...[
                   _buildStepIndicator(),
                   const SizedBox(height: 24),
@@ -160,7 +197,7 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -279,7 +316,7 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -290,7 +327,7 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isSelected ? kMid.withOpacity(0.1) : const Color(0xFFF2F0EB),
+                color: isSelected ? kMid.withValues(alpha: 0.1) : const Color(0xFFF2F0EB),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: isSelected ? kMid : kSub, size: 22),
@@ -321,7 +358,7 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -428,7 +465,7 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -508,7 +545,7 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
         border: Border.all(color: const Color(0xFFEAF5F0), width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

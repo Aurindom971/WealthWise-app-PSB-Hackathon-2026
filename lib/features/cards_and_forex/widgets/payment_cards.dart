@@ -38,7 +38,7 @@ class PaymentCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: gradient.first.withOpacity(0.4),
+            color: gradient.first.withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, 10),
           )
@@ -62,7 +62,7 @@ class PaymentCard extends StatelessWidget {
           Text(
             number,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.65),
+              color: Colors.white.withValues(alpha: 0.65),
               fontSize: 14,
               letterSpacing: 2.5,
               fontWeight: FontWeight.w500,
@@ -81,7 +81,7 @@ class PaymentCard extends StatelessWidget {
                       Text(
                         'AVAILABLE BALANCE',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.2,
@@ -92,7 +92,7 @@ class PaymentCard extends StatelessWidget {
                         onTap: onToggle,
                         child: Icon(
                           obscured ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           size: 16,
                         ),
                       ),
@@ -116,7 +116,7 @@ class PaymentCard extends StatelessWidget {
                   Text(
                     holder,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -140,12 +140,12 @@ class PaymentCard extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white.withOpacity(0.4), size: 16),
+                Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white.withValues(alpha: 0.4), size: 16),
                 const SizedBox(width: 6),
                 Text(
                   'pull down to reveal next',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 10,
                     letterSpacing: 0.5,
                   ),
@@ -166,9 +166,9 @@ class _Glass extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
     decoration: BoxDecoration(
-      color: Colors.white.withOpacity(0.12),
+      color: Colors.white.withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(6),
-      border: Border.all(color: Colors.white.withOpacity(0.15)),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
     ),
     child: Text(
       t,
@@ -191,7 +191,7 @@ class _Dot extends StatelessWidget {
     width: a ? 14 : 6,
     height: 6,
     decoration: BoxDecoration(
-      color: a ? const Color(0xFF4CAF7A) : Colors.white.withOpacity(0.3),
+      color: a ? const Color(0xFF4CAF7A) : Colors.white.withValues(alpha: 0.3),
       borderRadius: BorderRadius.circular(3),
     ),
   );

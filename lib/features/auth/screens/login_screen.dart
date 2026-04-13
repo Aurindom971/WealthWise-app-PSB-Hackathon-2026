@@ -367,7 +367,7 @@ class _LoginScreenState extends State<LoginScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, -5))
+            BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, -5))
           ],
         ),
         child: Row(
@@ -393,7 +393,7 @@ class _BottomAction extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 22, color: const Color(0xFF1F5D3A).withOpacity(0.7)),
+        Icon(icon, size: 22, color: const Color(0xFF1F5D3A).withValues(alpha: 0.7)),
         const SizedBox(height: 6),
         Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.black54)),
       ],

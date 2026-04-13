@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'features/auth/screens/login_screen.dart';
 import 'features/home/screens/home_screen.dart';
+import 'Send/Transfer/send_transfer_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +34,8 @@ class SecureWealthApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
+        '/send_transfer': (context) => const SendTransferScreen(),
+        '/qr_scanner': (context) => const QRScreen(),
       },
     );
   }
