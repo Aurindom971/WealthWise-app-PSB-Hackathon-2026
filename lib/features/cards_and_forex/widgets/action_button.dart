@@ -30,12 +30,9 @@ class FeatureActionButton extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: isHighlighted 
-                    ? const Color(0xFF38B27C).withOpacity(0.4) 
-                    : Colors.black.withOpacity(0.05),
-                  blurRadius: isHighlighted ? 15 : 10,
-                  spreadRadius: isHighlighted ? 2 : 0,
-                  offset: isHighlighted ? Offset.zero : const Offset(0, 4),
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
               ],
               border: isHighlighted 

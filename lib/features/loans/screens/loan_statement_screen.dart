@@ -61,7 +61,7 @@ class LoanStatementScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -69,10 +69,10 @@ class LoanStatementScreen extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      const Row(
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('9 of 20 EMIs paid',
+                          const Text('9 of 20 EMIs paid',
                               style: TextStyle(
                                   color: Color(0xFF1F7A5A),
                                   fontSize: 13,
@@ -95,7 +95,7 @@ class LoanStatementScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      Row(
+                      const Row(
                         children: [
                           Expanded(child: _MiniSummary(label: 'Principal Paid', value: '₹99,041')),
                           Expanded(child: _MiniSummary(label: 'Interest Paid', value: '₹35,959')),
@@ -187,7 +187,7 @@ class _SummaryBox extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -304,7 +304,7 @@ class _ScheduleItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

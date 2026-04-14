@@ -6,6 +6,8 @@ class LoanHeader extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final VoidCallback onBack;
+  final VoidCallback? onIconTap;
+  final String? actionLabel;
 
   const LoanHeader({
     super.key,
@@ -13,6 +15,8 @@ class LoanHeader extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.onBack,
+    this.onIconTap,
+    this.actionLabel,
   });
 
   @override
@@ -56,16 +60,18 @@ class LoanHeader extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        title.toUpperCase(),
-                        style: const TextStyle(
-                          color: kAccent,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.2,
+                      if (title.isNotEmpty) ...[
+                        Text(
+                          title.toUpperCase(),
+                          style: const TextStyle(
+                            color: kAccent,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.2,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
+                        const SizedBox(height: 2),
+                      ],
                       Text(
                         subtitle,
                         style: const TextStyle(
@@ -78,25 +84,47 @@ class LoanHeader extends StatelessWidget {
                     ],
                   ),
                 ),
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [kMid, kAccent],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: kAccent.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
+                GestureDetector(
+                  onTap: onIconTap,
+                  child: Container(
+                    height: 44,
+                    width: actionLabel != null ? null : 44,
+                    padding: actionLabel != null
+                        ? const EdgeInsets.symmetric(horizontal: 14)
+                        : null,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [kMid, kAccent],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    ],
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: kAccent.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: actionLabel != null
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                actionLabel!,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Icon(icon, color: Colors.white, size: 20),
+                            ],
+                          )
+                        : Icon(icon, color: Colors.white, size: 22),
                   ),
-                  child: Icon(icon, color: Colors.white, size: 22),
                 ),
               ],
             ),

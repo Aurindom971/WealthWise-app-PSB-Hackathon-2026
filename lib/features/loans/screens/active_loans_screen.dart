@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
+import '../../home/screens/notifications_screen.dart';
 import '../../home/screens/home_screen.dart';
 import '../widgets/loan_header.dart';
 import '../widgets/active_loan_card.dart';
@@ -118,4 +119,3 @@ class ActiveLoansScreen extends StatelessWidget {
     );
   }
 }
-

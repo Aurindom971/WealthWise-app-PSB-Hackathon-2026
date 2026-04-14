@@ -56,7 +56,7 @@ class ApplicationStatusScreen extends StatelessWidget {
         color: kCard,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -112,7 +112,7 @@ class ApplicationStatusScreen extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 22),
@@ -121,7 +121,7 @@ class ApplicationStatusScreen extends StatelessWidget {
               Container(
                 width: 2,
                 height: 40,
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
               ),
           ],
         ),
@@ -153,7 +153,7 @@ class ApplicationStatusScreen extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onBack,
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: kSub.withOpacity(0.2)),
+          side: BorderSide(color: kSub.withValues(alpha: 0.2)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(vertical: 16),
           backgroundColor: Colors.white,
@@ -161,12 +161,12 @@ class ApplicationStatusScreen extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Icon(Icons.arrow_back_ios_rounded, size: 14, color: kMid.withOpacity(0.8)),
+            const SizedBox(width: 8),
             const Text(
               'Back to Dashboard',
               style: TextStyle(color: kMid, fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            const SizedBox(width: 8),
-            Icon(Icons.arrow_back_ios_rounded, size: 14, color: kMid.withOpacity(0.8)),
           ],
         ),
       ),

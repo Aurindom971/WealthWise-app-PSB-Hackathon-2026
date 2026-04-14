@@ -21,7 +21,7 @@ class CreditCardWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF38B27C).withOpacity(0.3),
+            color: const Color(0xFF38B27C).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -36,7 +36,7 @@ class CreditCardWidget extends StatelessWidget {
               Text(
                 'Savings',
                 style: GoogleFonts.inter(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -77,7 +77,7 @@ class CreditCardWidget extends StatelessWidget {
                   Text(
                     'CARD HOLDER',
                     style: GoogleFonts.inter(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.2,

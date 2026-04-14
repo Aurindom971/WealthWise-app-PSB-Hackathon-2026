@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
+import '../../home/screens/notifications_screen.dart';
 import 'track_claims_screen.dart';
 import 'insurance_category_screen.dart';
 import 'all_plans_screen.dart';
@@ -107,6 +108,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
               child: TopBar(
                 onHomeTap: () => Navigator.pop(context),
                 onLogoutTap: () => Navigator.pop(context),
+                onNotificationTap: () => showNotifications(context),
               ),
             ),
 

@@ -12,14 +12,9 @@ const kInk = Color(0xFF1A1A18);
 class TopBar extends StatelessWidget {
   final VoidCallback onHomeTap;
   final VoidCallback onLogoutTap;
-  final String searchText;
+  final VoidCallback? onNotificationTap;
 
-  const TopBar({
-    super.key,
-    required this.onHomeTap,
-    required this.onLogoutTap,
-    this.searchText = 'Search',
-  });
+  const TopBar({super.key, required this.onHomeTap, required this.onLogoutTap, this.onNotificationTap});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +32,7 @@ class TopBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(23),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: Colors.black.withValues(alpha: 0.06),
                   blurRadius: 10,
                   offset: const Offset(0, 3))
             ],
@@ -54,6 +49,7 @@ class TopBar extends StatelessWidget {
       ),
       const SizedBox(width: 10),
       Bubble(
+          onTap: onNotificationTap,
           child: Stack(clipBehavior: Clip.none, children: [
         Icon(Icons.notifications_none_rounded, color: kInk, size: 20),
         Positioned(
@@ -91,7 +87,7 @@ class Bubble extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.07),
+                  color: Colors.black.withValues(alpha: 0.07),
                   blurRadius: 10,
                   offset: const Offset(0, 3))
             ],
@@ -121,7 +117,7 @@ class BottomNav extends StatelessWidget {
         color: kCard,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, -4))
         ],
@@ -138,7 +134,7 @@ class BottomNav extends StatelessWidget {
 
               if (isCenter) {
                 return GestureDetector(
-                  onTap: () => onTap(i),
+                  onTap: () => Navigator.pushNamed(context, '/qr_scanner'),
                   child: Container(
                     width: 60,
                     height: 38,
@@ -150,7 +146,7 @@ class BottomNav extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                            color: kForest.withOpacity(0.35),
+                            color: kForest.withValues(alpha: 0.35),
                             blurRadius: 10,
                             offset: const Offset(0, 4))
                       ],
