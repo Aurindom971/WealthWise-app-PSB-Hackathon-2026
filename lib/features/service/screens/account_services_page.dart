@@ -51,7 +51,19 @@ class AccountServicesPage extends StatelessWidget {
 
   Widget _buildTile(BuildContext context, String title, IconData icon) {
     return GestureDetector(
-      onTap: () => _navigateToPlaceholder(context, title),
+      onTap: () {
+        if (title == 'Download passbook') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Passbook has started downloading'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: kForest,
+            ),
+          );
+        } else {
+          _navigateToPlaceholder(context, title);
+        }
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),

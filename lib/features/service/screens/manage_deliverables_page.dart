@@ -15,6 +15,169 @@ class ManageDeliverablesPage extends StatefulWidget {
 class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
   bool isOrderTab = true;
 
+  void _showOrderConfirmation(String title, IconData icon) {
+    String? selectedSubtype;
+    bool isCard = title.contains('Card');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: kSub.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: kAccent.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, color: kForest, size: 28),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    'Order $title',
+                    style: const TextStyle(
+                      color: kForest,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Delivery Address',
+                style: TextStyle(color: kSub, fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Branch Address (Connaught Place)\nRegistered Local Address',
+                style: TextStyle(color: kForest, fontSize: 14, height: 1.5),
+              ),
+              if (isCard) ...[
+                const SizedBox(height: 24),
+                const Text(
+                  'Select Card Type',
+                  style: TextStyle(color: kSub, fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _buildSubtypeOption(
+                      'Visa',
+                      selectedSubtype == 'Visa',
+                      () => setModalState(() => selectedSubtype = 'Visa'),
+                    ),
+                    const SizedBox(width: 12),
+                    _buildSubtypeOption(
+                      'Mastercard',
+                      selectedSubtype == 'Mastercard',
+                      () => setModalState(() => selectedSubtype = 'Mastercard'),
+                    ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 32),
+              GestureDetector(
+                onTap: () {
+                  if (isCard && selectedSubtype == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please select a card type')),
+                    );
+                    return;
+                  }
+                  
+                  // Add to tracked orders
+                  ManageDeliverablesPage.trackedOrders.insert(0, {
+                    'title': isCard ? '$selectedSubtype $title' : title,
+                    'status': 'Requested',
+                    'date': 'Oct 14, 2023',
+                  });
+
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('$title order has been placed successfully'),
+                      backgroundColor: kForest,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                  setState(() {});
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    color: kForest,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Confirm Order',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubtypeOption(String label, bool isSelected, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? kForest : Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: isSelected ? kForest : kSub.withOpacity(0.2)),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : kForest,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildOrderTile(String title, String subtitle, IconData icon) {
     return GestureDetector(
       onTap: () {
@@ -22,7 +185,9 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const OrderChequeBookPage()),
-          ).then((_) => setState(() {})); // Refresh in case an order was added
+          ).then((_) => setState(() {}));
+        } else {
+          _showOrderConfirmation(title, icon);
         }
       },
       child: Container(

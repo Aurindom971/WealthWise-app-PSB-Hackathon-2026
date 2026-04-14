@@ -4,6 +4,9 @@ import 'package:securewealth_twin/features/service/screens/account_services_page
 import 'package:securewealth_twin/features/service/screens/card_services_page.dart';
 import 'package:securewealth_twin/features/service/screens/manage_deliverables_page.dart';
 import 'package:securewealth_twin/features/service/screens/order_cheque_book_page.dart';
+import 'package:securewealth_twin/features/service/screens/manage_autopay_page.dart';
+import 'package:securewealth_twin/features/service/screens/report_suspicious_activity_page.dart';
+import 'package:securewealth_twin/features/service/screens/pin_passwords_page.dart';
 
 class ServicesPage extends StatelessWidget {
   const ServicesPage({super.key});
@@ -115,32 +118,16 @@ class ServicesPage extends StatelessWidget {
               ],
             ),
             const SizedBox(width: 24),
-            Container(
-              margin: const EdgeInsets.only(bottom: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF232D3F),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Text(
-                'Project preview',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
           ],
         ),
         const SizedBox(height: 24),
         _buildTile(context, 'Order cheque book', Icons.menu_book_rounded, const OrderChequeBookPage()),
         _buildTile(context, 'Accounts services', Icons.account_balance_outlined, const AccountServicesPage()),
-        _buildTile(context, 'Manage autopay', Icons.autorenew_rounded),
+        _buildTile(context, 'Manage autopay', Icons.autorenew_rounded, const ManageAutopayPage()),
         _buildTile(context, 'Cards services', Icons.credit_card_outlined, const CardServicesPage()),
         _buildTile(context, 'Manage deliverables', Icons.inventory_2_outlined, const ManageDeliverablesPage()),
-        _buildTile(context, 'Pin and passwords management', Icons.vpn_key_outlined),
-        _buildTile(context, 'Report suspicious activities', Icons.privacy_tip_outlined),
+        _buildTile(context, 'Pin and passwords management', Icons.vpn_key_outlined, const PinPasswordsPage()),
+        _buildTile(context, 'Report suspicious activities', Icons.privacy_tip_outlined, const ReportSuspiciousActivityPage()),
         const SizedBox(height: 32),
       ],
     );
