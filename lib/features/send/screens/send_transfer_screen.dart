@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../../features/home/widgets/home_navigation_widgets.dart';
 import '../../home/screens/notifications_screen.dart';
 import '../../loans/widgets/loan_header.dart';
@@ -130,7 +131,7 @@ class SendTransferScreen extends StatelessWidget {
 
               // New Send Money Tab (LoanHeader Style)
               LoanHeader(
-                title: "Punjab & Sind Bank",
+                title: "",
                 subtitle: "Send Money",
                 icon: Icons.send_rounded,
                 onBack: () =>
@@ -1390,6 +1391,103 @@ class _SelfTransferScreenState extends State<SelfTransferScreen> {
 bool globalContactsPermissionGranted = false;
 bool globalCameraPermissionGranted = false;
 
+void showMyQrCode(BuildContext context) {
+  final String myUpiId = "aurindom@psb"; // Random string per user instruction or dummy
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    backgroundColor: Colors.white,
+    builder: (context) {
+      return Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "My QR Code",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Scan to pay me",
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: QrImageView(
+                data: "upi://pay?pa=$myUpiId&pn=User&cu=INR",
+                version: QrVersions.auto,
+                size: 200.0,
+                foregroundColor: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              "My UPI ID",
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  myUpiId,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                IconButton(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: myUpiId));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("UPI ID copied to clipboard"),
+                        backgroundColor: kForest,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.copy, color: kForest, size: 20),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.green.shade50,
+                    padding: const EdgeInsets.all(8),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 class UpiScreen extends StatefulWidget {
   const UpiScreen({super.key});
 
@@ -1481,11 +1579,14 @@ class _UpiScreenState extends State<UpiScreen> {
                   onNotificationTap: () => showNotifications(context),
                 ),
               ),
+
               LoanHeader(
                 title: "UPI Pays",
                 subtitle: "Send Money",
-                icon: Icons.phone_android,
+                icon: Icons.qr_code_2,
+                actionLabel: "My QR",
                 onBack: () => Navigator.pop(context),
+                onIconTap: () => showMyQrCode(context),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -1933,8 +2034,10 @@ class _QRScreenState extends State<QRScreen> {
             LoanHeader(
               title: "Scan QR Code",
               subtitle: "UPI Pays",
-              icon: Icons.qr_code_scanner,
+              icon: Icons.qr_code_2,
+              actionLabel: "My QR",
               onBack: () => Navigator.pop(context),
+              onIconTap: () => showMyQrCode(context),
             ),
             Expanded(
               child: _permissionGranted
