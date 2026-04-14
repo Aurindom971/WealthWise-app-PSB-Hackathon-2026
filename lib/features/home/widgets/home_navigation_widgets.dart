@@ -37,12 +37,12 @@ class TopBar extends StatelessWidget {
                   offset: const Offset(0, 3))
             ],
           ),
-          child: const Row(children: [
-            SizedBox(width: 16),
-            Icon(Icons.search_rounded, color: kSub, size: 20),
-            SizedBox(width: 8),
-            Text('Search',
-                style: TextStyle(
+          child: Row(children: [
+            const SizedBox(width: 16),
+            const Icon(Icons.search_rounded, color: kSub, size: 20),
+            const SizedBox(width: 8),
+            Text(searchText,
+                style: const TextStyle(
                     color: kSub, fontSize: 14, fontWeight: FontWeight.w400)),
           ]),
         ),
