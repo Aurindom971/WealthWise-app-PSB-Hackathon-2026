@@ -26,11 +26,17 @@ class AccountServicesPage extends StatelessWidget {
             ),
             actions: [
               IconButton(
-                icon: const Icon(Icons.notifications_none_rounded, color: kForest),
+                icon: const Icon(
+                  Icons.notifications_none_rounded,
+                  color: kForest,
+                ),
                 onPressed: () {},
               ),
               IconButton(
-                icon: const Icon(Icons.power_settings_new_rounded, color: kForest),
+                icon: const Icon(
+                  Icons.power_settings_new_rounded,
+                  color: kForest,
+                ),
                 onPressed: () {},
               ),
               const SizedBox(width: 8),

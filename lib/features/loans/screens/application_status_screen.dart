@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
-import '../../home/screens/home_screen.dart';
 import '../widgets/loan_header.dart';
 
 class ApplicationStatusScreen extends StatelessWidget {

@@ -31,7 +31,12 @@ class ServicesPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTile(BuildContext context, String title, IconData icon, [Widget? target]) {
+  Widget _buildTile(
+    BuildContext context,
+    String title,
+    IconData icon, [
+    Widget? target,
+  ]) {
     return GestureDetector(
       onTap: () {
         if (target != null) {
@@ -121,13 +126,48 @@ class ServicesPage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 24),
-        _buildTile(context, 'Order cheque book', Icons.menu_book_rounded, const OrderChequeBookPage()),
-        _buildTile(context, 'Accounts services', Icons.account_balance_outlined, const AccountServicesPage()),
-        _buildTile(context, 'Manage autopay', Icons.autorenew_rounded, const ManageAutopayPage()),
-        _buildTile(context, 'Cards services', Icons.credit_card_outlined, const CardServicesPage()),
-        _buildTile(context, 'Manage deliverables', Icons.inventory_2_outlined, const ManageDeliverablesPage()),
-        _buildTile(context, 'Pin and passwords management', Icons.vpn_key_outlined, const PinPasswordsPage()),
-        _buildTile(context, 'Report suspicious activities', Icons.privacy_tip_outlined, const ReportSuspiciousActivityPage()),
+        _buildTile(
+          context,
+          'Order cheque book',
+          Icons.menu_book_rounded,
+          const OrderChequeBookPage(),
+        ),
+        _buildTile(
+          context,
+          'Accounts services',
+          Icons.account_balance_outlined,
+          const AccountServicesPage(),
+        ),
+        _buildTile(
+          context,
+          'Manage autopay',
+          Icons.autorenew_rounded,
+          const ManageAutopayPage(),
+        ),
+        _buildTile(
+          context,
+          'Cards services',
+          Icons.credit_card_outlined,
+          const CardServicesPage(),
+        ),
+        _buildTile(
+          context,
+          'Manage deliverables',
+          Icons.inventory_2_outlined,
+          const ManageDeliverablesPage(),
+        ),
+        _buildTile(
+          context,
+          'Pin and passwords management',
+          Icons.vpn_key_outlined,
+          const PinPasswordsPage(),
+        ),
+        _buildTile(
+          context,
+          'Report suspicious activities',
+          Icons.privacy_tip_outlined,
+          const ReportSuspiciousActivityPage(),
+        ),
         const SizedBox(height: 32),
       ],
     );

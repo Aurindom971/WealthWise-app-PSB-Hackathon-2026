@@ -10,12 +10,20 @@ class ChangePasswordPage extends StatefulWidget {
 
 class _ChangePasswordPageState extends State<ChangePasswordPage> {
   int _currentStep = 1;
-  final TextEditingController _currentPasswordController = TextEditingController();
-  final List<TextEditingController> _emailOtpControllers = List.generate(6, (_) => TextEditingController());
-  final List<TextEditingController> _phoneOtpControllers = List.generate(6, (_) => TextEditingController());
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
+  final List<TextEditingController> _emailOtpControllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
+  final List<TextEditingController> _phoneOtpControllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-  
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
   bool _showPassword = false;
   String? _errorMessage;
 
@@ -48,7 +56,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
     if (!hasCapital || !hasDigit || !hasSymbol || !hasLength) {
       setState(() {
-        _errorMessage = 'Password must be >8 characters, with 1 capital, 1 symbol, and 1 digit';
+        _errorMessage =
+            'Password must be >8 characters, with 1 capital, 1 symbol, and 1 digit';
       });
       return;
     }
@@ -130,10 +139,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 const SizedBox(height: 4),
                 Text(
                   stepDesc,
-                  style: const TextStyle(
-                    color: kSub,
-                    fontSize: 13,
-                  ),
+                  style: const TextStyle(color: kSub, fontSize: 13),
                 ),
               ],
             ),
@@ -235,13 +241,22 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     ),
                     child: Text(
                       'OTP sent to your registered ${_currentStep == 2 ? 'email' : 'phone number'}',
-                      style: const TextStyle(color: kForest, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        color: kForest,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 _buildStepHeader(),
                 const SizedBox(height: 32),
                 if (_currentStep == 1) ...[
-                  const Text('Current Password', style: TextStyle(fontWeight: FontWeight.bold, color: kForest)),
+                  const Text(
+                    'Current Password',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: kForest,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _currentPasswordController,
@@ -251,8 +266,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       filled: true,
                       fillColor: Colors.white,
                       suffixIcon: IconButton(
-                        icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off, color: kSub),
-                        onPressed: () => setState(() => _showPassword = !_showPassword),
+                        icon: Icon(
+                          _showPassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: kSub,
+                        ),
+                        onPressed: () =>
+                            setState(() => _showPassword = !_showPassword),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -261,29 +282,59 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     ),
                   ),
                 ] else if (_currentStep == 2) ...[
-                  const Text('Email OTP', style: TextStyle(fontWeight: FontWeight.bold, color: kForest)),
+                  const Text(
+                    'Email OTP',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: kForest,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   _buildOtpInput(_emailOtpControllers),
                   const SizedBox(height: 20),
                   Center(
                     child: TextButton(
                       onPressed: () {},
-                      child: const Text('Resend OTP', style: TextStyle(color: kMid, decoration: TextDecoration.underline)),
+                      child: const Text(
+                        'Resend OTP',
+                        style: TextStyle(
+                          color: kMid,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
                     ),
                   ),
                 ] else if (_currentStep == 3) ...[
-                  const Text('Phone OTP', style: TextStyle(fontWeight: FontWeight.bold, color: kForest)),
+                  const Text(
+                    'Phone OTP',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: kForest,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   _buildOtpInput(_phoneOtpControllers),
                   const SizedBox(height: 20),
                   Center(
                     child: TextButton(
                       onPressed: () {},
-                      child: const Text('Resend OTP', style: TextStyle(color: kMid, decoration: TextDecoration.underline)),
+                      child: const Text(
+                        'Resend OTP',
+                        style: TextStyle(
+                          color: kMid,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
                     ),
                   ),
                 ] else if (_currentStep == 4) ...[
-                  const Text('New Password', style: TextStyle(fontWeight: FontWeight.bold, color: kForest)),
+                  const Text(
+                    'New Password',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: kForest,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _newPasswordController,
@@ -293,8 +344,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       filled: true,
                       fillColor: Colors.white,
                       suffixIcon: IconButton(
-                        icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off, color: kSub),
-                        onPressed: () => setState(() => _showPassword = !_showPassword),
+                        icon: Icon(
+                          _showPassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: kSub,
+                        ),
+                        onPressed: () =>
+                            setState(() => _showPassword = !_showPassword),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -303,7 +360,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text('Confirm New Password', style: TextStyle(fontWeight: FontWeight.bold, color: kForest)),
+                  const Text(
+                    'Confirm New Password',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: kForest,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _confirmPasswordController,
@@ -334,9 +397,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         _currentStep == 1
                             ? 'Verify & Send OTP'
                             : _currentStep == 2 || _currentStep == 3
-                                ? 'Verify and Next'
-                                : 'Change Password',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                            ? 'Verify and Next'
+                            : 'Change Password',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ),
@@ -350,27 +417,47 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               left: 20,
               right: 20,
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.red,
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(12),
+                  ),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.white, size: 20),
+                    const Icon(
+                      Icons.error_outline,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     GestureDetector(
                       onTap: () => setState(() => _errorMessage = null),
-                      child: const Icon(Icons.close, color: Colors.white, size: 18),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
                   ],
                 ),

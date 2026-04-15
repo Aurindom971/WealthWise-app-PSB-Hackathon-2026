@@ -69,7 +69,9 @@ class _AutopayMandateCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: kSub.withOpacity(0.05),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
               ),
               child: Row(
                 children: [
@@ -114,7 +116,11 @@ class _AutopayMandateCard extends StatelessWidget {
                     color: mandate.iconBgColor.withOpacity(0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(mandate.icon, color: mandate.iconBgColor, size: 24),
+                  child: Icon(
+                    mandate.icon,
+                    color: mandate.iconBgColor,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -132,10 +138,7 @@ class _AutopayMandateCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         mandate.subtitle,
-                        style: const TextStyle(
-                          color: kSub,
-                          fontSize: 13,
-                        ),
+                        style: const TextStyle(color: kSub, fontSize: 13),
                       ),
                     ],
                   ),
@@ -156,14 +159,14 @@ class _AutopayMandateCard extends StatelessWidget {
                       mandate.status == AutopayStatus.active
                           ? 'Active'
                           : mandate.status == AutopayStatus.skipped
-                              ? 'Skipped'
-                              : 'Stopped',
+                          ? 'Skipped'
+                          : 'Stopped',
                       style: TextStyle(
                         color: mandate.status == AutopayStatus.active
                             ? kAccent
                             : mandate.status == AutopayStatus.skipped
-                                ? Colors.orange
-                                : Colors.red,
+                            ? Colors.orange
+                            : Colors.red,
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
                       ),
@@ -182,7 +185,9 @@ class _AutopayMandateCard extends StatelessWidget {
                   if (mandate.status != AutopayStatus.stopped)
                     Expanded(
                       child: GestureDetector(
-                        onTap: mandate.status == AutopayStatus.active ? onSkip : onReactivate,
+                        onTap: mandate.status == AutopayStatus.active
+                            ? onSkip
+                            : onReactivate,
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
@@ -193,7 +198,9 @@ class _AutopayMandateCard extends StatelessWidget {
                           ),
                           child: Center(
                             child: Text(
-                              mandate.status == AutopayStatus.active ? 'Skip Next' : 'Reactivate',
+                              mandate.status == AutopayStatus.active
+                                  ? 'Skip Next'
+                                  : 'Reactivate',
                               style: TextStyle(
                                 color: mandate.status == AutopayStatus.active
                                     ? Colors.red
@@ -255,7 +262,10 @@ class _AutopayMandateCard extends StatelessWidget {
                   GestureDetector(
                     onTap: onToggle,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: kSub.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -337,7 +347,9 @@ class _ManageAutopayPageState extends State<ManageAutopayPage> {
 
   @override
   Widget build(BuildContext context) {
-    int activeCount = _mandates.where((m) => m.status != AutopayStatus.stopped).length;
+    int activeCount = _mandates
+        .where((m) => m.status != AutopayStatus.stopped)
+        .length;
 
     return Scaffold(
       backgroundColor: kCream,
@@ -390,7 +402,11 @@ class _ManageAutopayPageState extends State<ManageAutopayPage> {
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.autorenew_rounded, size: 50, color: kSub),
+                    child: const Icon(
+                      Icons.autorenew_rounded,
+                      size: 50,
+                      color: kSub,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   const Text(
@@ -409,48 +425,51 @@ class _ManageAutopayPageState extends State<ManageAutopayPage> {
               children: [
                 Text(
                   '$activeCount active mandates',
-                  style: const TextStyle(
-                    color: kSub,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: kSub, fontSize: 14),
                 ),
                 const SizedBox(height: 24),
-                ..._mandates.map((mandate) => _AutopayMandateCard(
-                      mandate: mandate,
-                      onToggle: () => setState(() => mandate.isExpanded = !mandate.isExpanded),
-                      onSkip: () {
-                        setState(() {
-                          mandate.status = AutopayStatus.skipped;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Next payment skipped')),
-                        );
-                      },
-                      onReactivate: () {
-                        setState(() {
-                          mandate.status = AutopayStatus.active;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Autopay reactivated')),
-                        );
-                      },
-                      onStop: () {
-                        setState(() {
-                          mandate.status = AutopayStatus.stopped;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Autopay stopped')),
-                        );
-                      },
-                      onRemove: () {
-                        setState(() {
-                          _mandates.remove(mandate);
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Mandate removed permanently')),
-                        );
-                      },
-                    )),
+                ..._mandates.map(
+                  (mandate) => _AutopayMandateCard(
+                    mandate: mandate,
+                    onToggle: () => setState(
+                      () => mandate.isExpanded = !mandate.isExpanded,
+                    ),
+                    onSkip: () {
+                      setState(() {
+                        mandate.status = AutopayStatus.skipped;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Next payment skipped')),
+                      );
+                    },
+                    onReactivate: () {
+                      setState(() {
+                        mandate.status = AutopayStatus.active;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Autopay reactivated')),
+                      );
+                    },
+                    onStop: () {
+                      setState(() {
+                        mandate.status = AutopayStatus.stopped;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Autopay stopped')),
+                      );
+                    },
+                    onRemove: () {
+                      setState(() {
+                        _mandates.remove(mandate);
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Mandate removed permanently'),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
     );

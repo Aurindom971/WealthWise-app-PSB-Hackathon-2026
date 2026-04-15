@@ -55,7 +55,11 @@ class PersonalInfoPage extends StatelessWidget {
                       color: kAccent.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.person_outline_rounded, color: kForest, size: 48),
+                    child: const Icon(
+                      Icons.person_outline_rounded,
+                      color: kForest,
+                      size: 48,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -94,17 +98,41 @@ class PersonalInfoPage extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildInfoRow(Icons.person_outline_rounded, 'Full Name', 'John Doe'),
+                  _buildInfoRow(
+                    Icons.person_outline_rounded,
+                    'Full Name',
+                    'John Doe',
+                  ),
                   _buildDivider(),
-                  _buildInfoRow(Icons.calendar_today_outlined, 'Date of Birth', '15 March 1990'),
+                  _buildInfoRow(
+                    Icons.calendar_today_outlined,
+                    'Date of Birth',
+                    '15 March 1990',
+                  ),
                   _buildDivider(),
-                  _buildInfoRow(Icons.phone_outlined, 'Phone Number', '+91 98765 43210'),
+                  _buildInfoRow(
+                    Icons.phone_outlined,
+                    'Phone Number',
+                    '+91 98765 43210',
+                  ),
                   _buildDivider(),
-                  _buildInfoRow(Icons.email_outlined, 'Email', 'johndoe@email.com'),
+                  _buildInfoRow(
+                    Icons.email_outlined,
+                    'Email',
+                    'johndoe@email.com',
+                  ),
                   _buildDivider(),
-                  _buildInfoRow(Icons.location_on_outlined, 'Address', '42, MG Road, New Delhi, 110001'),
+                  _buildInfoRow(
+                    Icons.location_on_outlined,
+                    'Address',
+                    '42, MG Road, New Delhi, 110001',
+                  ),
                   _buildDivider(),
-                  _buildInfoRow(Icons.credit_card_outlined, 'PAN', 'ABCDE1234F'),
+                  _buildInfoRow(
+                    Icons.credit_card_outlined,
+                    'PAN',
+                    'ABCDE1234F',
+                  ),
                 ],
               ),
             ),

@@ -88,7 +88,10 @@ class OrderChequeBookPage extends StatelessWidget {
                   const SizedBox(height: 20),
                   _buildDetailRow('Leaves', '25 leaves'),
                   const SizedBox(height: 20),
-                  _buildDetailRow('Delivery Address', 'Branch Address (Connaught Place)'),
+                  _buildDetailRow(
+                    'Delivery Address',
+                    'Branch Address (Connaught Place)',
+                  ),
                   const SizedBox(height: 32),
                   GestureDetector(
                     onTap: () => _requestChequeBook(context),
@@ -124,13 +127,7 @@ class OrderChequeBookPage extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: kSub,
-            fontSize: 14,
-          ),
-        ),
+        Text(label, style: const TextStyle(color: kSub, fontSize: 14)),
         const SizedBox(width: 16),
         Expanded(
           child: Text(

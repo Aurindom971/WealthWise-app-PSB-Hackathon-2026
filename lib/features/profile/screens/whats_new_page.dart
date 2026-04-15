@@ -138,7 +138,11 @@ class WhatsNewPage extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          const Icon(Icons.check_circle_outline_rounded, color: kForest, size: 20),
+          const Icon(
+            Icons.check_circle_outline_rounded,
+            color: kForest,
+            size: 20,
+          ),
         ],
       ),
     );

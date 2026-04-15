@@ -95,7 +95,11 @@ class ReportSuspiciousActivityPage extends StatelessWidget {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.attach_file_rounded, color: kForest, size: 20),
+                          Icon(
+                            Icons.attach_file_rounded,
+                            color: kForest,
+                            size: 20,
+                          ),
                           SizedBox(width: 8),
                           Text(
                             'Attach Media / Evidence',
@@ -176,10 +180,7 @@ class ReportSuspiciousActivityPage extends StatelessWidget {
                   const SizedBox(height: 8),
                   const Text(
                     'Call our 24/7 fraud helpline for urgent assistance',
-                    style: TextStyle(
-                      color: kSub,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: kSub, fontSize: 14),
                   ),
                   const SizedBox(height: 20),
                   GestureDetector(
@@ -193,7 +194,11 @@ class ReportSuspiciousActivityPage extends StatelessWidget {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.call_rounded, color: Colors.white, size: 20),
+                          Icon(
+                            Icons.call_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                           SizedBox(width: 8),
                           Text(
                             'Call Helpline: 1800-123-4567',

@@ -78,7 +78,10 @@ class RelationshipManagerPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF1F4F2),
                   borderRadius: BorderRadius.circular(12),
@@ -99,12 +102,20 @@ class RelationshipManagerPage extends StatelessWidget {
                     ),
                     GestureDetector(
                       onTap: () {
-                        Clipboard.setData(const ClipboardData(text: 'rm.johndoe@psb.co.in'));
+                        Clipboard.setData(
+                          const ClipboardData(text: 'rm.johndoe@psb.co.in'),
+                        );
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Email copied to clipboard')),
+                          const SnackBar(
+                            content: Text('Email copied to clipboard'),
+                          ),
                         );
                       },
-                      child: const Icon(Icons.copy_rounded, color: kForest, size: 18),
+                      child: const Icon(
+                        Icons.copy_rounded,
+                        color: kForest,
+                        size: 18,
+                      ),
                     ),
                   ],
                 ),
@@ -133,7 +144,11 @@ class RelationshipManagerPage extends StatelessWidget {
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.call_outlined, color: Colors.white, size: 18),
+                            Icon(
+                              Icons.call_outlined,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                             SizedBox(width: 8),
                             Text(
                               'Call',
@@ -162,7 +177,11 @@ class RelationshipManagerPage extends StatelessWidget {
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.chat_bubble_outline_rounded, color: kForest, size: 18),
+                            Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              color: kForest,
+                              size: 18,
+                            ),
                             SizedBox(width: 8),
                             Text(
                               'Text',

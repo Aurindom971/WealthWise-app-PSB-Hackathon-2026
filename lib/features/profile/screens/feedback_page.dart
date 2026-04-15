@@ -72,7 +72,10 @@ class FeedbackPage extends StatelessWidget {
                   const SizedBox(height: 20),
                   Container(
                     height: 200,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: kSub.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(12),

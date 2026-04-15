@@ -69,7 +69,11 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
               const SizedBox(height: 24),
               const Text(
                 'Delivery Address',
-                style: TextStyle(color: kSub, fontSize: 13, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: kSub,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -80,7 +84,11 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
                 const SizedBox(height: 24),
                 const Text(
                   'Select Card Type',
-                  style: TextStyle(color: kSub, fontSize: 13, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: kSub,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -104,11 +112,13 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
                 onTap: () {
                   if (isCard && selectedSubtype == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please select a card type')),
+                      const SnackBar(
+                        content: Text('Please select a card type'),
+                      ),
                     );
                     return;
                   }
-                  
+
                   // Add to tracked orders
                   ManageDeliverablesPage.trackedOrders.insert(0, {
                     'title': isCard ? '$selectedSubtype $title' : title,
@@ -119,7 +129,9 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('$title order has been placed successfully'),
+                      content: Text(
+                        '$title order has been placed successfully',
+                      ),
                       backgroundColor: kForest,
                       behavior: SnackBarBehavior.floating,
                     ),
@@ -153,7 +165,11 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
     );
   }
 
-  Widget _buildSubtypeOption(String label, bool isSelected, VoidCallback onTap) {
+  Widget _buildSubtypeOption(
+    String label,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -162,7 +178,9 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
           decoration: BoxDecoration(
             color: isSelected ? kForest : Colors.white,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: isSelected ? kForest : kSub.withOpacity(0.2)),
+            border: Border.all(
+              color: isSelected ? kForest : kSub.withOpacity(0.2),
+            ),
           ),
           child: Center(
             child: Text(
@@ -184,7 +202,9 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
         if (title == 'Cheque Book') {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const OrderChequeBookPage()),
+            MaterialPageRoute(
+              builder: (context) => const OrderChequeBookPage(),
+            ),
           ).then((_) => setState(() {}));
         } else {
           _showOrderConfirmation(title, icon);
@@ -230,15 +250,16 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      color: kSub,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: kSub, fontSize: 12),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.keyboard_arrow_down_rounded, color: kSub, size: 22),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: kSub,
+              size: 22,
+            ),
           ],
         ),
       ),
@@ -278,7 +299,10 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: kAccent.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
@@ -297,10 +321,7 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
                 const SizedBox(height: 4),
                 Text(
                   'Ordered on ${order['date']}',
-                  style: const TextStyle(
-                    color: kSub,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: kSub, fontSize: 12),
                 ),
               ],
             ),
@@ -352,7 +373,10 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
                 GestureDetector(
                   onTap: () => setState(() => isOrderTab = true),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: isOrderTab ? kForest : kAccent.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -370,7 +394,10 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
                 GestureDetector(
                   onTap: () => setState(() => isOrderTab = false),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: !isOrderTab ? kForest : kAccent.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(20),
@@ -397,10 +424,7 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
                     children: [
                       const Text(
                         'Order cheque books, cards, and other banking\ndeliverables',
-                        style: TextStyle(
-                          color: kSub,
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(color: kSub, fontSize: 13),
                       ),
                       const SizedBox(height: 24),
                       _buildOrderTile(
@@ -436,19 +460,21 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
                     ],
                   )
                 : ManageDeliverablesPage.trackedOrders.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'No active requests found.',
-                          style: TextStyle(color: kSub),
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(18),
-                        itemCount: ManageDeliverablesPage.trackedOrders.length,
-                        itemBuilder: (context, i) {
-                          return _buildTrackedCard(ManageDeliverablesPage.trackedOrders[i]);
-                        },
-                      ),
+                ? const Center(
+                    child: Text(
+                      'No active requests found.',
+                      style: TextStyle(color: kSub),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(18),
+                    itemCount: ManageDeliverablesPage.trackedOrders.length,
+                    itemBuilder: (context, i) {
+                      return _buildTrackedCard(
+                        ManageDeliverablesPage.trackedOrders[i],
+                      );
+                    },
+                  ),
           ),
         ],
       ),

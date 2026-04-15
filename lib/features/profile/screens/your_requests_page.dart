@@ -80,7 +80,10 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
               });
               Navigator.pop(context);
             },
-            child: const Text('OK', style: TextStyle(color: kMid, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'OK',
+              style: TextStyle(color: kMid, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -137,7 +140,9 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
                       height: 44,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: isNewApplication ? kForest : kSub.withOpacity(0.1),
+                        color: isNewApplication
+                            ? kForest
+                            : kSub.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(22),
                       ),
                       child: Text(
@@ -158,7 +163,9 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
                       height: 44,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: !isNewApplication ? kForest : kSub.withOpacity(0.1),
+                        color: !isNewApplication
+                            ? kForest
+                            : kSub.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(22),
                       ),
                       child: Text(
@@ -192,7 +199,9 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: isActive ? kAccent.withOpacity(0.1) : Colors.transparent,
+                      color: isActive
+                          ? kAccent.withOpacity(0.1)
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(
                         color: isActive ? kAccent : kSub.withOpacity(0.3),
@@ -203,7 +212,9 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
                       cat,
                       style: TextStyle(
                         color: isActive ? kForest : kSub,
-                        fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: isActive
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                         fontSize: 13,
                       ),
                     ),
@@ -221,30 +232,32 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
                     itemCount: applications.length,
                     itemBuilder: (context, i) {
                       final app = applications[i];
-                      if (selectedCategory != 'All' && app['category'] != selectedCategory) {
+                      if (selectedCategory != 'All' &&
+                          app['category'] != selectedCategory) {
                         return const SizedBox.shrink();
                       }
                       return _buildApplicationCard(app);
                     },
                   )
                 : trackedApplications.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'No requests to track yet.',
-                          style: TextStyle(color: kSub),
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
-                        itemCount: trackedApplications.length,
-                        itemBuilder: (context, i) {
-                          final app = trackedApplications[i];
-                          if (selectedCategory != 'All' && app['category'] != selectedCategory) {
-                            return const SizedBox.shrink();
-                          }
-                          return _buildTrackedCard(app);
-                        },
-                      ),
+                ? const Center(
+                    child: Text(
+                      'No requests to track yet.',
+                      style: TextStyle(color: kSub),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    itemCount: trackedApplications.length,
+                    itemBuilder: (context, i) {
+                      final app = trackedApplications[i];
+                      if (selectedCategory != 'All' &&
+                          app['category'] != selectedCategory) {
+                        return const SizedBox.shrink();
+                      }
+                      return _buildTrackedCard(app);
+                    },
+                  ),
           ),
         ],
       ),
@@ -283,10 +296,7 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
                 const SizedBox(height: 4),
                 Text(
                   app['subtitle']!,
-                  style: const TextStyle(
-                    color: kSub,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: kSub, fontSize: 12),
                 ),
               ],
             ),
@@ -354,7 +364,10 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: kAccent.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
@@ -373,10 +386,7 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
                 const SizedBox(height: 4),
                 Text(
                   'Applied on ${app['date']}',
-                  style: const TextStyle(
-                    color: kSub,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: kSub, fontSize: 12),
                 ),
               ],
             ),

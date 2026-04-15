@@ -48,8 +48,6 @@ List<String> userAccounts = [
 
 List<String> upiContacts = ["rahul@upi", "amit@upi", "priya@upi"];
 
-
-
 //////////////////// MAIN SCREEN ////////////////////
 
 class SendTransferScreen extends StatelessWidget {
@@ -549,7 +547,8 @@ Widget customBankInput(
           enabled: enabled,
           inputFormatters: [
             if (isNumber) FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
-            if (label.toLowerCase().contains("name")) FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+            if (label.toLowerCase().contains("name"))
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
           ],
           decoration: InputDecoration(
             hintText: hint,
@@ -617,351 +616,366 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-      backgroundColor: kCream,
-      bottomNavigationBar: BottomNav(
-        currentIndex: -1,
-        onTap: (i) => Navigator.popUntil(context, (route) => route.isFirst),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: TopBar(
-                onHomeTap: () =>
-                    Navigator.popUntil(context, (route) => route.isFirst),
-                onLogoutTap: () =>
-                    Navigator.popUntil(context, (route) => route.isFirst),
-                onNotificationTap: () => showNotifications(context),
-              ),
-            ),
-            LoanHeader(
-              title: "Bank Transfer",
-              subtitle: "Send Money",
-              icon: Icons.swap_horiz,
-              onBack: () => Navigator.pop(context),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    // FROM Section
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.circle, size: 10, color: kAccent),
-                              const SizedBox(width: 8),
-                              const Text(
-                                "FROM:",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          SearchableDropdown(
-                            label: "Select Account",
-                            hint: "Select PSB Account",
-                            items: userAccounts,
-                            value: fromAccount,
-                            showSearch: false,
-                            onChanged: (val) {
-                              setState(() {
-                                fromAccount = val;
-                                // Auto-fill FROM Mock Data
-                                _fromAccController.text = val.replaceAll(
-                                  RegExp(r'[^0-9]'),
-                                  '',
-                                );
-                                _fromIfscController.text = "PSIB0001234";
-                                _fromNomineeController.text = "Rajesh Kumar";
-                              });
-                            },
-                          ),
-                          customBankInput(
-                            "Account No.",
-                            "Account Number",
-                            enabled: false,
-                            controller: _fromAccController,
-                          ),
-                          customBankInput(
-                            "IFSC Code",
-                            "e.g. PSIB0000001",
-                            enabled: false,
-                            controller: _fromIfscController,
-                          ),
-                          customBankInput(
-                            "Nominee Name",
-                            "Account Holder Name",
-                            enabled: false,
-                            controller: _fromNomineeController,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // TO Section
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.circle, size: 10, color: kMid),
-                              const SizedBox(width: 8),
-                              const Text(
-                                "TO:",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          SearchableDropdown(
-                            label: "Select Bank",
-                            hint: "Search and select bank",
-                            items: allBanks,
-                            value: toBank,
-                            showSearch: true,
-                            onChanged: (val) {
-                              setState(() {
-                                toBank = val;
-                              });
-                            },
-                          ),
-                          customBankInput(
-                            "Account No.",
-                            "Recipient Account Number",
-                            isNumber: true,
-                            controller: _toAccountController,
-                          ),
-                          customBankInput(
-                            "IFSC Code",
-                            "e.g. SBIN0001234",
-                            controller: _toIfscController,
-                          ),
-                          customBankInput(
-                            "Nominee Name",
-                            "Recipient Name",
-                            controller: _toNomineeController,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // PURPOSE Section
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.circle, size: 10, color: kForest),
-                              const SizedBox(width: 8),
-                              const Text(
-                                "PURPOSE:",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          SearchableDropdown(
-                            label: "Select Purpose",
-                            hint: "Search and select purpose",
-                            items: transferPurposes,
-                            value: transferPurpose,
-                            showSearch: true,
-                            onChanged: (val) {
-                              setState(() {
-                                transferPurpose = val;
-                                if (val != "Other") {
-                                  _otherPurposeController.clear();
-                                }
-                              });
-                            },
-                          ),
-                          if (transferPurpose == "Other")
-                            customBankInput(
-                              "Specify Purpose",
-                              "Enter your reason",
-                              controller: _otherPurposeController,
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // AMOUNT Section
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.circle, size: 10, color: kAccent),
-                              const SizedBox(width: 8),
-                              const Text(
-                                "AMOUNT",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                          customBankInput(
-                            "Enter Amount (₹)",
-                            "0.00",
-                            isNumber: true,
-                            controller: _amountController,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+        backgroundColor: kCream,
+        bottomNavigationBar: BottomNav(
+          currentIndex: -1,
+          onTap: (i) => Navigator.popUntil(context, (route) => route.isFirst),
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                child: TopBar(
+                  onHomeTap: () =>
+                      Navigator.popUntil(context, (route) => route.isFirst),
+                  onLogoutTap: () =>
+                      Navigator.popUntil(context, (route) => route.isFirst),
+                  onNotificationTap: () => showNotifications(context),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Container(
-          width: double.infinity,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [kForest, kMid],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: kForest.withValues(alpha: 0.25),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+              LoanHeader(
+                title: "Bank Transfer",
+                subtitle: "Send Money",
+                icon: Icons.swap_horiz,
+                onBack: () => Navigator.pop(context),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      // FROM Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.circle,
+                                  size: 10,
+                                  color: kAccent,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  "FROM:",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            SearchableDropdown(
+                              label: "Select Account",
+                              hint: "Select PSB Account",
+                              items: userAccounts,
+                              value: fromAccount,
+                              showSearch: false,
+                              onChanged: (val) {
+                                setState(() {
+                                  fromAccount = val;
+                                  // Auto-fill FROM Mock Data
+                                  _fromAccController.text = val.replaceAll(
+                                    RegExp(r'[^0-9]'),
+                                    '',
+                                  );
+                                  _fromIfscController.text = "PSIB0001234";
+                                  _fromNomineeController.text = "Rajesh Kumar";
+                                });
+                              },
+                            ),
+                            customBankInput(
+                              "Account No.",
+                              "Account Number",
+                              enabled: false,
+                              controller: _fromAccController,
+                            ),
+                            customBankInput(
+                              "IFSC Code",
+                              "e.g. PSIB0000001",
+                              enabled: false,
+                              controller: _fromIfscController,
+                            ),
+                            customBankInput(
+                              "Nominee Name",
+                              "Account Holder Name",
+                              enabled: false,
+                              controller: _fromNomineeController,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // TO Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.circle, size: 10, color: kMid),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  "TO:",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            SearchableDropdown(
+                              label: "Select Bank",
+                              hint: "Search and select bank",
+                              items: allBanks,
+                              value: toBank,
+                              showSearch: true,
+                              onChanged: (val) {
+                                setState(() {
+                                  toBank = val;
+                                });
+                              },
+                            ),
+                            customBankInput(
+                              "Account No.",
+                              "Recipient Account Number",
+                              isNumber: true,
+                              controller: _toAccountController,
+                            ),
+                            customBankInput(
+                              "IFSC Code",
+                              "e.g. SBIN0001234",
+                              controller: _toIfscController,
+                            ),
+                            customBankInput(
+                              "Nominee Name",
+                              "Recipient Name",
+                              controller: _toNomineeController,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // PURPOSE Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.circle,
+                                  size: 10,
+                                  color: kForest,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  "PURPOSE:",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            SearchableDropdown(
+                              label: "Select Purpose",
+                              hint: "Search and select purpose",
+                              items: transferPurposes,
+                              value: transferPurpose,
+                              showSearch: true,
+                              onChanged: (val) {
+                                setState(() {
+                                  transferPurpose = val;
+                                  if (val != "Other") {
+                                    _otherPurposeController.clear();
+                                  }
+                                });
+                              },
+                            ),
+                            if (transferPurpose == "Other")
+                              customBankInput(
+                                "Specify Purpose",
+                                "Enter your reason",
+                                controller: _otherPurposeController,
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // AMOUNT Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.circle,
+                                  size: 10,
+                                  color: kAccent,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  "AMOUNT",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            customBankInput(
+                              "Enter Amount (₹)",
+                              "0.00",
+                              isNumber: true,
+                              controller: _amountController,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [kForest, kMid],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
               ),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: kForest.withValues(alpha: 0.25),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            onPressed: () {
-              if (fromAccount == null ||
-                  toBank == null ||
-                  transferPurpose == null ||
-                  (transferPurpose == "Other" &&
-                      _otherPurposeController.text.trim().isEmpty) ||
-                  _toAccountController.text.trim().isEmpty ||
-                  _toIfscController.text.trim().isEmpty ||
-                  _toNomineeController.text.trim().isEmpty ||
-                  _amountController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Please fill in all compulsory details!"),
-                    backgroundColor: Colors.red,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              onPressed: () {
+                if (fromAccount == null ||
+                    toBank == null ||
+                    transferPurpose == null ||
+                    (transferPurpose == "Other" &&
+                        _otherPurposeController.text.trim().isEmpty) ||
+                    _toAccountController.text.trim().isEmpty ||
+                    _toIfscController.text.trim().isEmpty ||
+                    _toNomineeController.text.trim().isEmpty ||
+                    _amountController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Please fill in all compulsory details!"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PinScreen(
+                      recipientName: _toNomineeController.text,
+                      amount: _amountController.text,
+                    ),
                   ),
                 );
-                return;
-              }
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PinScreen(
-                    recipientName: _toNomineeController.text,
-                    amount: _amountController.text,
-                  ),
+              },
+              child: const Text(
+                "Proceed to Pay",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
-              );
-            },
-            child: const Text(
-              "Proceed to Pay",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
               ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -1010,377 +1024,392 @@ class _SelfTransferScreenState extends State<SelfTransferScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-      backgroundColor: kCream,
-      bottomNavigationBar: BottomNav(
-        currentIndex: -1,
-        onTap: (i) => Navigator.popUntil(context, (route) => route.isFirst),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: TopBar(
-                onHomeTap: () =>
-                    Navigator.popUntil(context, (route) => route.isFirst),
-                onLogoutTap: () =>
-                    Navigator.popUntil(context, (route) => route.isFirst),
-                onNotificationTap: () => showNotifications(context),
-              ),
-            ),
-            LoanHeader(
-              title: "Self Transfer",
-              subtitle: "Send Money",
-              icon: Icons.sync,
-              onBack: () => Navigator.pop(context),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    // FROM Section
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.circle, size: 10, color: kAccent),
-                              const SizedBox(width: 8),
-                              const Text(
-                                "FROM:",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          SearchableDropdown(
-                            label: "Select Account",
-                            hint: "Select PSB Account",
-                            items: userAccounts,
-                            value: fromAccount,
-                            showSearch: false,
-                            onChanged: (val) {
-                              setState(() {
-                                fromAccount = val;
-                                if (toAccount == val) {
-                                  toAccount = null;
-                                  _toAccController.clear();
-                                  _toIfscController.clear();
-                                  _toNomineeController.clear();
-                                }
-                                _fromAccController.text = val.replaceAll(
-                                  RegExp(r'[^0-9]'),
-                                  '',
-                                );
-                                _fromIfscController.text = "PSIB0001234";
-                                _fromNomineeController.text = "Rajesh Kumar";
-                              });
-                            },
-                          ),
-                          customBankInput(
-                            "Account No.",
-                            "Account Number",
-                            enabled: false,
-                            controller: _fromAccController,
-                          ),
-                          customBankInput(
-                            "IFSC Code",
-                            "e.g. PSIB0000001",
-                            enabled: false,
-                            controller: _fromIfscController,
-                          ),
-                          customBankInput(
-                            "Nominee Name",
-                            "Account Holder Name",
-                            enabled: false,
-                            controller: _fromNomineeController,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // TO Section
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.circle, size: 10, color: kMid),
-                              const SizedBox(width: 8),
-                              const Text(
-                                "TO:",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          SearchableDropdown(
-                            label: "Select Account",
-                            hint: "Select Your Account",
-                            items: userAccounts
-                                .where((acc) => acc != fromAccount)
-                                .toList(),
-                            value: toAccount,
-                            showSearch: false,
-                            onChanged: (val) {
-                              setState(() {
-                                toAccount = val;
-                                // For self transfer, the TO account is automatically filled too!
-                                _toAccController.text = val.replaceAll(
-                                  RegExp(r'[^0-9]'),
-                                  '',
-                                );
-                                _toIfscController.text = "PSIB0001234";
-                                _toNomineeController.text = "Rajesh Kumar";
-                              });
-                            },
-                          ),
-                          customBankInput(
-                            "Account No.",
-                            "Recipient Account Number",
-                            isNumber: true,
-                            enabled: false,
-                            controller: _toAccController,
-                          ),
-                          customBankInput(
-                            "IFSC Code",
-                            "e.g. PSIB0001234",
-                            enabled: false,
-                            controller: _toIfscController,
-                          ),
-                          customBankInput(
-                            "Nominee Name",
-                            "Recipient Name",
-                            enabled: false,
-                            controller: _toNomineeController,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // PURPOSE Section
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.circle, size: 10, color: kForest),
-                              const SizedBox(width: 8),
-                              const Text(
-                                "PURPOSE:",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          SearchableDropdown(
-                            label: "Select Purpose",
-                            hint: "Search and select purpose",
-                            items: transferPurposes,
-                            value: transferPurpose,
-                            showSearch: true,
-                            onChanged: (val) {
-                              setState(() {
-                                transferPurpose = val;
-                                if (val != "Other") {
-                                  _otherPurposeController.clear();
-                                }
-                              });
-                            },
-                          ),
-                          if (transferPurpose == "Other")
-                            customBankInput(
-                              "Specify Purpose",
-                              "Enter your reason",
-                              controller: _otherPurposeController,
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // AMOUNT Section
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.circle, size: 10, color: kAccent),
-                              const SizedBox(width: 8),
-                              const Text(
-                                "AMOUNT",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                          customBankInput(
-                            "Enter Amount (₹)",
-                            "0.00",
-                            isNumber: true,
-                            controller: _amountController,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+        backgroundColor: kCream,
+        bottomNavigationBar: BottomNav(
+          currentIndex: -1,
+          onTap: (i) => Navigator.popUntil(context, (route) => route.isFirst),
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+                child: TopBar(
+                  onHomeTap: () =>
+                      Navigator.popUntil(context, (route) => route.isFirst),
+                  onLogoutTap: () =>
+                      Navigator.popUntil(context, (route) => route.isFirst),
+                  onNotificationTap: () => showNotifications(context),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Container(
-          width: double.infinity,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [kForest, kMid],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: kForest.withValues(alpha: 0.25),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+              LoanHeader(
+                title: "Self Transfer",
+                subtitle: "Send Money",
+                icon: Icons.sync,
+                onBack: () => Navigator.pop(context),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      // FROM Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.circle,
+                                  size: 10,
+                                  color: kAccent,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  "FROM:",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            SearchableDropdown(
+                              label: "Select Account",
+                              hint: "Select PSB Account",
+                              items: userAccounts,
+                              value: fromAccount,
+                              showSearch: false,
+                              onChanged: (val) {
+                                setState(() {
+                                  fromAccount = val;
+                                  if (toAccount == val) {
+                                    toAccount = null;
+                                    _toAccController.clear();
+                                    _toIfscController.clear();
+                                    _toNomineeController.clear();
+                                  }
+                                  _fromAccController.text = val.replaceAll(
+                                    RegExp(r'[^0-9]'),
+                                    '',
+                                  );
+                                  _fromIfscController.text = "PSIB0001234";
+                                  _fromNomineeController.text = "Rajesh Kumar";
+                                });
+                              },
+                            ),
+                            customBankInput(
+                              "Account No.",
+                              "Account Number",
+                              enabled: false,
+                              controller: _fromAccController,
+                            ),
+                            customBankInput(
+                              "IFSC Code",
+                              "e.g. PSIB0000001",
+                              enabled: false,
+                              controller: _fromIfscController,
+                            ),
+                            customBankInput(
+                              "Nominee Name",
+                              "Account Holder Name",
+                              enabled: false,
+                              controller: _fromNomineeController,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // TO Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.circle, size: 10, color: kMid),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  "TO:",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            SearchableDropdown(
+                              label: "Select Account",
+                              hint: "Select Your Account",
+                              items: userAccounts
+                                  .where((acc) => acc != fromAccount)
+                                  .toList(),
+                              value: toAccount,
+                              showSearch: false,
+                              onChanged: (val) {
+                                setState(() {
+                                  toAccount = val;
+                                  // For self transfer, the TO account is automatically filled too!
+                                  _toAccController.text = val.replaceAll(
+                                    RegExp(r'[^0-9]'),
+                                    '',
+                                  );
+                                  _toIfscController.text = "PSIB0001234";
+                                  _toNomineeController.text = "Rajesh Kumar";
+                                });
+                              },
+                            ),
+                            customBankInput(
+                              "Account No.",
+                              "Recipient Account Number",
+                              isNumber: true,
+                              enabled: false,
+                              controller: _toAccController,
+                            ),
+                            customBankInput(
+                              "IFSC Code",
+                              "e.g. PSIB0001234",
+                              enabled: false,
+                              controller: _toIfscController,
+                            ),
+                            customBankInput(
+                              "Nominee Name",
+                              "Recipient Name",
+                              enabled: false,
+                              controller: _toNomineeController,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // PURPOSE Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.circle,
+                                  size: 10,
+                                  color: kForest,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  "PURPOSE:",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            SearchableDropdown(
+                              label: "Select Purpose",
+                              hint: "Search and select purpose",
+                              items: transferPurposes,
+                              value: transferPurpose,
+                              showSearch: true,
+                              onChanged: (val) {
+                                setState(() {
+                                  transferPurpose = val;
+                                  if (val != "Other") {
+                                    _otherPurposeController.clear();
+                                  }
+                                });
+                              },
+                            ),
+                            if (transferPurpose == "Other")
+                              customBankInput(
+                                "Specify Purpose",
+                                "Enter your reason",
+                                controller: _otherPurposeController,
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // AMOUNT Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.circle,
+                                  size: 10,
+                                  color: kAccent,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  "AMOUNT",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            customBankInput(
+                              "Enter Amount (₹)",
+                              "0.00",
+                              isNumber: true,
+                              controller: _amountController,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [kForest, kMid],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
               ),
-            ),
-            onPressed: () {
-              if (fromAccount == null ||
-                  toAccount == null ||
-                  transferPurpose == null ||
-                  (transferPurpose == "Other" &&
-                      _otherPurposeController.text.trim().isEmpty) ||
-                  _toAccController.text.trim().isEmpty ||
-                  _amountController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Please fill in all compulsory details!"),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-              if (fromAccount == toAccount) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      "Cannot transfer from and to the same account!",
-                    ),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PinScreen(
-                    recipientName: _toNomineeController.text,
-                    amount: _amountController.text,
-                  ),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: kForest.withValues(alpha: 0.25),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-              );
-            },
-            child: const Text(
-              "Proceed to Pay",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+              ],
+            ),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              onPressed: () {
+                if (fromAccount == null ||
+                    toAccount == null ||
+                    transferPurpose == null ||
+                    (transferPurpose == "Other" &&
+                        _otherPurposeController.text.trim().isEmpty) ||
+                    _toAccController.text.trim().isEmpty ||
+                    _amountController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Please fill in all compulsory details!"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+                if (fromAccount == toAccount) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "Cannot transfer from and to the same account!",
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PinScreen(
+                      recipientName: _toNomineeController.text,
+                      amount: _amountController.text,
+                    ),
+                  ),
+                );
+              },
+              child: const Text(
+                "Proceed to Pay",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -1392,7 +1421,8 @@ bool globalContactsPermissionGranted = false;
 bool globalCameraPermissionGranted = false;
 
 void showMyQrCode(BuildContext context) {
-  final String myUpiId = "aurindom@psb"; // Random string per user instruction or dummy
+  final String myUpiId =
+      "aurindom@psb"; // Random string per user instruction or dummy
   showModalBottomSheet(
     context: context,
     shape: const RoundedRectangleBorder(
@@ -1570,7 +1600,10 @@ class _UpiScreenState extends State<UpiScreen> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
                 child: TopBar(
                   onHomeTap: () =>
                       Navigator.popUntil(context, (route) => route.isFirst),
@@ -1612,7 +1645,10 @@ class _UpiScreenState extends State<UpiScreen> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.grey.shade200, width: 1.5),
+                            border: Border.all(
+                              color: Colors.grey.shade200,
+                              width: 1.5,
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -1622,7 +1658,10 @@ class _UpiScreenState extends State<UpiScreen> {
                                   color: Colors.green.shade50,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Icon(Icons.qr_code_scanner, color: kForest),
+                                child: const Icon(
+                                  Icons.qr_code_scanner,
+                                  color: kForest,
+                                ),
                               ),
                               const SizedBox(width: 16),
                               Column(
@@ -1657,7 +1696,10 @@ class _UpiScreenState extends State<UpiScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade200, width: 1.5),
+                          border: Border.all(
+                            color: Colors.grey.shade200,
+                            width: 1.5,
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1675,14 +1717,18 @@ class _UpiScreenState extends State<UpiScreen> {
                               controller: _upiIdController,
                               decoration: InputDecoration(
                                 hintText: "example@ybl",
-                                hintStyle: TextStyle(color: Colors.grey.shade400),
+                                hintStyle: TextStyle(
+                                  color: Colors.grey.shade400,
+                                ),
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 16,
                                   vertical: 14,
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.grey.shade300),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                  ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -1706,14 +1752,18 @@ class _UpiScreenState extends State<UpiScreen> {
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
                                 hintText: "0.00",
-                                hintStyle: TextStyle(color: Colors.grey.shade400),
+                                hintStyle: TextStyle(
+                                  color: Colors.grey.shade400,
+                                ),
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 16,
                                   vertical: 14,
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.grey.shade300),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                  ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -1734,7 +1784,10 @@ class _UpiScreenState extends State<UpiScreen> {
                           width: double.infinity,
                           child: OutlinedButton.icon(
                             onPressed: _requestContactsPermission,
-                            icon: const Icon(Icons.people_outline, color: kForest),
+                            icon: const Icon(
+                              Icons.people_outline,
+                              color: kForest,
+                            ),
                             label: const Text(
                               "Show UPI Contacts",
                               style: TextStyle(
@@ -1745,7 +1798,10 @@ class _UpiScreenState extends State<UpiScreen> {
                             ),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              side: BorderSide(color: Colors.grey.shade200, width: 1.5),
+                              side: BorderSide(
+                                color: Colors.grey.shade200,
+                                width: 1.5,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -1760,7 +1816,10 @@ class _UpiScreenState extends State<UpiScreen> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.grey.shade200, width: 1.5),
+                            border: Border.all(
+                              color: Colors.grey.shade200,
+                              width: 1.5,
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1787,22 +1846,30 @@ class _UpiScreenState extends State<UpiScreen> {
                                     itemBuilder: (context, index) {
                                       final contact = _mockContacts[index];
                                       final isSelected =
-                                          _upiIdController.text == contact["upi"];
+                                          _upiIdController.text ==
+                                          contact["upi"];
                                       return GestureDetector(
                                         onTap: () {
                                           setState(() {
-                                            _upiIdController.text = contact["upi"]!;
+                                            _upiIdController.text =
+                                                contact["upi"]!;
                                           });
                                         },
                                         child: AnimatedContainer(
-                                          duration: const Duration(milliseconds: 200),
-                                          margin: const EdgeInsets.only(bottom: 10),
+                                          duration: const Duration(
+                                            milliseconds: 200,
+                                          ),
+                                          margin: const EdgeInsets.only(
+                                            bottom: 10,
+                                          ),
                                           padding: const EdgeInsets.all(10),
                                           decoration: BoxDecoration(
                                             color: isSelected
                                                 ? Colors.grey.shade100
                                                 : Colors.transparent,
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                             border: Border.all(
                                               color: isSelected
                                                   ? Colors.grey.shade300
@@ -1824,11 +1891,13 @@ class _UpiScreenState extends State<UpiScreen> {
                                                 ),
                                                 child: Center(
                                                   child: Text(
-                                                    contact["name"]![0].toUpperCase(),
+                                                    contact["name"]![0]
+                                                        .toUpperCase(),
                                                     style: const TextStyle(
                                                       color: Colors.white,
                                                       fontSize: 18,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                                   ),
                                                 ),
@@ -1841,7 +1910,8 @@ class _UpiScreenState extends State<UpiScreen> {
                                                   Text(
                                                     contact["name"]!,
                                                     style: const TextStyle(
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                       fontSize: 15,
                                                       color: Colors.black87,
                                                     ),
@@ -1850,7 +1920,8 @@ class _UpiScreenState extends State<UpiScreen> {
                                                   Text(
                                                     contact["upi"]!,
                                                     style: TextStyle(
-                                                      color: Colors.grey.shade600,
+                                                      color:
+                                                          Colors.grey.shade600,
                                                       fontSize: 13,
                                                     ),
                                                   ),
@@ -1892,7 +1963,9 @@ class _UpiScreenState extends State<UpiScreen> {
                                 _upiIdController.text.trim().isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text("Please enter UPI ID and Amount"),
+                                  content: Text(
+                                    "Please enter UPI ID and Amount",
+                                  ),
                                   backgroundColor: Colors.red,
                                 ),
                               );
@@ -1902,7 +1975,8 @@ class _UpiScreenState extends State<UpiScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (_) => PinScreen(
-                                  recipientName: _upiIdController.text.isNotEmpty
+                                  recipientName:
+                                      _upiIdController.text.isNotEmpty
                                       ? _upiIdController.text
                                             .split('@')
                                             .first
@@ -2148,7 +2222,10 @@ class _PinScreenState extends State<PinScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Check Balance", style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text(
+            "Check Balance",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           content: TextField(
             controller: _pinController,
             obscureText: true,
@@ -2175,12 +2252,17 @@ class _PinScreenState extends State<PinScreen> {
                   Navigator.pop(context);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Please enter a valid 4-digit PIN")),
+                    const SnackBar(
+                      content: Text("Please enter a valid 4-digit PIN"),
+                    ),
                   );
                 }
               },
               style: ElevatedButton.styleFrom(backgroundColor: kForest),
-              child: const Text("Verify", style: TextStyle(color: Colors.white)),
+              child: const Text(
+                "Verify",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -2223,7 +2305,10 @@ class _PinScreenState extends State<PinScreen> {
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 32,
+                  ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -2316,7 +2401,10 @@ class _PinScreenState extends State<PinScreen> {
                       const SizedBox(height: 40),
                       TextButton.icon(
                         onPressed: _showPinDialog,
-                        icon: const Icon(Icons.account_balance_wallet_outlined, size: 20),
+                        icon: const Icon(
+                          Icons.account_balance_wallet_outlined,
+                          size: 20,
+                        ),
                         label: Text(
                           _isBalanceUnlocked
                               ? "Balance: ${_isBalanceVisible ? '₹1,45,000.50' : '******'}"
@@ -2326,7 +2414,10 @@ class _PinScreenState extends State<PinScreen> {
                         style: TextButton.styleFrom(
                           foregroundColor: kMid,
                           backgroundColor: kMid.withValues(alpha: 0.05),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
@@ -2515,10 +2606,14 @@ class SuccessScreen extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: Colors.grey.shade200),
+                                    border: Border.all(
+                                      color: Colors.grey.shade200,
+                                    ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.04),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.04,
+                                        ),
                                         blurRadius: 10,
                                         offset: const Offset(0, 4),
                                       ),
@@ -2528,7 +2623,8 @@ class SuccessScreen extends StatelessWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             "Transaction ID",
@@ -2553,18 +2649,28 @@ class SuccessScreen extends StatelessWidget {
                                       const SizedBox(width: 24),
                                       GestureDetector(
                                         onTap: () {
-                                          Clipboard.setData(ClipboardData(text: txnId));
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                          Clipboard.setData(
+                                            ClipboardData(text: txnId),
+                                          );
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             const SnackBar(
-                                              content: Text("Transaction ID Copied!"),
+                                              content: Text(
+                                                "Transaction ID Copied!",
+                                              ),
                                             ),
                                           );
                                         },
                                         child: Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
-                                            color: kForest.withValues(alpha: 0.1),
-                                            borderRadius: BorderRadius.circular(8),
+                                            color: kForest.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                           ),
                                           child: const Icon(
                                             Icons.copy,

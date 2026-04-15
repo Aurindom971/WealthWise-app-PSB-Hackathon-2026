@@ -125,7 +125,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   color: kAccent.withOpacity(0.15),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.person_outline_rounded, color: kForest, size: 28),
+                child: const Icon(
+                  Icons.person_outline_rounded,
+                  color: kForest,
+                  size: 28,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -145,16 +149,16 @@ class _ProfilePageState extends State<ProfilePage> {
                       children: [
                         Text(
                           _obscureKyc ? 'KYC No: XXXXXXXX' : 'KYC No: 12345678',
-                          style: const TextStyle(
-                            color: kSub,
-                            fontSize: 13,
-                          ),
+                          style: const TextStyle(color: kSub, fontSize: 13),
                         ),
                         const SizedBox(width: 8),
                         GestureDetector(
-                          onTap: () => setState(() => _obscureKyc = !_obscureKyc),
+                          onTap: () =>
+                              setState(() => _obscureKyc = !_obscureKyc),
                           child: Icon(
-                            _obscureKyc ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                            _obscureKyc
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
                             color: kSub,
                             size: 16,
                           ),
@@ -165,7 +169,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     GestureDetector(
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const PersonalInfoPage()),
+                        MaterialPageRoute(
+                          builder: (_) => const PersonalInfoPage(),
+                        ),
                       ),
                       child: const Text(
                         'View profile',
@@ -183,21 +189,38 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
         const SizedBox(height: 20),
-        _buildTile('Relationship manager', Icons.people_outline_rounded, const RelationshipManagerPage()),
-        _buildTile('Account details', Icons.description_outlined, const AccountDetailsPage()),
-        _buildTile('Your requests', Icons.assignment_outlined, const YourRequestsPage()),
-        _buildTile('Feedback', Icons.chat_bubble_outline_rounded, const FeedbackPage()),
-        _buildTile('Terms and Condition', Icons.article_outlined, const TermsConditionsPage()),
+        _buildTile(
+          'Relationship manager',
+          Icons.people_outline_rounded,
+          const RelationshipManagerPage(),
+        ),
+        _buildTile(
+          'Account details',
+          Icons.description_outlined,
+          const AccountDetailsPage(),
+        ),
+        _buildTile(
+          'Your requests',
+          Icons.assignment_outlined,
+          const YourRequestsPage(),
+        ),
+        _buildTile(
+          'Feedback',
+          Icons.chat_bubble_outline_rounded,
+          const FeedbackPage(),
+        ),
+        _buildTile(
+          'Terms and Condition',
+          Icons.article_outlined,
+          const TermsConditionsPage(),
+        ),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               'App version: 29.8.7',
-              style: TextStyle(
-                color: kSub.withOpacity(0.8),
-                fontSize: 12,
-              ),
+              style: TextStyle(color: kSub.withOpacity(0.8), fontSize: 12),
             ),
             GestureDetector(
               onTap: () => Navigator.push(
