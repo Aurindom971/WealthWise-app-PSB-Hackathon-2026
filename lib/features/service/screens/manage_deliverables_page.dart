@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
+import '../../loans/widgets/loan_header.dart';
+import '../../home/screens/notifications_screen.dart';
 import 'order_cheque_book_page.dart';
 
 class ManageDeliverablesPage extends StatefulWidget {
@@ -335,148 +337,140 @@ class _ManageDeliverablesPageState extends State<ManageDeliverablesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kCream,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: kForest),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Order Deliverables',
-          style: TextStyle(
-            color: kForest,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: kForest),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.power_settings_new_rounded, color: kForest),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Custom Tab Bar
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => setState(() => isOrderTab = true),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isOrderTab ? kForest : kAccent.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Order',
-                      style: TextStyle(
-                        color: isOrderTab ? Colors.white : kSub,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                GestureDetector(
-                  onTap: () => setState(() => isOrderTab = false),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: !isOrderTab ? kForest : kAccent.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Track',
-                      style: TextStyle(
-                        color: !isOrderTab ? Colors.white : kSub,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                onHomeTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onLogoutTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onNotificationTap: () => showNotifications(context),
+              ),
             ),
-          ),
-          // Top divider
-          Container(color: kSub.withOpacity(0.1), height: 1),
-          // Content
-          Expanded(
-            child: isOrderTab
-                ? ListView(
-                    padding: const EdgeInsets.all(18),
-                    children: [
-                      const Text(
-                        'Order cheque books, cards, and other banking\ndeliverables',
-                        style: TextStyle(color: kSub, fontSize: 13),
+            LoanHeader(
+              title: "",
+              subtitle: "Order Deliverables",
+              icon: Icons.inventory_2_outlined,
+              onBack: () => Navigator.pop(context),
+            ),
+            // Custom Tab Bar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => setState(() => isOrderTab = true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 10,
                       ),
-                      const SizedBox(height: 24),
-                      _buildOrderTile(
-                        'Cheque Book',
-                        'Order a new cheque book for your account',
-                        Icons.menu_book_rounded,
+                      decoration: BoxDecoration(
+                        color: isOrderTab ? kForest : kAccent.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      _buildOrderTile(
-                        'Debit Card',
-                        'Request a new or replacement debit card',
-                        Icons.credit_card_outlined,
+                      child: Text(
+                        'Order',
+                        style: TextStyle(
+                          color: isOrderTab
+                              ? Colors.white
+                              : kSub.withOpacity(0.8),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      _buildOrderTile(
-                        'Credit Card',
-                        'Apply for a credit card',
-                        Icons.credit_card_outlined,
-                      ),
-                      _buildOrderTile(
-                        'Passbook',
-                        'Request a new passbook',
-                        Icons.import_contacts_rounded,
-                      ),
-                      _buildOrderTile(
-                        'Welcome Kit',
-                        'Request a welcome kit with account essentials',
-                        Icons.inventory_2_outlined,
-                      ),
-                      _buildOrderTile(
-                        'Token / Security Device',
-                        'Order a hardware security token',
-                        Icons.shield_outlined,
-                      ),
-                    ],
-                  )
-                : ManageDeliverablesPage.trackedOrders.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No active requests found.',
-                      style: TextStyle(color: kSub),
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(18),
-                    itemCount: ManageDeliverablesPage.trackedOrders.length,
-                    itemBuilder: (context, i) {
-                      return _buildTrackedCard(
-                        ManageDeliverablesPage.trackedOrders[i],
-                      );
-                    },
                   ),
-          ),
-        ],
+                  const SizedBox(width: 16),
+                  GestureDetector(
+                    onTap: () => setState(() => isOrderTab = false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: !isOrderTab ? kForest : kAccent.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Track',
+                        style: TextStyle(
+                          color: !isOrderTab
+                              ? Colors.white
+                              : kSub.withOpacity(0.8),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Content
+            Expanded(
+              child: isOrderTab
+                  ? ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      children: [
+                        _buildOrderTile(
+                          'Cheque Book',
+                          'Order a new cheque book for your account',
+                          Icons.menu_book_rounded,
+                        ),
+                        _buildOrderTile(
+                          'Debit Card',
+                          'Request a new or replacement debit card',
+                          Icons.credit_card_outlined,
+                        ),
+                        _buildOrderTile(
+                          'Credit Card',
+                          'Apply for a credit card',
+                          Icons.credit_card_outlined,
+                        ),
+                        _buildOrderTile(
+                          'Passbook',
+                          'Request a new passbook',
+                          Icons.import_contacts_rounded,
+                        ),
+                        _buildOrderTile(
+                          'Welcome Kit',
+                          'Request a welcome kit with account essentials',
+                          Icons.inventory_2_outlined,
+                        ),
+                        _buildOrderTile(
+                          'Token / Security Device',
+                          'Order a hardware security token',
+                          Icons.shield_outlined,
+                        ),
+                      ],
+                    )
+                  : ManageDeliverablesPage.trackedOrders.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No active requests found.',
+                        style: TextStyle(color: kSub),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(18),
+                      itemCount: ManageDeliverablesPage.trackedOrders.length,
+                      itemBuilder: (context, i) {
+                        return _buildTrackedCard(
+                          ManageDeliverablesPage.trackedOrders[i],
+                        );
+                      },
+                    ),
+            ),
+            BottomNav(
+              currentIndex: -1,
+              onTap: (i) =>
+                  Navigator.popUntil(context, (route) => route.isFirst),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
+import '../../loans/widgets/loan_header.dart';
+import '../../home/screens/notifications_screen.dart';
 
 class YourRequestsPage extends StatefulWidget {
   const YourRequestsPage({super.key});
@@ -94,172 +96,175 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kCream,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: kForest),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Your Requests',
-          style: TextStyle(
-            color: kForest,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: kForest),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.power_settings_new_rounded, color: kForest),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: kSub.withOpacity(0.1), height: 1),
-        ),
-      ),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
-          // Toggle Buttons
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => isNewApplication = true),
-                    child: Container(
-                      height: 44,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: isNewApplication
-                            ? kForest
-                            : kSub.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: Text(
-                        'New Application',
-                        style: TextStyle(
-                          color: isNewApplication ? Colors.white : kSub,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => isNewApplication = false),
-                    child: Container(
-                      height: 44,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: !isNewApplication
-                            ? kForest
-                            : kSub.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: Text(
-                        'Track Requests',
-                        style: TextStyle(
-                          color: !isNewApplication ? Colors.white : kSub,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                onHomeTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onLogoutTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onNotificationTap: () => showNotifications(context),
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          // Category Filters
-          SizedBox(
-            height: 36,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, i) {
-                final cat = categories[i]['label']!;
-                final isActive = selectedCategory == cat;
-                return GestureDetector(
-                  onTap: () => setState(() => selectedCategory = cat),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? kAccent.withOpacity(0.1)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: isActive ? kAccent : kSub.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Text(
-                      cat,
-                      style: TextStyle(
-                        color: isActive ? kForest : kSub,
-                        fontWeight: isActive
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                );
-              },
+            LoanHeader(
+              title: "",
+              subtitle: "Your Requests",
+              icon: Icons.assignment_outlined,
+              onBack: () => Navigator.pop(context),
             ),
-          ),
-          const SizedBox(height: 16),
-          // Application List
-          Expanded(
-            child: isNewApplication
-                ? ListView.builder(
+            Expanded(
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  // Toggle Buttons
+                  Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 18),
-                    itemCount: applications.length,
-                    itemBuilder: (context, i) {
-                      final app = applications[i];
-                      if (selectedCategory != 'All' &&
-                          app['category'] != selectedCategory) {
-                        return const SizedBox.shrink();
-                      }
-                      return _buildApplicationCard(app);
-                    },
-                  )
-                : trackedApplications.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No requests to track yet.',
-                      style: TextStyle(color: kSub),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                setState(() => isNewApplication = true),
+                            child: Container(
+                              height: 44,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: isNewApplication
+                                    ? kForest
+                                    : kSub.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                              child: Text(
+                                'New Application',
+                                style: TextStyle(
+                                  color: isNewApplication ? Colors.white : kSub,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                setState(() => isNewApplication = false),
+                            child: Container(
+                              height: 44,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: !isNewApplication
+                                    ? kForest
+                                    : kSub.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                              child: Text(
+                                'Track Requests',
+                                style: TextStyle(
+                                  color:
+                                      !isNewApplication ? Colors.white : kSub,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    itemCount: trackedApplications.length,
-                    itemBuilder: (context, i) {
-                      final app = trackedApplications[i];
-                      if (selectedCategory != 'All' &&
-                          app['category'] != selectedCategory) {
-                        return const SizedBox.shrink();
-                      }
-                      return _buildTrackedCard(app);
-                    },
                   ),
-          ),
-        ],
+                  const SizedBox(height: 20),
+                  // Category Filters
+                  SizedBox(
+                    height: 36,
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: categories.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 10),
+                      itemBuilder: (context, i) {
+                        final cat = categories[i]['label']!;
+                        final isActive = selectedCategory == cat;
+                        return GestureDetector(
+                          onTap: () => setState(() => selectedCategory = cat),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? kAccent.withOpacity(0.1)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color:
+                                    isActive ? kAccent : kSub.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              cat,
+                              style: TextStyle(
+                                color: isActive ? kForest : kSub,
+                                fontWeight: isActive
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Application List
+                  Expanded(
+                    child: isNewApplication
+                        ? ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 18),
+                            itemCount: applications.length,
+                            itemBuilder: (context, i) {
+                              final app = applications[i];
+                              if (selectedCategory != 'All' &&
+                                  app['category'] != selectedCategory) {
+                                return const SizedBox.shrink();
+                              }
+                              return _buildApplicationCard(app);
+                            },
+                          )
+                        : trackedApplications.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'No requests to track yet.',
+                                  style: TextStyle(color: kSub),
+                                ),
+                              )
+                            : ListView.builder(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 18),
+                                itemCount: trackedApplications.length,
+                                itemBuilder: (context, i) {
+                                  final app = trackedApplications[i];
+                                  if (selectedCategory != 'All' &&
+                                      app['category'] != selectedCategory) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return _buildTrackedCard(app);
+                                },
+                              ),
+                  ),
+                ],
+              ),
+            ),
+            BottomNav(
+              currentIndex: -1,
+              onTap: (i) =>
+                  Navigator.popUntil(context, (route) => route.isFirst),
+            ),
+          ],
+        ),
       ),
     );
   }

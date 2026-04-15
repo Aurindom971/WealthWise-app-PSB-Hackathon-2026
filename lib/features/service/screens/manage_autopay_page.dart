@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
+import '../../loans/widgets/loan_header.dart';
+import '../../home/screens/notifications_screen.dart';
 
 enum AutopayStatus { active, skipped, stopped }
 
@@ -159,14 +161,14 @@ class _AutopayMandateCard extends StatelessWidget {
                       mandate.status == AutopayStatus.active
                           ? 'Active'
                           : mandate.status == AutopayStatus.skipped
-                          ? 'Skipped'
-                          : 'Stopped',
+                              ? 'Skipped'
+                              : 'Stopped',
                       style: TextStyle(
                         color: mandate.status == AutopayStatus.active
                             ? kAccent
                             : mandate.status == AutopayStatus.skipped
-                            ? Colors.orange
-                            : Colors.red,
+                                ? Colors.orange
+                                : Colors.red,
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
                       ),
@@ -347,131 +349,132 @@ class _ManageAutopayPageState extends State<ManageAutopayPage> {
 
   @override
   Widget build(BuildContext context) {
-    int activeCount = _mandates
-        .where((m) => m.status != AutopayStatus.stopped)
-        .length;
+    int activeCount =
+        _mandates.where((m) => m.status != AutopayStatus.stopped).length;
 
     return Scaffold(
       backgroundColor: kCream,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: kForest),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Manage Autopay',
-          style: TextStyle(
-            color: kForest,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: kForest),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.power_settings_new_rounded, color: kForest),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: kSub.withOpacity(0.1), height: 1),
-        ),
-      ),
-      body: _mandates.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: kCard,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 20,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                onHomeTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onLogoutTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onNotificationTap: () => showNotifications(context),
+              ),
+            ),
+            LoanHeader(
+              title: "",
+              subtitle: "Manage Autopay",
+              icon: Icons.autorenew_outlined,
+              onBack: () => Navigator.pop(context),
+            ),
+            Expanded(
+              child: _mandates.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              color: kCard,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 20,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.autorenew_rounded,
+                              size: 50,
+                              color: kSub,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          const Text(
+                            'No active autopay mandates',
+                            style: TextStyle(
+                              color: kSub,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 24),
+                      children: [
+                        Text(
+                          '$activeCount active mandates',
+                          style: const TextStyle(color: kSub, fontSize: 14),
+                        ),
+                        const SizedBox(height: 24),
+                        ..._mandates.map(
+                          (mandate) => _AutopayMandateCard(
+                            mandate: mandate,
+                            onToggle: () => setState(
+                              () => mandate.isExpanded = !mandate.isExpanded,
+                            ),
+                            onSkip: () {
+                              setState(() {
+                                mandate.status = AutopayStatus.skipped;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Next payment skipped')),
+                              );
+                            },
+                            onReactivate: () {
+                              setState(() {
+                                mandate.status = AutopayStatus.active;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Autopay reactivated')),
+                              );
+                            },
+                            onStop: () {
+                              setState(() {
+                                mandate.status = AutopayStatus.stopped;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Autopay stopped')),
+                              );
+                            },
+                            onRemove: () {
+                              setState(() {
+                                _mandates.remove(mandate);
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Mandate removed permanently'),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.autorenew_rounded,
-                      size: 50,
-                      color: kSub,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'No active autopay mandates',
-                    style: TextStyle(
-                      color: kSub,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-              children: [
-                Text(
-                  '$activeCount active mandates',
-                  style: const TextStyle(color: kSub, fontSize: 14),
-                ),
-                const SizedBox(height: 24),
-                ..._mandates.map(
-                  (mandate) => _AutopayMandateCard(
-                    mandate: mandate,
-                    onToggle: () => setState(
-                      () => mandate.isExpanded = !mandate.isExpanded,
-                    ),
-                    onSkip: () {
-                      setState(() {
-                        mandate.status = AutopayStatus.skipped;
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Next payment skipped')),
-                      );
-                    },
-                    onReactivate: () {
-                      setState(() {
-                        mandate.status = AutopayStatus.active;
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Autopay reactivated')),
-                      );
-                    },
-                    onStop: () {
-                      setState(() {
-                        mandate.status = AutopayStatus.stopped;
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Autopay stopped')),
-                      );
-                    },
-                    onRemove: () {
-                      setState(() {
-                        _mandates.remove(mandate);
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Mandate removed permanently'),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
             ),
+            BottomNav(
+              currentIndex: -1,
+              onTap: (i) =>
+                  Navigator.popUntil(context, (route) => route.isFirst),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

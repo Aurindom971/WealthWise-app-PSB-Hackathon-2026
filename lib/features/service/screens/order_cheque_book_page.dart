@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
+import '../../loans/widgets/loan_header.dart';
+import '../../home/screens/notifications_screen.dart';
 import 'manage_deliverables_page.dart';
 
 class OrderChequeBookPage extends StatelessWidget {
@@ -34,88 +36,86 @@ class OrderChequeBookPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kCream,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: kForest),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Order Cheque Book',
-          style: TextStyle(
-            color: kForest,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: kForest),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.power_settings_new_rounded, color: kForest),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: kSub.withOpacity(0.1), height: 1),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(18),
+      body: SafeArea(
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                onHomeTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onLogoutTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onNotificationTap: () => showNotifications(context),
               ),
-              child: Column(
-                children: [
-                  _buildDetailRow('Account', 'XXXX1234 (Savings)'),
-                  const SizedBox(height: 20),
-                  _buildDetailRow('Leaves', '25 leaves'),
-                  const SizedBox(height: 20),
-                  _buildDetailRow(
-                    'Delivery Address',
-                    'Branch Address (Connaught Place)',
-                  ),
-                  const SizedBox(height: 32),
-                  GestureDetector(
-                    onTap: () => _requestChequeBook(context),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            LoanHeader(
+              title: "",
+              subtitle: "Order Cheque Book",
+              icon: Icons.book_outlined,
+              onBack: () => Navigator.pop(context),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: kForest,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'Request Cheque Book',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
                           ),
-                        ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          _buildDetailRow('Account', 'XXXX1234 (Savings)'),
+                          const SizedBox(height: 20),
+                          _buildDetailRow('Leaves', '25 leaves'),
+                          const SizedBox(height: 20),
+                          _buildDetailRow(
+                            'Delivery Address',
+                            'Branch Address (Connaught Place)',
+                          ),
+                          const SizedBox(height: 32),
+                          GestureDetector(
+                            onTap: () => _requestChequeBook(context),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              decoration: BoxDecoration(
+                                color: kForest,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'Request Cheque Book',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+            ),
+            BottomNav(
+              currentIndex: -1,
+              onTap: (i) =>
+                  Navigator.popUntil(context, (route) => route.isFirst),
             ),
           ],
         ),
@@ -144,3 +144,4 @@ class OrderChequeBookPage extends StatelessWidget {
     );
   }
 }
+

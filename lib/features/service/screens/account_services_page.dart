@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
+import '../../loans/widgets/loan_header.dart';
+import '../../home/screens/notifications_screen.dart';
 
 class AccountServicesPage extends StatelessWidget {
   const AccountServicesPage({super.key});
@@ -9,46 +11,40 @@ class AccountServicesPage extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (context) => Scaffold(
-          appBar: AppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: kForest),
-              onPressed: () => Navigator.pop(context),
-            ),
-            title: Text(
-              title,
-              style: const TextStyle(
-                color: kForest,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(
-                  Icons.notifications_none_rounded,
-                  color: kForest,
-                ),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.power_settings_new_rounded,
-                  color: kForest,
-                ),
-                onPressed: () {},
-              ),
-              const SizedBox(width: 8),
-            ],
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(1),
-              child: Container(color: kSub.withOpacity(0.1), height: 1),
-            ),
-          ),
           backgroundColor: kCream,
-          body: const Center(
-            child: Text('Under construction', style: TextStyle(color: kSub)),
+          body: SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  child: TopBar(
+                    onHomeTap: () =>
+                        Navigator.popUntil(context, (route) => route.isFirst),
+                    onLogoutTap: () =>
+                        Navigator.popUntil(context, (route) => route.isFirst),
+                    onNotificationTap: () => showNotifications(context),
+                  ),
+                ),
+                LoanHeader(
+                  title: "",
+                  subtitle: title,
+                  icon: Icons.info_outline,
+                  onBack: () => Navigator.pop(context),
+                ),
+                const Expanded(
+                  child: Center(
+                    child: Text('Under construction',
+                        style: TextStyle(color: kSub)),
+                  ),
+                ),
+                BottomNav(
+                  currentIndex: -1,
+                  onTap: (i) =>
+                      Navigator.popUntil(context, (route) => route.isFirst),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -116,45 +112,47 @@ class AccountServicesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kCream,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: kForest),
-          onPressed: () => Navigator.pop(context),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                onHomeTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onLogoutTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onNotificationTap: () => showNotifications(context),
+              ),
+            ),
+            LoanHeader(
+              title: "",
+              subtitle: "Accounts Services",
+              icon: Icons.account_balance_outlined,
+              onBack: () => Navigator.pop(context),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(18),
+                children: [
+                  _buildTile(
+                      context, 'Account statement', Icons.description_outlined),
+                  _buildTile(
+                      context, 'Download passbook', Icons.download_outlined),
+                  _buildTile(
+                      context, 'Nominee management', Icons.shield_outlined),
+                  _buildTile(
+                      context, 'Modify account details', Icons.sync_rounded),
+                ],
+              ),
+            ),
+            BottomNav(
+              currentIndex: -1,
+              onTap: (i) =>
+                  Navigator.popUntil(context, (route) => route.isFirst),
+            ),
+          ],
         ),
-        title: const Text(
-          'Accounts Services',
-          style: TextStyle(
-            color: kForest,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: kForest),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.power_settings_new_rounded, color: kForest),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: kSub.withOpacity(0.1), height: 1),
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(18),
-        children: [
-          _buildTile(context, 'Account statement', Icons.description_outlined),
-          _buildTile(context, 'Download passbook', Icons.download_outlined),
-          _buildTile(context, 'Nominee management', Icons.shield_outlined),
-          _buildTile(context, 'Modify account details', Icons.sync_rounded),
-        ],
       ),
     );
   }

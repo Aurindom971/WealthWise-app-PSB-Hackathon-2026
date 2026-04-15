@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
+import '../../loans/widgets/loan_header.dart';
+import '../../home/screens/notifications_screen.dart';
 
 class AccountDetailsPage extends StatelessWidget {
   const AccountDetailsPage({super.key});
@@ -8,72 +10,70 @@ class AccountDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kCream,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: kForest),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Account Details',
-          style: TextStyle(
-            color: kForest,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: kForest),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.power_settings_new_rounded, color: kForest),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: kSub.withOpacity(0.1), height: 1),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(18),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                onHomeTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onLogoutTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onNotificationTap: () => showNotifications(context),
               ),
-            ],
-          ),
-          child: Column(
-            children: [
-              _buildRow('Account Holder', 'John Doe'),
-              _buildDivider(),
-              _buildRow('Account Number', '0012345678901234'),
-              _buildDivider(),
-              _buildRow('Account Type', 'Savings Account'),
-              _buildDivider(),
-              _buildRow('Branch', 'Connaught Place, New Delhi'),
-              _buildDivider(),
-              _buildRow('IFSC Code', 'PSIB0000001'),
-              _buildDivider(),
-              _buildRow('MICR Code', '110023002'),
-              _buildDivider(),
-              _buildRow('Opening Date', '15 March 2019'),
-              _buildDivider(),
-              _buildRow('Nomination', 'Registered'),
-              _buildDivider(),
-              _buildRow('Balance', '₹1,25,340.56', isBoldValue: true),
-            ],
-          ),
+            ),
+            LoanHeader(
+              title: "",
+              subtitle: "Account Details",
+              icon: Icons.description_outlined,
+              onBack: () => Navigator.pop(context),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(18),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      _buildRow('Account Holder', 'John Doe'),
+                      _buildDivider(),
+                      _buildRow('Account Number', '0012345678901234'),
+                      _buildDivider(),
+                      _buildRow('Account Type', 'Savings Account'),
+                      _buildDivider(),
+                      _buildRow('Branch', 'Connaught Place, New Delhi'),
+                      _buildDivider(),
+                      _buildRow('IFSC Code', 'PSIB0000001'),
+                      _buildDivider(),
+                      _buildRow('MICR Code', '110023002'),
+                      _buildDivider(),
+                      _buildRow('Opening Date', '15 March 2019'),
+                      _buildDivider(),
+                      _buildRow('Nomination', 'Registered'),
+                      _buildDivider(),
+                      _buildRow('Balance', '₹1,25,340.56', isBoldValue: true),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            BottomNav(
+              currentIndex: -1,
+              onTap: (i) =>
+                  Navigator.popUntil(context, (route) => route.isFirst),
+            ),
+          ],
         ),
       ),
     );
@@ -116,3 +116,4 @@ class AccountDetailsPage extends StatelessWidget {
     );
   }
 }
+

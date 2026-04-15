@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
 import 'package:securewealth_twin/features/cards_and_forex/screens/cards_and_forex_screen.dart';
+import '../../loans/widgets/loan_header.dart';
+import '../../home/screens/notifications_screen.dart';
 
 class CardServicesPage extends StatelessWidget {
   const CardServicesPage({super.key});
@@ -11,44 +13,37 @@ class CardServicesPage extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) => Scaffold(
           backgroundColor: kCream,
-          appBar: AppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: kForest),
-              onPressed: () => Navigator.pop(context),
-            ),
-            title: const Text(
-              'Cards & Forex',
-              style: TextStyle(
-                color: kForest,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(
-                  Icons.notifications_none_rounded,
-                  color: kForest,
+          body: SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  child: TopBar(
+                    onHomeTap: () =>
+                        Navigator.popUntil(context, (route) => route.isFirst),
+                    onLogoutTap: () =>
+                        Navigator.popUntil(context, (route) => route.isFirst),
+                    onNotificationTap: () => showNotifications(context),
+                  ),
                 ),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: const Icon(
-                  Icons.power_settings_new_rounded,
-                  color: kForest,
+                LoanHeader(
+                  title: "",
+                  subtitle: "Cards & Forex",
+                  icon: Icons.credit_card_outlined,
+                  onBack: () => Navigator.pop(context),
                 ),
-                onPressed: () {},
-              ),
-              const SizedBox(width: 8),
-            ],
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(1),
-              child: Container(color: kSub.withOpacity(0.1), height: 1),
+                Expanded(
+                  child: CardsAndForexScreen(highlightAction: highlight),
+                ),
+                BottomNav(
+                  currentIndex: -1,
+                  onTap: (i) =>
+                      Navigator.popUntil(context, (route) => route.isFirst),
+                ),
+              ],
             ),
           ),
-          body: CardsAndForexScreen(highlightAction: highlight),
         ),
       ),
     );
@@ -78,7 +73,7 @@ class CardServicesPage extends StatelessWidget {
               child: Container(
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Color(0xFFE0E0E0),
                   borderRadius: BorderRadius.all(Radius.circular(2)),
                 ),
@@ -237,50 +232,51 @@ class CardServicesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kCream,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: kForest),
-          onPressed: () => Navigator.pop(context),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                onHomeTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onLogoutTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onNotificationTap: () => showNotifications(context),
+              ),
+            ),
+            LoanHeader(
+              title: "",
+              subtitle: "Cards Services",
+              icon: Icons.credit_card_outlined,
+              onBack: () => Navigator.pop(context),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(18),
+                children: [
+                  _buildTile(
+                      context, 'View card details', Icons.credit_card_outlined),
+                  _buildTile(
+                    context,
+                    'Block / Unblock card',
+                    Icons.lock_outline_rounded,
+                    'Block',
+                  ),
+                  _buildTile(
+                      context, 'Set card limits', Icons.sync_rounded, 'Limits'),
+                  _buildTile(
+                      context, 'Report lost card', Icons.privacy_tip_outlined),
+                ],
+              ),
+            ),
+            BottomNav(
+              currentIndex: -1,
+              onTap: (i) =>
+                  Navigator.popUntil(context, (route) => route.isFirst),
+            ),
+          ],
         ),
-        title: const Text(
-          'Cards Services',
-          style: TextStyle(
-            color: kForest,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: kForest),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.power_settings_new_rounded, color: kForest),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: kSub.withOpacity(0.1), height: 1),
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(18),
-        children: [
-          _buildTile(context, 'View card details', Icons.credit_card_outlined),
-          _buildTile(
-            context,
-            'Block / Unblock card',
-            Icons.lock_outline_rounded,
-            'Block',
-          ),
-          _buildTile(context, 'Set card limits', Icons.sync_rounded, 'Limits'),
-          _buildTile(context, 'Report lost card', Icons.privacy_tip_outlined),
-        ],
       ),
     );
   }
