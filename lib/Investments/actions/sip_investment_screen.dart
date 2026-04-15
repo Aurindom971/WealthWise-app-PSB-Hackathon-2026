@@ -1,0 +1,643 @@
+import 'dart:math' as math;
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../../features/home/widgets/home_navigation_widgets.dart';
+import '../../features/send/screens/send_transfer_screen.dart';
+
+class SIPInvestmentScreen extends StatefulWidget {
+  final String fundName;
+  const SIPInvestmentScreen({super.key, required this.fundName});
+
+  @override
+  State<SIPInvestmentScreen> createState() => _SIPInvestmentScreenState();
+}
+
+class _SIPInvestmentScreenState extends State<SIPInvestmentScreen> {
+  double _amount = 1000;
+  late TextEditingController _amountController;
+  String _selectedFrequency = 'Quarterly';
+  int _selectedDate = 20;
+  bool _autoDebit = true;
+  double _years = 2;
+  int _selectedPaymentIndex = 0;
+  String? _selectedAccount;
+
+  final List<Map<String, dynamic>> _paymentMethods = [
+    {
+      'title': 'Bank Account',
+      'subtitle': 'Linked savings account',
+      'icon': Icons.account_balance_outlined,
+    },
+    {
+      'title': 'UPI',
+      'subtitle': 'Pay via UPI ID',
+      'icon': Icons.phone_android_outlined,
+    },
+    {
+      'title': 'Net Banking',
+      'subtitle': 'All major banks',
+      'icon': Icons.language_outlined,
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController(text: _amount.toStringAsFixed(0));
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  final List<String> _frequencies = ['Weekly', 'Monthly', 'Quarterly'];
+  final List<int> _dates = [1, 5, 8, 10, 15, 20, 25];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F9F8),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.arrow_back, color: kForest, size: 20),
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        title: const Text(
+          'Start SIP',
+          style: TextStyle(
+            color: kForest,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            _buildAmountCard(),
+            const SizedBox(height: 20),
+            _buildFrequencyCard(),
+            const SizedBox(height: 20),
+            _buildDeductionDateCard(),
+            const SizedBox(height: 20),
+            _buildEMandateCard(),
+            const SizedBox(height: 20),
+            _buildPaymentMethodCard(),
+            const SizedBox(height: 20),
+            _buildCalculatorCard(),
+            const SizedBox(height: 32),
+            _buildSetupButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAmountCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Monthly SIP Amount',
+            style: TextStyle(
+              color: kSub,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              const Text(
+                '₹ ',
+                style: TextStyle(
+                  color: kForest,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Expanded(
+                child: TextField(
+                  controller: _amountController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  style: const TextStyle(
+                    color: kForest,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  onChanged: (val) {
+                    setState(() {
+                      _amount = double.tryParse(val) ?? 0;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(height: 2, color: kForest),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [1000, 2500, 5000, 10000].map((val) {
+              bool isSelected = _amount == val;
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _amount = val.toDouble();
+                    _amountController.text = val.toStringAsFixed(0);
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected ? kForest : const Color(0xFFF7F7F7),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isSelected
+                          ? kForest
+                          : Colors.grey.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: Text(
+                    '₹${val ~/ 1000},${(val % 1000).toString().padLeft(3, '0').replaceAll('000', '00')}',
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : kSub,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFrequencyCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Frequency',
+            style: TextStyle(
+              color: kForest,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: _frequencies.map((freq) {
+              bool isSelected = _selectedFrequency == freq;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedFrequency = freq),
+                  child: Container(
+                    margin: EdgeInsets.only(
+                      right: freq == 'Quarterly' ? 0 : 8,
+                      left: freq == 'Weekly' ? 0 : 8,
+                    ),
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: isSelected ? kForest : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? kForest
+                            : Colors.grey.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      freq,
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : kForest,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeductionDateCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.calendar_today_outlined, color: kForest, size: 18),
+              SizedBox(width: 12),
+              Text(
+                'SIP Deduction Date',
+                style: TextStyle(
+                  color: kForest,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _dates.map((date) {
+                bool isSelected = _selectedDate == date;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedDate = date),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected ? kForest : const Color(0xFFF7F7F7),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      date.toString(),
+                      style: TextStyle(
+                        color: isSelected ? Colors.white : kForest,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Your SIP will be debited on the ${_selectedDate}th of every month',
+            style: const TextStyle(color: kSub, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEMandateCard() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'E-Mandate (Auto-Debit)',
+                  style: TextStyle(
+                    color: kForest,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Automatic deduction from bank account',
+                  style: TextStyle(color: kSub, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: _autoDebit,
+            onChanged: (val) => setState(() => _autoDebit = val),
+            activeTrackColor: kForest.withValues(alpha: 0.5),
+            activeThumbColor: kForest,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentMethodCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Payment Method', style: TextStyle(color: kForest, fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 20),
+          Column(
+            children: List.generate(_paymentMethods.length, (index) {
+              bool isSelected = _selectedPaymentIndex == index;
+              var method = _paymentMethods[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedPaymentIndex = index),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFFE8F5E9) : const Color(0xFFF7F7F7),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected ? Colors.green.shade600 : Colors.transparent,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(method['icon'], color: kForest, size: 20),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(method['title'], style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 14)),
+                              Text(method['subtitle'], style: const TextStyle(color: kSub, fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+          if (_selectedPaymentIndex == 0) ...[
+            const SizedBox(height: 20),
+            const Divider(),
+            const SizedBox(height: 20),
+            const Text('Select Source Account', style: TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 12),
+            ...userAccounts.where((a) => a.contains('Savings')).map((acc) {
+              bool isAccSelected = _selectedAccount == acc;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedAccount = acc),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isAccSelected ? kForest.withValues(alpha: 0.05) : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isAccSelected ? kForest : Colors.grey.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(isAccSelected ? Icons.radio_button_checked : Icons.radio_button_off, color: isAccSelected ? kForest : kSub, size: 18),
+                        const SizedBox(width: 12),
+                        Text(acc, style: TextStyle(color: kForest, fontWeight: isAccSelected ? FontWeight.bold : FontWeight.normal, fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCalculatorCard() {
+    double totalInvested = _amount * 12 * _years;
+    double futureValue = _calculateSIPWealth(_amount, _years, 0.12);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'SIP Calculator',
+            style: TextStyle(
+              color: kForest,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Duration',
+                style: TextStyle(color: kSub, fontSize: 13),
+              ),
+              Text(
+                '${_years.toInt()} years',
+                style: const TextStyle(
+                  color: kForest,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: kForest,
+              inactiveTrackColor: const Color(0xFFF7F7F7),
+              thumbColor: kForest,
+              overlayColor: kForest.withValues(alpha: 0.2),
+              trackHeight: 2,
+            ),
+            child: Slider(
+              value: _years,
+              min: 1,
+              max: 20,
+              onChanged: (val) => setState(() => _years = val),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F5E9).withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'If you invest ₹${_amount.toStringAsFixed(0)}/month for ${_years.toInt()} years',
+                  style: const TextStyle(color: kSub, fontSize: 12),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Total invested: ₹${totalInvested.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                  style: const TextStyle(
+                    color: kForest,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Text(
+                      'You could have ',
+                      style: TextStyle(
+                        color: kForest,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '₹${futureValue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                      style: const TextStyle(
+                        color: Color(0xFF2E7D32),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '*Assuming 12% annual returns',
+                  style: TextStyle(
+                    color: kSub,
+                    fontSize: 10,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  double _calculateSIPWealth(double monthly, double years, double rate) {
+    double r = rate / 12;
+    double n = years * 12;
+    return monthly * ((math.pow(1 + r, n) - 1) / r) * (1 + r);
+  }
+
+  Widget _buildSetupButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
+      child: ElevatedButton(
+        onPressed: () {
+          if (_selectedPaymentIndex == 0 || _selectedPaymentIndex == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => BankTransferScreen(
+                  toAccount: "987654321012",
+                  toIfsc: "PSIB0001234",
+                  toNominee: "PSB Investment Portal",
+                  toBank: "Punjab National Bank",
+                  amount: _amount.toStringAsFixed(2),
+                  purpose: "Investment",
+                  fromAccount: _selectedPaymentIndex == 0 ? _selectedAccount : null,
+                ),
+              ),
+            );
+          } else if (_selectedPaymentIndex == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => UpiScreen(
+                  prefilledUpiId: "psb.invest@upi",
+                  prefilledAmount: _amount.toStringAsFixed(2),
+                ),
+              ),
+            );
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: kForest,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
+        ),
+        child: Text(
+          'Setup $_selectedFrequency SIP',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+}

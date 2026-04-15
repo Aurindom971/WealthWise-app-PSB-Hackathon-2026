@@ -63,16 +63,17 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
 
     // Dummy calculation logic
     double basePremium = 100;
-    if (_selectedCategory == 'Health')
+    if (_selectedCategory == 'Health') {
       basePremium = 500;
-    else if (_selectedCategory == 'Life')
+    } else if (_selectedCategory == 'Life') {
       basePremium = 800;
-    else if (_selectedCategory == 'Vehicle')
+    } else if (_selectedCategory == 'Vehicle') {
       basePremium = 300;
-    else if (_selectedCategory == 'Term')
+    } else if (_selectedCategory == 'Term') {
       basePremium = 400;
-    else if (_selectedCategory == 'Travel')
+    } else if (_selectedCategory == 'Travel') {
       basePremium = 100;
+    }
 
     final double ageFactor = (age / 10);
     final double durationFactor = 1 / (duration * 0.5 + 0.5);
@@ -126,7 +127,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                         vertical: 16,
                       ),
                       decoration: BoxDecoration(
-                        color: kMid.withOpacity(0.9),
+                        color: kMid.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(20),
                         image: const DecorationImage(
                           image: NetworkImage(
@@ -144,7 +145,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.15),
+                                  color: Colors.white.withValues(alpha: 0.15),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -375,7 +376,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.03),
+                              color: Colors.black.withValues(alpha: 0.03),
                               blurRadius: 24,
                               offset: const Offset(0, 12),
                             ),
@@ -401,14 +402,14 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                                   hint: Text(
                                     'Select insurance type',
                                     style: TextStyle(
-                                      color: kInk.withOpacity(0.4),
+                                      color: kInk.withValues(alpha: 0.4),
                                       fontSize: 16,
                                       fontWeight: FontWeight.w400,
                                     ),
                                   ),
                                   icon: Icon(
                                     Icons.keyboard_arrow_down_rounded,
-                                    color: kInk.withOpacity(0.4),
+                                    color: kInk.withValues(alpha: 0.4),
                                     size: 24,
                                   ),
                                   dropdownColor: Colors.white,
@@ -533,7 +534,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                               width: 52,
                               height: 52,
                               decoration: BoxDecoration(
-                                color: kMid.withOpacity(0.1),
+                                color: kMid.withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -559,7 +560,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                                   Text(
                                     '99% claim settlement ratio • 24/7 support • Instant policy issuance',
                                     style: TextStyle(
-                                      color: kInk.withOpacity(0.5),
+                                      color: kInk.withValues(alpha: 0.5),
                                       fontSize: 13,
                                       height: 1.4,
                                     ),
@@ -620,7 +621,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
       margin: const EdgeInsets.only(top: 18),
       width: 20,
       height: 1.5,
-      color: Colors.grey.withOpacity(0.3),
+      color: Colors.grey.withValues(alpha: 0.3),
     );
   }
 
@@ -655,7 +656,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
           hintText: hint,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
           hintStyle: TextStyle(
-            color: kInk.withOpacity(0.35),
+            color: kInk.withValues(alpha: 0.35),
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -679,12 +680,12 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
         ],
-        border: Border.all(color: Colors.grey.withOpacity(0.05)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -739,7 +740,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
               Text(
                 unit,
                 style: TextStyle(
-                  color: kInk.withOpacity(0.4),
+                  color: kInk.withValues(alpha: 0.4),
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -765,7 +766,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                     child: Text(
                       f,
                       style: TextStyle(
-                        color: kInk.withOpacity(0.75),
+                        color: kInk.withValues(alpha: 0.75),
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         letterSpacing: -0.2,
@@ -903,7 +904,7 @@ class _BrowseCategoriesSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.035),
+            color: Colors.black.withValues(alpha: 0.035),
             blurRadius: 28,
             offset: const Offset(0, 14),
           ),
@@ -938,7 +939,7 @@ class _BrowseCategoriesSection extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: kInk.withOpacity(0.45),
+              color: kInk.withValues(alpha: 0.45),
               fontSize: 12,
               height: 1.2,
             ),
@@ -949,7 +950,7 @@ class _BrowseCategoriesSection extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               decoration: BoxDecoration(
-                color: kMid.withOpacity(0.12),
+                color: kMid.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Text(
@@ -1014,3 +1015,4 @@ class _BrowseCategoriesSection extends StatelessWidget {
     );
   }
 }
+

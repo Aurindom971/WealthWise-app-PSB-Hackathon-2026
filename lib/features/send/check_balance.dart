@@ -1,5 +1,7 @@
 import 'dart:io';
 
+// ignore_for_file: avoid_print
+
 void main(List<String> args) {
   if (args.length < 3) {
     print('Usage: dart check_balance.dart <filename> <start_line> <end_line>');
@@ -44,12 +46,19 @@ void checkBalance(String filename, int startLine, int endLine) {
 
   for (int i = 0; i < code.length; i++) {
     String char = code[i];
-    if (char == '(') pCount += 1;
-    else if (char == ')') pCount -= 1;
-    else if (char == '{') bCount += 1;
-    else if (char == '}') bCount -= 1;
-    else if (char == '[') sCount += 1;
-    else if (char == ']') sCount -= 1;
+    if (char == '(') {
+      pCount += 1;
+    } else if (char == ')') {
+      pCount -= 1;
+    } else if (char == '{') {
+      bCount += 1;
+    } else if (char == '}') {
+      bCount -= 1;
+    } else if (char == '[') {
+      sCount += 1;
+    } else if (char == ']') {
+      sCount -= 1;
+    }
   }
 
   print('Parentheses: $pCount');

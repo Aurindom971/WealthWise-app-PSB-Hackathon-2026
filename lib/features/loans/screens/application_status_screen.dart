@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
-import '../../home/screens/home_screen.dart';
 import '../widgets/loan_header.dart';
 
 class ApplicationStatusScreen extends StatelessWidget {
@@ -161,7 +160,7 @@ class ApplicationStatusScreen extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.arrow_back_ios_rounded, size: 14, color: kMid.withOpacity(0.8)),
+            Icon(Icons.arrow_back_ios_rounded, size: 14, color: kMid.withValues(alpha: 0.8)),
             const SizedBox(width: 8),
             const Text(
               'Back to Dashboard',
@@ -173,3 +172,4 @@ class ApplicationStatusScreen extends StatelessWidget {
     );
   }
 }
+

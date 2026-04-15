@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
-import '../../home/screens/home_screen.dart';
 import '../widgets/loan_header.dart';
 
 class LoanStatementScreen extends StatelessWidget {
@@ -117,7 +116,7 @@ class LoanStatementScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -368,3 +367,4 @@ class _MiniScheduleBox extends StatelessWidget {
     );
   }
 }
+

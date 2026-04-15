@@ -77,7 +77,7 @@ class _PaymentGatewayScreenState extends State<PaymentGatewayScreen> with Single
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       )
@@ -117,7 +117,7 @@ class _PaymentGatewayScreenState extends State<PaymentGatewayScreen> with Single
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 )
@@ -184,7 +184,7 @@ class _PaymentGatewayScreenState extends State<PaymentGatewayScreen> with Single
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: kAccent.withOpacity(0.1),
+                    color: kAccent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.account_balance_wallet_rounded, color: kAccent),
@@ -331,3 +331,4 @@ class _PaymentGatewayScreenState extends State<PaymentGatewayScreen> with Single
     );
   }
 }
+

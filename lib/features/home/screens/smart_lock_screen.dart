@@ -188,7 +188,7 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
                       height: 128,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                       ),
                     ),
                   ),
@@ -200,7 +200,7 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
                       height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                       ),
                     ),
                   ),
@@ -250,7 +250,7 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
                               width: 64,
                               height: 64,
                               decoration: BoxDecoration(
-                                color: _accountLocked ? cs.error : Colors.white.withOpacity(0.2),
+                                color: _accountLocked ? cs.error : Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Icon(
@@ -351,7 +351,7 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: _toggles[f.id]! ? const Color(0xFF2E9461).withOpacity(0.1) : const Color(0xFFEAF3EF),
+                        color: _toggles[f.id]! ? const Color(0xFF2E9461).withValues(alpha: 0.1) : const Color(0xFFEAF3EF),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -387,8 +387,7 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
                     Switch.adaptive(
                       value: _toggles[f.id]!,
                       onChanged: (_) => _handleFeatureToggle(f.id),
-                      activeColor: const Color(0xFF2E9461),
-                      activeTrackColor: const Color(0xFF2E9461).withOpacity(0.4),
+                      activeTrackColor: const Color(0xFF2E9461),
                     ),
                   ],
                 ),
@@ -409,7 +408,7 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -598,7 +597,7 @@ class _EmergencyFreezeSheetState extends State<_EmergencyFreezeSheet> {
                     width: (MediaQuery.of(context).size.width - 48) *
                         (_holdProgress / 100),
                     height: 56,
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                   ),
                   Center(
                     child: Text(
@@ -631,3 +630,4 @@ class _EmergencyFreezeSheetState extends State<_EmergencyFreezeSheet> {
     );
   }
 }
+

@@ -2,13 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import '../../home/screens/home_screen.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
-import '../../home/screens/notifications_screen.dart';
 import '../widgets/active_loan_card.dart';
-import 'active_loans_screen.dart';
-import 'loan_statement_screen.dart';
-import 'loan_eligibility_screen.dart';
-import 'apply_loan_screen.dart';
-import 'compare_loans_screen.dart';
 
 class LoansScreen extends StatefulWidget {
   final VoidCallback onBack;
@@ -794,7 +788,7 @@ class _TrackApplicationSectionState extends State<_TrackApplicationSection> {
       decoration: BoxDecoration(
         color: kCard,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: kMid.withOpacity(0.1)),
+        border: Border.all(color: kMid.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
@@ -1115,3 +1109,4 @@ class _StickyApplyButton extends StatelessWidget {
     );
   }
 }
+

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../../../features/home/widgets/home_navigation_widgets.dart';
 import '../../home/screens/notifications_screen.dart';
+import '../../home/widgets/home_navigation_widgets.dart'; // Ensure kCream is available if not in the right scope, but TopBar uses it.
 import '../../loans/widgets/loan_header.dart';
 
 const primaryGreen = kForest;
@@ -578,7 +578,26 @@ Widget customBankInput(
 //////////////////// BANK TRANSFER ////////////////////
 
 class BankTransferScreen extends StatefulWidget {
-  const BankTransferScreen({super.key});
+  final String? toAccount;
+  final String? toIfsc;
+  final String? toNominee;
+  final String? amount;
+  final String? toBank;
+  final String? purpose;
+  final String? otherPurpose;
+  final String? fromAccount;
+
+  const BankTransferScreen({
+    super.key,
+    this.toAccount,
+    this.toIfsc,
+    this.toNominee,
+    this.amount,
+    this.toBank,
+    this.purpose,
+    this.otherPurpose,
+    this.fromAccount,
+  });
 
   @override
   State<BankTransferScreen> createState() => _BankTransferScreenState();
@@ -598,6 +617,24 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
   final TextEditingController _toNomineeController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _otherPurposeController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.toAccount != null) _toAccountController.text = widget.toAccount!;
+    if (widget.toIfsc != null) _toIfscController.text = widget.toIfsc!;
+    if (widget.toNominee != null) _toNomineeController.text = widget.toNominee!;
+    if (widget.amount != null) _amountController.text = widget.amount!;
+    if (widget.toBank != null) toBank = widget.toBank!;
+    if (widget.purpose != null) transferPurpose = widget.purpose!;
+    if (widget.otherPurpose != null) _otherPurposeController.text = widget.otherPurpose!;
+    if (widget.fromAccount != null) {
+      fromAccount = widget.fromAccount;
+      _fromAccController.text = widget.fromAccount!.replaceAll(RegExp(r'[^0-9]'), '');
+      _fromIfscController.text = "PSIB0001234";
+      _fromNomineeController.text = "Rajesh Kumar";
+    }
+  }
 
   @override
   void dispose() {
@@ -1436,7 +1473,14 @@ void showMyQrCode(BuildContext context) {
                 data: "upi://pay?pa=$myUpiId&pn=User&cu=INR",
                 version: QrVersions.auto,
                 size: 200.0,
-                foregroundColor: Colors.black87,
+                eyeStyle: const QrEyeStyle(
+                  eyeShape: QrEyeShape.square,
+                  color: Colors.black87,
+                ),
+                dataModuleStyle: const QrDataModuleStyle(
+                  dataModuleShape: QrDataModuleShape.square,
+                  color: Colors.black87,
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -1489,7 +1533,14 @@ void showMyQrCode(BuildContext context) {
 }
 
 class UpiScreen extends StatefulWidget {
-  const UpiScreen({super.key});
+  final String? prefilledUpiId;
+  final String? prefilledAmount;
+
+  const UpiScreen({
+    super.key,
+    this.prefilledUpiId,
+    this.prefilledAmount,
+  });
 
   @override
   State<UpiScreen> createState() => _UpiScreenState();
@@ -1500,6 +1551,17 @@ class _UpiScreenState extends State<UpiScreen> {
   final TextEditingController _amountController = TextEditingController();
   final FocusNode _amountFocusNode = FocusNode();
   final ScrollController _contactsScrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.prefilledUpiId != null) {
+      _upiIdController.text = widget.prefilledUpiId!;
+    }
+    if (widget.prefilledAmount != null) {
+      _amountController.text = widget.prefilledAmount!;
+    }
+  }
 
   @override
   void dispose() {

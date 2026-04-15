@@ -26,10 +26,10 @@ class LoanHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCard,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: kMid.withOpacity(0.1)),
+        border: Border.all(color: kMid.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
-            color: kForest.withOpacity(0.04),
+            color: kForest.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -48,7 +48,7 @@ class LoanHeader extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: kMid.withOpacity(0.08),
+                      color: kMid.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.arrow_back_rounded, color: kMid, size: 20),
@@ -101,7 +101,7 @@ class LoanHeader extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: kAccent.withOpacity(0.3),
+                          color: kAccent.withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -134,3 +134,4 @@ class LoanHeader extends StatelessWidget {
     );
   }
 }
+

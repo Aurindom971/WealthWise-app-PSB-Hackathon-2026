@@ -18,6 +18,7 @@ import 'package:securewealth_twin/features/loans/screens/active_loans_screen.dar
 import 'package:securewealth_twin/features/loans/screens/apply_loan_screen.dart';
 import 'package:securewealth_twin/features/loans/screens/compare_loans_screen.dart';
 import 'package:securewealth_twin/features/loans/screens/application_status_screen.dart';
+import 'package:securewealth_twin/Investments/invest.dart';
 
 enum LoanSubState { main, eligibility, activeLoans, statement, apply, compare, status }
 
@@ -102,19 +103,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       backgroundColor: kCream,
       body: SafeArea(
         child: Column(children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-            child: TopBar(
-              onHomeTap: () => setState(() {
-                _isShowingDashboard = true;
-                _isShowingCardsAndForex = false;
-                _isShowingBillAndRecharge = false;
-                _isShowingLoans = false;
-              }),
-              onLogoutTap: _handleLogout,
-              onNotificationTap: () => showNotifications(context),
+          if (_isShowingDashboard || _isShowingCardsAndForex || _isShowingBillAndRecharge || _isShowingLoans || _navIdx == 3)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                onHomeTap: () => setState(() {
+                  _isShowingDashboard = true;
+                  _isShowingCardsAndForex = false;
+                  _isShowingBillAndRecharge = false;
+                  _isShowingLoans = false;
+                }),
+                onLogoutTap: _handleLogout,
+                onNotificationTap: () => showNotifications(context),
+              ),
             ),
-          ),
           Expanded(
             child: FadeTransition(
               opacity: _fade,
@@ -228,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return LoansScreen(
           onBack: () => setState(() => _isShowingLoans = false),
           onNavigate: (state, {loanType, loanId}) => setState(() {
-            _loanSubState = state as LoanSubState;
+            _loanSubState = state;
             if (loanType != null) _selectedLoanType = loanType;
             if (loanId != null) _selectedLoanId = loanId;
           }),
@@ -279,6 +281,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildTabContent() {
     if (_navIdx == 1) return TransactionScreen(onBack: () => setState(() => _isShowingDashboard = true));
+    if (_navIdx == 3) return InvestmentsScreen(onBack: () => setState(() => _isShowingDashboard = true));
     if (_navIdx == 4) return SmartLockScreen(onBack: () => setState(() => _isShowingDashboard = true));
 
     final titles = ['Profile', 'Transactions', 'UPI', 'Investments', 'Smart Lock'];

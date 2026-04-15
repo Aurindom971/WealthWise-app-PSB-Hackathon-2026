@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
 import '../models/bill_models.dart';
-import 'payment_gateway_screen.dart';
 
 class UtilityPaymentScreen extends StatefulWidget {
   final UtilityProvider provider;
@@ -81,7 +80,7 @@ class _UtilityPaymentScreenState extends State<UtilityPaymentScreen> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       )
@@ -132,7 +131,7 @@ class _UtilityPaymentScreenState extends State<UtilityPaymentScreen> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )
@@ -150,14 +149,14 @@ class _UtilityPaymentScreenState extends State<UtilityPaymentScreen> {
                     DropdownButtonFormField<String>(
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: kCream.withOpacity(0.5),
+                        fillColor: kCream.withValues(alpha: 0.5),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
-                      hint: Text('Select Operator', style: TextStyle(color: kSub.withOpacity(0.5))),
+                      hint: Text('Select Operator', style: TextStyle(color: kSub.withValues(alpha: 0.5))),
                       items: ['Airtel', 'Jio', 'Vi', 'BSNL']
                           .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                           .toList(),
@@ -178,9 +177,9 @@ class _UtilityPaymentScreenState extends State<UtilityPaymentScreen> {
                           keyboardType: isMobile ? TextInputType.phone : TextInputType.text,
                           decoration: InputDecoration(
                             hintText: hint,
-                            hintStyle: TextStyle(color: kSub.withOpacity(0.5)),
+                            hintStyle: TextStyle(color: kSub.withValues(alpha: 0.5)),
                             filled: true,
-                            fillColor: kCream.withOpacity(0.5),
+                            fillColor: kCream.withValues(alpha: 0.5),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide.none,
@@ -222,7 +221,7 @@ class _UtilityPaymentScreenState extends State<UtilityPaymentScreen> {
                 decoration: BoxDecoration(
                   color: kCard,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: kAccent.withOpacity(0.1)),
+                  border: Border.all(color: kAccent.withValues(alpha: 0.1)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,3 +289,4 @@ class _UtilityPaymentScreenState extends State<UtilityPaymentScreen> {
     );
   }
 }
+
