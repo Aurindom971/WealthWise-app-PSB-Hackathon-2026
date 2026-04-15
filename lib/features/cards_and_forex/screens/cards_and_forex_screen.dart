@@ -16,7 +16,10 @@ class CardsAndForexScreen extends StatefulWidget {
     super.key,
     this.showFreezeCard = true,
     this.onBack,
+    this.highlightAction,
   });
+
+  final String? highlightAction;
 
   @override
   State<CardsAndForexScreen> createState() => _CardsAndForexScreenState();
@@ -148,21 +151,25 @@ class _CardsAndForexScreenState extends State<CardsAndForexScreen> {
                       icon: Icons.ac_unit_rounded,
                       label: 'Freeze Card',
                       onTap: _showFreezeWarning,
+                      isHighlighted: widget.highlightAction == 'Block',
                     ),
                   FeatureActionButton(
                     icon: Icons.description_outlined,
                     label: 'Statement',
                     onTap: () => _showModal(context, const StatementModal()),
+                    isHighlighted: widget.highlightAction == 'Statement',
                   ),
                   FeatureActionButton(
                     icon: Icons.settings_outlined,
                     label: 'Settings',
                     onTap: () => _showModal(context, const SettingsModal(), isScrollControlled: true),
+                    isHighlighted: widget.highlightAction == 'Limits',
                   ),
                   FeatureActionButton(
                     icon: Icons.swap_horiz_rounded,
                     label: 'Forex',
                     onTap: () => _showModal(context, const ForexModal()),
+                    isHighlighted: widget.highlightAction == 'Forex',
                   ),
                 ],
               ),

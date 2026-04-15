@@ -13,61 +13,89 @@ class TopBar extends StatelessWidget {
   final VoidCallback onHomeTap;
   final VoidCallback onLogoutTap;
   final VoidCallback? onNotificationTap;
+  final String searchText;
 
-  const TopBar({super.key, required this.onHomeTap, required this.onLogoutTap, this.onNotificationTap});
+  const TopBar({
+    super.key,
+    required this.onHomeTap,
+    required this.onLogoutTap,
+    this.searchText = 'Search here...',
+    this.onNotificationTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      Bubble(
-        onTap: onHomeTap,
-        child: const Icon(Icons.home_rounded, color: kForest, size: 22),
-      ),
-      const SizedBox(width: 8),
-      Expanded(
-        child: Container(
-          height: 46,
-          decoration: BoxDecoration(
-            color: kCard,
-            borderRadius: BorderRadius.circular(23),
-            boxShadow: [
-              BoxShadow(
+    return Row(
+      children: [
+        Bubble(
+          onTap: onHomeTap,
+          child: const Icon(Icons.home_rounded, color: kForest, size: 22),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Container(
+            height: 46,
+            decoration: BoxDecoration(
+              color: kCard,
+              borderRadius: BorderRadius.circular(23),
+              boxShadow: [
+                BoxShadow(
                   color: Colors.black.withValues(alpha: 0.06),
                   blurRadius: 10,
-                  offset: const Offset(0, 3))
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const SizedBox(width: 16),
+                const Icon(Icons.search_rounded, color: kSub, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  searchText,
+                  style: const TextStyle(
+                    color: kSub,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Bubble(
+          onTap: onNotificationTap,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(Icons.notifications_none_rounded, color: kInk, size: 20),
+              Positioned(
+                top: -2,
+                right: -2,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: Color(0xFFE53935),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
             ],
           ),
-          child: const Row(children: [
-            SizedBox(width: 16),
-            Icon(Icons.search_rounded, color: kSub, size: 20),
-            SizedBox(width: 8),
-            Text('Search',
-                style: TextStyle(
-                    color: kSub, fontSize: 14, fontWeight: FontWeight.w400)),
-          ]),
         ),
-      ),
-      const SizedBox(width: 10),
-      Bubble(
-          onTap: onNotificationTap,
-          child: Stack(clipBehavior: Clip.none, children: [
-        Icon(Icons.notifications_none_rounded, color: kInk, size: 20),
-        Positioned(
-          top: -2,
-          right: -2,
-          child: Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                  color: Color(0xFFE53935), shape: BoxShape.circle)),
-        ),
-      ])),
-      const SizedBox(width: 8),
-      Bubble(
+        const SizedBox(width: 8),
+        Bubble(
           onTap: onLogoutTap,
-          child: const Icon(Icons.power_settings_new_rounded,
-              color: Color(0xFFE53935), size: 20)),
-    ]);
+          child: const Icon(
+            Icons.power_settings_new_rounded,
+            color: Color(0xFFE53935),
+            size: 20,
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -77,30 +105,40 @@ class Bubble extends StatelessWidget {
   const Bubble({super.key, required this.child, this.onTap});
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 44,
-          height: 44,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: kCard,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.07),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3))
-            ],
+    onTap: onTap,
+    child: Container(
+      width: 44,
+      height: 44,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: kCard,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.07),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
-          child: child,
-        ),
-      );
+        ],
+      ),
+      child: child,
+    ),
+  );
 }
 
 class BottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
-  const BottomNav({super.key, required this.currentIndex, required this.onTap});
+  final VoidCallback? onLogoutTap;
+  final VoidCallback? onNotificationTap;
+
+  const BottomNav({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+    this.onLogoutTap,
+    this.onNotificationTap,
+  });
 
   static const _items = [
     (Icons.person_rounded, 'Profile', false),
@@ -117,9 +155,10 @@ class BottomNav extends StatelessWidget {
         color: kCard,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 20,
-              offset: const Offset(0, -4))
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
         ],
       ),
       child: SafeArea(
@@ -140,19 +179,24 @@ class BottomNav extends StatelessWidget {
                     height: 38,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                          colors: [kForest, kMid],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight),
+                        colors: [kForest, kMid],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                            color: kForest.withValues(alpha: 0.35),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4))
+                          color: kForest.withValues(alpha: 0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
                       ],
                     ),
-                    child: const Icon(Icons.qr_code_scanner_rounded,
-                        color: Colors.white, size: 22),
+                    child: const Icon(
+                      Icons.qr_code_scanner_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
                 );
               }
@@ -172,16 +216,16 @@ class BottomNav extends StatelessWidget {
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    Icon(icon,
-                        size: 22, color: active ? kForest : kSub),
+                    Icon(icon, size: 22, color: active ? kForest : kSub),
                     const SizedBox(height: 3),
-                    Text(label,
-                        style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: active
-                                ? FontWeight.bold
-                                : FontWeight.w500,
-                            color: active ? kForest : kSub)),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: active ? FontWeight.bold : FontWeight.w500,
+                        color: active ? kForest : kSub,
+                      ),
+                    ),
                   ],
                 ),
               );
