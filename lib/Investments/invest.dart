@@ -7,7 +7,6 @@ import 'actions/price_gainers_screen.dart';
 import 'dart:math' as math;
 import 'actions/explore_funds_screen.dart';
 import 'actions/track_sips_screen.dart';
-import 'actions/filtered_market_screen.dart';
 import 'actions/fund_detail_screen.dart';
 import 'actions/quick_checkout_modal.dart';
 import 'actions/lumpsum_investment_screen.dart';
@@ -15,6 +14,8 @@ import 'actions/sip_investment_screen.dart';
 import 'actions/hdfc_nfo_screen.dart';
 import 'actions/sbi_innovation_nfo_screen.dart';
 import 'actions/icici_business_cycle_nfo_screen.dart';
+import 'actions/stock_analysis_screen.dart';
+import 'actions/fii_dii_insights_screen.dart';
 import '../features/send/screens/send_transfer_screen.dart';
 
 class InvestmentsScreen extends StatefulWidget {
@@ -39,6 +40,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
       4; // 0: 1m, 1: 3m, 2: 6m, 3: 1y, 4: 3y, 5: 5y, 6: max
   int _selectedFnOTimeframe = 0; // Starts at 1m for F&O
   int _selectedMFTimeframe = 4; // Starts at 3y for MF
+  int _selectedOptionChainIndex = 0; // 0: Nifty 50, 1: Sensex, 2: Bank, 3: Fin
 
   @override
   void initState() {
@@ -105,7 +107,6 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
               const SizedBox(height: 16),
               _buildMFChart(),
               const SizedBox(height: 16),
-              _buildMFCategories(),
               const SizedBox(height: 16),
               _buildTopFunds(),
               const SizedBox(height: 24),
@@ -701,42 +702,68 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   }
 
   Widget _buildSuggestedStocks() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Suggested Stock Prices',
-            style: TextStyle(
-              color: kDarkGreen,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Market',
+          style: TextStyle(
+            color: Color(0xFF111827),
+            fontWeight: FontWeight.w900,
+            fontSize: 28,
+            letterSpacing: -1,
           ),
-          const SizedBox(height: 20),
-          _buildStockRow('INFY', 'Infosys Ltd', '₹1,450', '+2.3%', true),
-          Divider(color: Colors.grey.shade100, thickness: 1, height: 32),
-          _buildStockRow('TCS', 'Tata Consultancy', '₹3,680', '-0.8%', false),
-          Divider(color: Colors.grey.shade100, thickness: 1, height: 32),
-          _buildStockRow(
-            'RELIANCE',
-            'Reliance Industries',
-            '₹2,540',
-            '+1.5%',
-            true,
+        ),
+        const Text(
+          'Suggested Stock Prices',
+          style: TextStyle(
+            color: Color(0xFF6B7280),
+            fontWeight: FontWeight.w500,
+            fontSize: 14,
           ),
-          Divider(color: Colors.grey.shade100, thickness: 1, height: 32),
-          _buildStockRow('HDFCBANK', 'HDFC Bank Ltd', '₹1,620', '+0.9%', true),
-          Divider(color: Colors.grey.shade100, thickness: 1, height: 32),
-          _buildStockRow('WIPRO', 'Wipro Ltd', '₹485', '-1.2%', false),
-        ],
-      ),
+        ),
+        const SizedBox(height: 20),
+        _buildStockRow(
+          'INFY',
+          'Infosys Ltd',
+          '1,316',
+          '+0.82',
+          true,
+          [1305, 1318, 1310, 1322, 1316],
+        ),
+        _buildStockRow(
+          'TCS',
+          'Tata Consultancy',
+          '2,573',
+          '+0.71',
+          true,
+          [2554, 2580, 2570, 2590, 2573],
+        ),
+        _buildStockRow(
+          'RELIANCE',
+          'Reliance Industries',
+          '1,345',
+          '+0.13',
+          true,
+          [1344, 1350, 1340, 1348, 1345],
+        ),
+        _buildStockRow(
+          'HDFCBANK',
+          'HDFC Bank Ltd',
+          '794',
+          '-1.96',
+          false,
+          [810, 805, 812, 798, 794],
+        ),
+        _buildStockRow(
+          'WIPRO',
+          'Wipro Ltd',
+          '210',
+          '+0.19',
+          true,
+          [209, 211, 210, 212, 210],
+        ),
+      ],
     );
   }
 
@@ -746,57 +773,111 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     String price,
     String change,
     bool isUp,
+    List<double> history,
   ) {
-    Color changeColor = isUp ? Colors.grey.shade600 : const Color(0xFFD32F2F);
-    IconData changeIcon = isUp ? Icons.trending_up : Icons.trending_down;
-    // In the image, positive trends just have greyish green text, wait, standard dark green might be used but image showed a dark gray/green style, and negative is obviously red. Let's make positive use kDarkGreen.
-    changeColor = isUp ? kDarkGreen : const Color(0xFFE53935);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => StockAnalysisScreen(
+              symbol: symbol,
+              name: name,
+              price: price,
+              change: change,
+              isUp: isUp,
+              history: history,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+        margin: const EdgeInsets.only(bottom: 4),
+        decoration: const BoxDecoration(
+          color: Colors.transparent,
+        ),
+        child: Row(
           children: [
-            Text(
-              symbol,
-              style: TextStyle(
-                color: kDarkGreen,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    symbol,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: kDarkGreen,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  Text(
+                    name,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              name,
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+            SizedBox(
+              width: 60,
+              height: 30,
+              child: CustomPaint(
+                painter: MiniGraphPainter(
+                  history,
+                  isUp ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                ),
+              ),
+            ),
+            const SizedBox(width: 20),
+            SizedBox(
+              width: 90,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '₹$price',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TextStyle(
+                      color: kDarkGreen,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Icon(
+                        isUp ? Icons.trending_up : Icons.trending_down,
+                        color: isUp ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$change%',
+                        style: TextStyle(
+                          color: isUp ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
-        Row(
-          children: [
-            Text(
-              price,
-              style: TextStyle(
-                color: kDarkGreen,
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Icon(changeIcon, color: changeColor, size: 16),
-            const SizedBox(width: 4),
-            Text(
-              change,
-              style: TextStyle(
-                color: changeColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ],
+      ),
     );
   }
 
@@ -804,26 +885,13 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Live IPOs',
-              style: TextStyle(
-                color: kDarkGreen,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-            Text(
-              'View All',
-              style: TextStyle(
-                color: const Color(0xFF3282B8),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+        Text(
+          'Live IPOs',
+          style: TextStyle(
+            color: kDarkGreen,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
         ),
         const SizedBox(height: 16),
         SingleChildScrollView(
@@ -836,12 +904,16 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                 'Emiac Technologies Ltd',
                 '27 Mar - 8 Apr',
                 '₹93-₹98',
+                lotSize: 150,
+                minAmount: '₹14,700',
               ),
               const SizedBox(width: 16),
               _buildIPOCard(
-                'Safety Controls & ...',
+                'Safety Controls & Instrumentation Ltd',
                 '6 Apr - 8 Apr',
                 '₹75-₹80',
+                lotSize: 180,
+                minAmount: '₹14,400',
               ),
             ],
           ),
@@ -850,7 +922,8 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     );
   }
 
-  Widget _buildIPOCard(String name, String date, String priceRange) {
+  Widget _buildIPOCard(String name, String date, String priceRange,
+      {required int lotSize, required String minAmount}) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -860,6 +933,8 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
               companyName: name,
               dates: date,
               priceRange: priceRange,
+              lotSize: lotSize,
+              minAmount: minAmount,
             ),
           ),
         );
@@ -1371,14 +1446,6 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
                             ),
-                          ),
-                        ),
-                        Text(
-                          'View All',
-                          style: TextStyle(
-                            color: Colors.blue.shade600,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -2140,18 +2207,10 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                     ),
                   ),
                   Text(
-                    '07 Apr \u25BE',
+                    _selectedOptionChainIndex == 1 ? '11 Apr \u25BE' : '07 Apr \u25BE',
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                   ),
                 ],
-              ),
-              Text(
-                'View All',
-                style: TextStyle(
-                  color: Colors.blue.shade600,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
               ),
             ],
           ),
@@ -2160,13 +2219,13 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFnOTab('Nifty 50', true),
+                _buildFnOTab('Nifty 50', _selectedOptionChainIndex == 0, () => setState(() => _selectedOptionChainIndex = 0)),
                 const SizedBox(width: 16),
-                _buildFnOTab('BSE Sensex', false),
+                _buildFnOTab('BSE Sensex', _selectedOptionChainIndex == 1, () => setState(() => _selectedOptionChainIndex = 1)),
                 const SizedBox(width: 16),
-                _buildFnOTab('Nifty Bank', false),
+                _buildFnOTab('Nifty Bank', _selectedOptionChainIndex == 2, () => setState(() => _selectedOptionChainIndex = 2)),
                 const SizedBox(width: 16),
-                _buildFnOTab('Nifty Financial', false),
+                _buildFnOTab('Nifty Financial', _selectedOptionChainIndex == 3, () => setState(() => _selectedOptionChainIndex = 3)),
               ],
             ),
           ),
@@ -2189,78 +2248,144 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
             ],
           ),
           const SizedBox(height: 16),
-          _buildOptionChainRow(
-            '298.90',
-            '-13.6%',
-            '22650',
-            '-11.22%',
-            '242.05',
-          ),
-          const SizedBox(height: 12),
-          _buildOptionChainRow(
-            '269.15',
-            '-15.45%',
-            '22700',
-            '-10.57%',
-            '263.55',
-          ),
+          _buildOptionChainRows(),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(child: Container(height: 1, color: kDarkGreen)),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: kDarkGreen,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Text(
-                  '\u20B9 22,713.10 (+0.15%) Short Built Up',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              Expanded(child: Container(height: 1, color: kDarkGreen)),
-            ],
-          ),
+          _buildOptionChainSpotBar(),
           const SizedBox(height: 16),
-          _buildOptionChainRow(
-            '241.70',
-            '-17.42%',
-            '22750',
-            '-10.39%',
-            '284.60',
-          ),
-          const SizedBox(height: 12),
-          _buildOptionChainRow('217.25', '-18.8%', '22800', '-9.63%', '309.55'),
+          _buildOptionChainRows(isAfterSpot: true),
         ],
       ),
     );
   }
 
-  Widget _buildFnOTab(String t, bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.only(bottom: 4),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: isSelected ? kDarkGreen : Colors.transparent,
-            width: 2,
+  Widget _buildOptionChainRows({bool isAfterSpot = false}) {
+    // Return different data based on _selectedOptionChainIndex
+    if (_selectedOptionChainIndex == 0) {
+      // Nifty 50
+      return Column(
+        children: isAfterSpot
+            ? [
+                _buildOptionChainRow('241.70', '-17.42%', '22750', '-10.39%', '284.60'),
+                const SizedBox(height: 12),
+                _buildOptionChainRow('217.25', '-18.8%', '22800', '-9.63%', '309.55'),
+              ]
+            : [
+                _buildOptionChainRow('298.90', '-13.6%', '22650', '-11.22%', '242.05'),
+                const SizedBox(height: 12),
+                _buildOptionChainRow('269.15', '-15.45%', '22700', '-10.57%', '263.55'),
+              ],
+      );
+    } else if (_selectedOptionChainIndex == 1) {
+      // BSE Sensex
+      return Column(
+        children: isAfterSpot
+            ? [
+                _buildOptionChainRow('845.20', '-8.12%', '74800', '-5.22%', '790.15'),
+                const SizedBox(height: 12),
+                _buildOptionChainRow('782.45', '-9.45%', '74900', '-4.88%', '865.30'),
+              ]
+            : [
+                _buildOptionChainRow('1012.30', '-6.45%', '74600', '-7.15%', '642.50'),
+                const SizedBox(height: 12),
+                _buildOptionChainRow('928.75', '-7.22%', '74700', '-6.80%', '712.95'),
+              ],
+      );
+    } else if (_selectedOptionChainIndex == 2) {
+      // Nifty Bank
+      return Column(
+        children: isAfterSpot
+            ? [
+                _buildOptionChainRow('542.80', '+2.14%', '48600', '-8.45%', '612.35'),
+                const SizedBox(height: 12),
+                _buildOptionChainRow('498.15', '+1.88%', '48700', '-7.90%', '678.90'),
+              ]
+            : [
+                _buildOptionChainRow('654.20', '+3.45%', '48400', '-10.12%', '512.60'),
+                const SizedBox(height: 12),
+                _buildOptionChainRow('598.75', '+2.90%', '48500', '-9.50%', '564.25'),
+              ],
+      );
+    } else {
+      // Nifty Financial
+      return Column(
+        children: isAfterSpot
+            ? [
+                _buildOptionChainRow('212.45', '-1.22%', '21450', '+2.45%', '245.60'),
+                const SizedBox(height: 12),
+                _buildOptionChainRow('195.80', '-1.45%', '21500', '+2.88%', '272.35'),
+              ]
+            : [
+                _buildOptionChainRow('258.90', '-0.85%', '21350', '+1.12%', '198.45'),
+                const SizedBox(height: 12),
+                _buildOptionChainRow('234.15', '-1.05%', '21400', '+1.25%', '220.80'),
+              ],
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildOptionChainSpotBar() {
+    String label = '';
+    switch (_selectedOptionChainIndex) {
+      case 0:
+        label = '\u20B9 22,713.10 (+0.15%) Short Built Up';
+        break;
+      case 1:
+        label = '\u20B9 74,742.50 (+0.12%) Long Built Up';
+        break;
+      case 2:
+        label = '\u20B9 48,512.30 (+0.25%) Strong Trend';
+        break;
+      case 3:
+        label = '\u20B9 21,385.20 (+0.08%) Volatile';
+        break;
+      default:
+        label = '';
+    }
+
+    return Row(
+      children: [
+        Expanded(child: Container(height: 1, color: kDarkGreen)),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: kDarkGreen,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
-      ),
-      child: Text(
-        t,
-        style: TextStyle(
-          color: isSelected ? kDarkGreen : Colors.grey.shade500,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        Expanded(child: Container(height: 1, color: kDarkGreen)),
+      ],
+    );
+  }
+
+  Widget _buildFnOTab(String t, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.only(bottom: 4),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isSelected ? kDarkGreen : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          t,
+          style: TextStyle(
+            color: isSelected ? kDarkGreen : Colors.grey.shade500,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
         ),
       ),
     );
@@ -2273,38 +2398,62 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     String pp,
     String pl,
   ) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Text(cl, style: TextStyle(color: kDarkGreen, fontSize: 13)),
-            const SizedBox(width: 4),
-            Text(
-              cp,
-              style: TextStyle(color: Colors.red.shade700, fontSize: 13),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Row(
+              children: [
+                Text(cl, style: TextStyle(color: kDarkGreen, fontSize: 13)),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    cp,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.red.shade700, fontSize: 11),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        Text(
-          sp,
-          style: TextStyle(
-            color: kDarkGreen,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
           ),
-        ),
-        Row(
-          children: [
-            Text(
-              pp,
-              style: TextStyle(color: Colors.red.shade700, fontSize: 13),
+          Expanded(
+            flex: 1,
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  sp,
+                  style: TextStyle(
+                    color: kDarkGreen,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(width: 4),
-            Text(pl, style: TextStyle(color: kDarkGreen, fontSize: 13)),
-          ],
-        ),
-      ],
+          ),
+          Expanded(
+            flex: 2,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Flexible(
+                  child: Text(
+                    pp,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.red.shade700, fontSize: 11),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(pl, style: TextStyle(color: kDarkGreen, fontSize: 13)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2330,12 +2479,20 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                   fontSize: 18,
                 ),
               ),
-              Text(
-                'View Insights',
-                style: TextStyle(
-                  color: Colors.blue.shade600,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const FIIDIIInsightsScreen()),
+                  );
+                },
+                child: Text(
+                  'View Insights',
+                  style: TextStyle(
+                    color: Colors.blue.shade600,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
@@ -2500,14 +2657,6 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                   fontSize: 18,
                 ),
               ),
-              Text(
-                'View All',
-                style: TextStyle(
-                  color: Colors.blue.shade600,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -2665,15 +2814,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                   fontSize: 16,
                 ),
               ),
-              Text(
-                'View All',
-                style: TextStyle(
-                  color: const Color(0xFF3282B8),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+          ],
           ),
           const SizedBox(height: 20),
           _buildFundRow(
@@ -3123,99 +3264,6 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     );
   }
 
-  Widget _buildMFCategories() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Categories by Asset Class',
-                style: TextStyle(
-                  color: kDarkGreen,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              Text(
-                'View All',
-                style: TextStyle(
-                  color: Colors.blue.shade600,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          GridView.count(
-            crossAxisCount: 3,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 1.1,
-            children: [
-              _buildMFCategCard('Equity', Icons.show_chart_rounded),
-              _buildMFCategCard('Debt', Icons.account_balance_rounded),
-              _buildMFCategCard('Hybrid', Icons.pie_chart_rounded),
-              _buildMFCategCard('Index', Icons.list_alt_rounded),
-              _buildMFCategCard('Gold', Icons.monetization_on_rounded),
-              _buildMFCategCard('ELSS', Icons.security_rounded),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMFCategCard(String title, IconData iconData) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => FilteredMarketScreen(
-              categoryName: title,
-              riskLevel: title == 'Debt' || title == 'Gold'
-                  ? 'Moderate Risk'
-                  : 'High Risk',
-            ),
-          ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF7F9F8),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(iconData, color: kDarkGreen, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(
-                color: kDarkGreen,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildLiveNFOs() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -3229,14 +3277,6 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                 color: kDarkGreen,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
-              ),
-            ),
-            Text(
-              'View All',
-              style: TextStyle(
-                color: const Color(0xFF3282B8),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -3595,4 +3635,45 @@ class _ChartData {
     required this.xLabels,
     required this.spots,
   });
+}
+
+class MiniGraphPainter extends CustomPainter {
+  final List<double> data;
+  final Color color;
+
+  MiniGraphPainter(this.data, this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+    double min = data.reduce((a, b) => a < b ? a : b);
+    double max = data.reduce((a, b) => a > b ? a : b);
+    double range = max - min;
+    if (range == 0) range = 1;
+
+    for (int i = 0; i < data.length; i++) {
+      double x = data.length > 1 
+          ? (i / (data.length - 1)) * size.width 
+          : size.width / 2;
+      double y = size.height - ((data[i] - min) / range * size.height);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
