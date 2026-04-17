@@ -228,7 +228,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 MaterialPageRoute(builder: (_) => const WhatsNewPage()),
               ),
               child: const Text(
-                'Update details',
+                'What\'s new',
                 style: TextStyle(
                   color: kMid,
                   fontSize: 12,
