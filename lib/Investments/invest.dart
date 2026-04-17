@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'actions/ipo_application_screen.dart';
-import 'actions/oi_gainers_screen.dart';
-import 'actions/oi_losers_screen.dart';
 import 'actions/price_gainers_screen.dart';
 import 'dart:math' as math;
 import 'actions/explore_funds_screen.dart';
@@ -2321,7 +2319,6 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
               ],
       );
     }
-    return const SizedBox.shrink();
   }
 
   Widget _buildOptionChainSpotBar() {
@@ -2666,13 +2663,9 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
               children: [
                 _buildMarketMoverTab('Popular Search', 0, null),
                 const SizedBox(width: 16),
-                _buildMarketMoverTab('OI Gainers', 1, const OIGainersScreen()),
-                const SizedBox(width: 16),
-                _buildMarketMoverTab('OI Losers', 2, const OILosersScreen()),
-                const SizedBox(width: 16),
                 _buildMarketMoverTab(
                   'Price Gainers',
-                  3,
+                  1,
                   const PriceGainersScreen(),
                 ),
               ],

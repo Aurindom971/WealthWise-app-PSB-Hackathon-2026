@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../features/home/widgets/home_navigation_widgets.dart';
+import 'filtered_market_screen.dart';
 
 class ExploreFundsScreen extends StatefulWidget {
   const ExploreFundsScreen({super.key});
@@ -193,43 +194,61 @@ class _ExploreFundsScreenState extends State<ExploreFundsScreen> {
       itemCount: _trendingCollections.length,
       itemBuilder: (context, index) {
         final collection = _trendingCollections[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: collection['color'].withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
+        return GestureDetector(
+          onTap: () {
+            String risk = 'Moderate Risk';
+            if (collection['title'] == 'High Return Picks') risk = 'Very High Risk';
+            if (collection['title'] == 'Tax Saver (ELSS)') risk = 'High Risk';
+            if (collection['title'] == 'Better than FD') risk = 'Low Risk';
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FilteredMarketScreen(
+                  categoryName: collection['title'],
+                  riskLevel: risk,
                 ),
-                child: Icon(collection['icon'], color: collection['color'], size: 24),
               ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: collection['color'].withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(collection['icon'], color: collection['color'], size: 24),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(collection['title'], style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 4),
+                      Text(collection['subtitle'], style: const TextStyle(color: kSub, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(collection['title'], style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 16)),
-                    const SizedBox(height: 4),
-                    Text(collection['subtitle'], style: const TextStyle(color: kSub, fontSize: 12)),
+                    Text(collection['funds'], style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 12)),
+                    const Icon(Icons.chevron_right, color: kSub, size: 20),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(collection['funds'], style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 12)),
-                  const Icon(Icons.chevron_right, color: kSub, size: 20),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

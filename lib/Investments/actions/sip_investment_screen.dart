@@ -13,6 +13,7 @@ class SIPInvestmentScreen extends StatefulWidget {
 }
 
 class _SIPInvestmentScreenState extends State<SIPInvestmentScreen> {
+  late String _selectedFund;
   double _amount = 1000;
   late TextEditingController _amountController;
   String _selectedFrequency = 'Quarterly';
@@ -21,6 +22,23 @@ class _SIPInvestmentScreenState extends State<SIPInvestmentScreen> {
   double _years = 2;
   int _selectedPaymentIndex = 0;
   String? _selectedAccount;
+  String _searchQuery = '';
+  String _selectedCategory = 'All';
+
+  final List<Map<String, String>> _availableInvestments = [
+    {'name': 'Quant Small Cap Fund', 'type': 'Mutual Fund', 'category': 'Small Cap'},
+    {'name': 'Parag Parikh Flexi Cap', 'type': 'Mutual Fund', 'category': 'Flexi Cap'},
+    {'name': 'Nippon India Small Cap', 'type': 'Mutual Fund', 'category': 'Small Cap'},
+    {'name': 'HDFC Mid-Cap Opportunities', 'type': 'Mutual Fund', 'category': 'Mid Cap'},
+    {'name': 'Axis Bluechip Fund', 'type': 'Mutual Fund', 'category': 'Large Cap'},
+    {'name': 'SBI Magnum Equity Funds', 'type': 'Mutual Fund', 'category': 'Focused'},
+    {'name': 'Reliance Industries', 'type': 'Stock', 'category': 'Energy'},
+    {'name': 'Tata Consultancy', 'type': 'Stock', 'category': 'IT Services'},
+    {'name': 'Infosys Ltd', 'type': 'Stock', 'category': 'IT Services'},
+    {'name': 'HDFC Bank Ltd', 'type': 'Stock', 'category': 'Banking'},
+    {'name': 'Wipro Ltd', 'type': 'Stock', 'category': 'IT Services'},
+    {'name': 'ICICI Bank Ltd', 'type': 'Stock', 'category': 'Banking'},
+  ];
 
   final List<Map<String, dynamic>> _paymentMethods = [
     {
@@ -43,7 +61,16 @@ class _SIPInvestmentScreenState extends State<SIPInvestmentScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedFund = (widget.fundName == 'Multiple Funds' || widget.fundName.isEmpty) 
+        ? _availableInvestments[0]['name']! 
+        : widget.fundName;
     _amountController = TextEditingController(text: _amount.toStringAsFixed(0));
+
+    if (widget.fundName == 'Multiple Funds' || widget.fundName.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showFundSelectionModal();
+      });
+    }
   }
 
   @override
@@ -89,6 +116,8 @@ class _SIPInvestmentScreenState extends State<SIPInvestmentScreen> {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
+            _buildFundSelectionCard(),
+            const SizedBox(height: 20),
             _buildAmountCard(),
             const SizedBox(height: 20),
             _buildFrequencyCard(),
@@ -104,6 +133,211 @@ class _SIPInvestmentScreenState extends State<SIPInvestmentScreen> {
             _buildSetupButton(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildFundSelectionCard() {
+    var selectedItem = _availableInvestments.firstWhere((i) => i['name'] == _selectedFund, orElse: () => _availableInvestments[0]);
+    return GestureDetector(
+      onTap: _showFundSelectionModal,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: kForest,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [BoxShadow(color: kForest.withValues(alpha: 0.2), blurRadius: 15, offset: const Offset(0, 8))],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
+              child: Icon(selectedItem['type'] == 'Mutual Fund' ? Icons.auto_graph_rounded : Icons.business_rounded, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_selectedFund, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(color: const Color(0xFF4CAF7A).withValues(alpha: 0.3), borderRadius: BorderRadius.circular(6)),
+                        child: Text(selectedItem['type']!.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(selectedItem['category']!, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFundSelectionModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          var filteredItems = _availableInvestments.where((item) {
+            bool matchesSearch = item['name']!.toLowerCase().contains(_searchQuery.toLowerCase());
+            bool matchesCategory = _selectedCategory == 'All' || item['type'] == _selectedCategory;
+            return matchesSearch && matchesCategory;
+          }).toList();
+
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            decoration: const BoxDecoration(
+              color: Color(0xFFF7F9F8),
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+            ),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(24, 24, 24, 16),
+                  child: Text('Invest in Funds or Stocks', style: TextStyle(color: kForest, fontSize: 22, fontWeight: FontWeight.bold)),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: TextField(
+                      onChanged: (val) {
+                        setModalState(() => _searchQuery = val);
+                        setState(() {});
+                      },
+                      decoration: const InputDecoration(
+                        hintText: 'Search for mutual fund or stock company',
+                        hintStyle: TextStyle(color: kSub, fontSize: 14),
+                        icon: Icon(Icons.search, color: kForest),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    children: ['All', 'Mutual Fund', 'Stock'].map((cat) {
+                      bool isSelected = _selectedCategory == cat;
+                      return GestureDetector(
+                        onTap: () {
+                          setModalState(() => _selectedCategory = cat);
+                          setState(() {});
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected ? kForest : Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: isSelected ? kForest : Colors.grey.shade200),
+                          ),
+                          child: Text(cat == 'Mutual Fund' ? 'Funds' : cat == 'Stock' ? 'Stocks' : 'All', 
+                            style: TextStyle(color: isSelected ? Colors.white : kForest, fontWeight: FontWeight.bold, fontSize: 13)),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: filteredItems.isEmpty 
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade300),
+                          const SizedBox(height: 16),
+                          const Text('No results found', style: TextStyle(color: kSub, fontSize: 16)),
+                        ],
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        itemCount: filteredItems.length,
+                        itemBuilder: (context, index) {
+                          var item = filteredItems[index];
+                          bool isSelected = _selectedFund == item['name'];
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() => _selectedFund = item['name']!);
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: isSelected ? kForest.withValues(alpha: 0.05) : Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: isSelected ? kForest : Colors.transparent, width: 1.5),
+                                boxShadow: [
+                                  BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? kForest : kLightGreenBg,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Icon(
+                                      item['type'] == 'Mutual Fund' ? Icons.auto_graph_rounded : Icons.business_rounded, 
+                                      color: isSelected ? Colors.white : kForest,
+                                      size: 22
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(item['name']!, style: TextStyle(color: kForest, fontWeight: isSelected ? FontWeight.bold : FontWeight.w700, fontSize: 15)),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Text(item['type']!, style: const TextStyle(color: kSub, fontSize: 11)),
+                                            const SizedBox(width: 8),
+                                            const Text('•', style: TextStyle(color: kSub, fontSize: 11)),
+                                            const SizedBox(width: 8),
+                                            Text(item['category']!, style: const TextStyle(color: kSub, fontSize: 11)),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (isSelected) const Icon(Icons.check_circle_rounded, color: kForest, size: 28),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                ),
+              ],
+            ),
+          );
+        }
       ),
     );
   }
@@ -602,7 +836,7 @@ class _SIPInvestmentScreenState extends State<SIPInvestmentScreen> {
                 builder: (context) => BankTransferScreen(
                   toAccount: "987654321012",
                   toIfsc: "PSIB0001234",
-                  toNominee: "PSB Investment Portal",
+                  toNominee: _selectedFund,
                   toBank: "Punjab National Bank",
                   amount: _amount.toStringAsFixed(2),
                   purpose: "Investment",
