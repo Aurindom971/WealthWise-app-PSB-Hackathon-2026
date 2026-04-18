@@ -11,7 +11,10 @@ class FeatureActionButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.isHighlighted = false,
   });
+
+  final bool isHighlighted;
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +35,9 @@ class FeatureActionButton extends StatelessWidget {
                   offset: const Offset(0, 4),
                 ),
               ],
+              border: isHighlighted 
+                ? Border.all(color: const Color(0xFF38B27C), width: 2) 
+                : null,
             ),
             child: Icon(
               icon,
