@@ -20,7 +20,8 @@ class LockFeature {
 // ─── MAIN SCREEN ────────────────────────────────────────────
 class SmartLockScreen extends StatefulWidget {
   final VoidCallback? onBack;
-  const SmartLockScreen({super.key, this.onBack});
+  final String? highlightId;
+  const SmartLockScreen({super.key, this.onBack, this.highlightId});
 
   @override
   State<SmartLockScreen> createState() => _SmartLockScreenState();
@@ -341,8 +342,16 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: const Color(0xFFE0E8E4),
+                    color: f.id == widget.highlightId ? const Color(0xFF2E9461).withOpacity(0.5) : const Color(0xFFE0E8E4),
+                    width: f.id == widget.highlightId ? 2 : 1,
                   ),
+                  boxShadow: f.id == widget.highlightId ? [
+                    BoxShadow(
+                      color: const Color(0xFF2E9461).withOpacity(0.15),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    )
+                  ] : [],
                 ),
                 child: Row(
                   children: [

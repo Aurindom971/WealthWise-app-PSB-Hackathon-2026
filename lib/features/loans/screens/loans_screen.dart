@@ -2,31 +2,51 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import '../../home/screens/home_screen.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
-import '../../home/screens/notifications_screen.dart';
 import '../widgets/active_loan_card.dart';
-import 'active_loans_screen.dart';
-import 'loan_statement_screen.dart';
-import 'loan_eligibility_screen.dart';
-import 'apply_loan_screen.dart';
-import 'compare_loans_screen.dart';
 
 class LoansScreen extends StatefulWidget {
   final VoidCallback onBack;
   final Function(LoanSubState, {String? loanType, String? loanId}) onNavigate;
+  final String? highlightType;
 
-  const LoansScreen({super.key, required this.onBack, required this.onNavigate});
+  const LoansScreen({super.key, required this.onBack, required this.onNavigate, this.highlightType});
 
   @override
   State<LoansScreen> createState() => _LoansScreenState();
 }
 
 class _LoansScreenState extends State<LoansScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _loanKeys = {
+    'Personal Loan': GlobalKey(),
+    'Home Loan': GlobalKey(),
+    'Education Loan': GlobalKey(),
+    'Car Loan': GlobalKey(),
+  };
+
   // EMI Calculator Controllers
   final _amtController = TextEditingController();
   final _tenureController = TextEditingController();
   final _rateController = TextEditingController();
   String _emiResult = '₹ 0 / mo';
 
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.highlightType != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final key = _loanKeys[widget.highlightType];
+        if (key?.currentContext != null) {
+          Scrollable.ensureVisible(
+            key!.currentContext!,
+            duration: const Duration(milliseconds: 800),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
+  }
 
   void _calculateEMI() {
     double p = double.tryParse(_amtController.text.replaceAll(',', '')) ?? 0;
@@ -71,6 +91,7 @@ class _LoansScreenState extends State<LoansScreen> {
       children: [
         Expanded(
           child: SingleChildScrollView(
+            controller: _scrollController,
             physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
@@ -78,7 +99,11 @@ class _LoansScreenState extends State<LoansScreen> {
                     const SizedBox(height: 24),
                     _ActiveLoansSection(onNavigate: widget.onNavigate),
                     const SizedBox(height: 24),
-                    _AvailableOptionsSection(onNavigate: widget.onNavigate),
+                    _AvailableOptionsSection(
+                      onNavigate: widget.onNavigate, 
+                      highlightType: widget.highlightType,
+                      itemKeys: _loanKeys,
+                    ),
                     _CompareOptionsCard(onNavigate: widget.onNavigate),
                     
                     _PaymentPlanningSection(
@@ -235,7 +260,13 @@ class _ActiveLoansSection extends StatelessWidget {
 
 class _AvailableOptionsSection extends StatelessWidget {
   final Function(LoanSubState, {String? loanType, String? loanId}) onNavigate;
-  const _AvailableOptionsSection({required this.onNavigate});
+  final String? highlightType;
+  final Map<String, GlobalKey> itemKeys;
+  const _AvailableOptionsSection({
+    required this.onNavigate, 
+    this.highlightType,
+    required this.itemKeys,
+  });
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -246,6 +277,7 @@ class _AvailableOptionsSection extends StatelessWidget {
           const Text('Available Loan Options', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kInk)),
           const SizedBox(height: 16),
           _LoanOptionCard(
+            key: itemKeys['Personal Loan'],
             title: 'Personal Loan',
             desc: 'Quick funds for your personal needs',
             emiStart: '₹8,850/month',
@@ -255,9 +287,11 @@ class _AvailableOptionsSection extends StatelessWidget {
             tagColor: Colors.orange,
             icon: Icons.person_outline,
             onNavigate: onNavigate,
+            isHighlighted: highlightType == 'Personal Loan',
           ),
           const SizedBox(height: 16),
           _LoanOptionCard(
+            key: itemKeys['Home Loan'],
             title: 'Home Loan',
             desc: 'Fulfill your dream of owning a home',
             emiStart: '₹7,689/month',
@@ -267,9 +301,11 @@ class _AvailableOptionsSection extends StatelessWidget {
             tagColor: Colors.orangeAccent,
             icon: Icons.home_outlined,
             onNavigate: onNavigate,
+            isHighlighted: highlightType == 'Home Loan',
           ),
           const SizedBox(height: 16),
           _LoanOptionCard(
+            key: itemKeys['Education Loan'],
             title: 'Education Loan',
             desc: 'Invest in your future education',
             emiStart: '₹12,668/month',
@@ -277,9 +313,11 @@ class _AvailableOptionsSection extends StatelessWidget {
             interest: '9.0% p.a.',
             icon: Icons.school_outlined,
             onNavigate: onNavigate,
+            isHighlighted: highlightType == 'Education Loan',
           ),
           const SizedBox(height: 16),
           _LoanOptionCard(
+            key: itemKeys['Car Loan'],
             title: 'Car Loan',
             desc: 'Drive home your dream car today',
             emiStart: '₹10,455/month',
@@ -289,6 +327,7 @@ class _AvailableOptionsSection extends StatelessWidget {
             tagColor: Colors.redAccent,
             icon: Icons.directions_car_outlined,
             onNavigate: onNavigate,
+            isHighlighted: highlightType == 'Car Loan',
           ),
           const SizedBox(height: 24),
         ],
@@ -307,8 +346,10 @@ class _LoanOptionCard extends StatelessWidget {
   final Color? tagColor;
   final IconData icon;
   final Function(LoanSubState, {String? loanType, String? loanId}) onNavigate;
+  final bool isHighlighted;
 
   const _LoanOptionCard({
+    super.key,
     required this.title, 
     required this.desc, 
     required this.emiStart, 
@@ -318,6 +359,7 @@ class _LoanOptionCard extends StatelessWidget {
     this.tagColor, 
     required this.icon,
     required this.onNavigate,
+    this.isHighlighted = false,
   });
 
   @override
@@ -327,8 +369,20 @@ class _LoanOptionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCard,
         borderRadius: BorderRadius.circular(24),
+        border: isHighlighted
+            ? Border.all(color: const Color(0xFF2E9461), width: 2)
+            : null,
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          if (isHighlighted)
+            BoxShadow(
+              color: const Color(0xFF2E9461).withOpacity(0.15),
+              blurRadius: 15,
+              spreadRadius: 2,
+            ),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4)),
         ],
       ),
       child: Column(

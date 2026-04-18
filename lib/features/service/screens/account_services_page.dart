@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
+import 'package:securewealth_twin/features/cards_and_forex/widgets/statement_modal.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../home/screens/notifications_screen.dart';
+import 'nominee_management_page.dart';
+import 'modify_account_details_page.dart';
 
 class AccountServicesPage extends StatelessWidget {
   const AccountServicesPage({super.key});
@@ -54,12 +57,25 @@ class AccountServicesPage extends StatelessWidget {
   Widget _buildTile(BuildContext context, String title, IconData icon) {
     return GestureDetector(
       onTap: () {
-        if (title == 'Download passbook') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Passbook has started downloading'),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: kForest,
+        if (title == 'Download statement') {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => const StatementModal(),
+          );
+        } else if (title == 'Nominee management') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const NomineeManagementPage(),
+            ),
+          );
+        } else if (title == 'Modify account details') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ModifyAccountDetailsPage(),
             ),
           );
         } else {
@@ -136,9 +152,7 @@ class AccountServicesPage extends StatelessWidget {
                 padding: const EdgeInsets.all(18),
                 children: [
                   _buildTile(
-                      context, 'Account statement', Icons.description_outlined),
-                  _buildTile(
-                      context, 'Download passbook', Icons.download_outlined),
+                      context, 'Download statement', Icons.file_download_outlined),
                   _buildTile(
                       context, 'Nominee management', Icons.shield_outlined),
                   _buildTile(
