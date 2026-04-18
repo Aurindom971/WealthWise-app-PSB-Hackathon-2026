@@ -30,9 +30,6 @@ class _LoansScreenState extends State<LoansScreen> {
   final _rateController = TextEditingController();
   String _emiResult = '₹ 0 / mo';
 
-  // Eligibility Controllers
-  final _incomeController = TextEditingController();
-  final _scoreController = TextEditingController();
 
   @override
   void initState() {
@@ -66,24 +63,6 @@ class _LoansScreenState extends State<LoansScreen> {
     }
   }
 
-  void _checkEligibility() {
-    double income = double.tryParse(_incomeController.text.replaceAll(',', '')) ?? 0;
-    int score = int.tryParse(_scoreController.text) ?? 0;
-
-    if (income > 0 && score > 0) {
-      bool isEligible = income >= 30000 && score >= 750;
-      _showStyledDialog(
-        title: isEligible ? 'Congratulations!' : 'Almost there...',
-        message: isEligible 
-          ? 'Based on your income and credit score, you are eligible for an instant loan up to ₹ 10 Lakh!' 
-          : 'Your current eligibility is low. We recommend improving your credit score or income stability.',
-        isSuccess: isEligible,
-      );
-    } else {
-      _showStyledSnackBar('Please enter your income and credit score');
-    }
-  }
-
   void _showStyledSnackBar(String message, {bool isError = true}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -97,71 +76,12 @@ class _LoansScreenState extends State<LoansScreen> {
     );
   }
 
-  void _showStyledDialog({required String title, required String message, bool isSuccess = true}) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isSuccess ? const Color(0xFFEAF6F0) : const Color(0xFFFFF4F4),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isSuccess ? Icons.check_circle_outline : Icons.info_outline,
-                  color: isSuccess ? kMid : const Color(0xFFE74C3C),
-                  size: 40,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: kInk),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, color: kSub, height: 1.5),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kMid,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 0,
-                  ),
-                  child: const Text('OK', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   void dispose() {
     _amtController.dispose();
     _tenureController.dispose();
     _rateController.dispose();
-    _incomeController.dispose();
-    _scoreController.dispose();
-    _scrollController.dispose();
+
     super.dispose();
   }
 
@@ -192,9 +112,6 @@ class _LoansScreenState extends State<LoansScreen> {
                       rateController: _rateController,
                       emiResult: _emiResult,
                       onCalc: _calculateEMI,
-                      incomeController: _incomeController,
-                      scoreController: _scoreController,
-                      onCheck: _checkEligibility,
                     ),
                     
                     const _TrackApplicationSection(),
@@ -614,9 +531,6 @@ class _PaymentPlanningSection extends StatelessWidget {
   final TextEditingController rateController;
   final String emiResult;
   final VoidCallback onCalc;
-  final TextEditingController incomeController;
-  final TextEditingController scoreController;
-  final VoidCallback onCheck;
 
   const _PaymentPlanningSection({
     required this.amtController,
@@ -624,9 +538,6 @@ class _PaymentPlanningSection extends StatelessWidget {
     required this.rateController,
     required this.emiResult,
     required this.onCalc,
-    required this.incomeController,
-    required this.scoreController,
-    required this.onCheck,
   });
 
   @override
@@ -645,12 +556,7 @@ class _PaymentPlanningSection extends StatelessWidget {
             emiResult: emiResult,
             onCalc: onCalc,
           ),
-          const SizedBox(height: 16),
-          _EligibilityCheckCard(
-            incomeController: incomeController,
-            scoreController: scoreController,
-            onCheck: onCheck,
-          ),
+
           const SizedBox(height: 24),
         ],
       ),
@@ -722,66 +628,6 @@ class _EMICalculatorCard extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text('Calculate EMI', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EligibilityCheckCard extends StatelessWidget {
-  final TextEditingController incomeController;
-  final TextEditingController scoreController;
-  final VoidCallback onCheck;
-
-  const _EligibilityCheckCard({
-    required this.incomeController,
-    required this.scoreController,
-    required this.onCheck,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: kCard,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: const Color(0xFFEAF6F0), borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.shield_outlined, color: Color(0xFF1F7A5A), size: 24),
-              ),
-              const SizedBox(width: 14),
-              const Text('Check Eligibility', style: TextStyle(color: kInk, fontSize: 16, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _SmallInput(label: 'Monthly Income (₹)', controller: incomeController, hint: 'e.g. 50000'),
-          const SizedBox(height: 12),
-          _SmallInput(label: 'Credit Score', controller: scoreController, hint: 'e.g. 750'),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onCheck,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kMid,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: const Text('Check Eligibility', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
         ],
