@@ -8,6 +8,7 @@ const kCream = Color(0xFFF2F0EB);
 const kCard = Color(0xFFFFFFFF);
 const kSub = Color(0xFF9A9A94);
 const kInk = Color(0xFF1A1A18);
+const kLightGreenBg = Color(0xFFEAF1ED);
 
 class TopBar extends StatelessWidget {
   final VoidCallback onHomeTap;

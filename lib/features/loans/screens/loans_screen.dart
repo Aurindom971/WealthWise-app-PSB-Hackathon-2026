@@ -695,7 +695,7 @@ class _TrackApplicationSectionState extends State<_TrackApplicationSection> {
       decoration: BoxDecoration(
         color: kCard,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: kMid.withOpacity(0.1)),
+        border: Border.all(color: kMid.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
         ],
@@ -1016,3 +1016,4 @@ class _StickyApplyButton extends StatelessWidget {
     );
   }
 }
+

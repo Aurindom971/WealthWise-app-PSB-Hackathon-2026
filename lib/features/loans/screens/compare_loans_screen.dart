@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
 import '../widgets/loan_header.dart';
-import 'apply_loan_screen.dart';
 
 class CompareLoansScreen extends StatefulWidget {
   final VoidCallback onBack;

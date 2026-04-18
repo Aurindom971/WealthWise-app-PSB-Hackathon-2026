@@ -18,6 +18,7 @@ import 'package:securewealth_twin/features/loans/screens/active_loans_screen.dar
 import 'package:securewealth_twin/features/loans/screens/apply_loan_screen.dart';
 import 'package:securewealth_twin/features/loans/screens/compare_loans_screen.dart';
 import 'package:securewealth_twin/features/loans/screens/application_status_screen.dart';
+import 'package:securewealth_twin/Investments/invest.dart';
 import 'package:securewealth_twin/features/profile/profile_page.dart';
 import 'package:securewealth_twin/features/service/services_page.dart';
 
@@ -121,6 +122,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: kCream,
       body: SafeArea(
+        child: Column(children: [
+          if (_isShowingDashboard || _isShowingCardsAndForex || _isShowingBillAndRecharge || _isShowingLoans || _navIdx == 3)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
         child: Column(
           children: [
             Padding(
@@ -136,6 +142,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   _isShowingCardsAndForex = false;
                   _isShowingBillAndRecharge = false;
                   _isShowingLoans = false;
+                }),
+                onLogoutTap: _handleLogout,
+                onNotificationTap: () => showNotifications(context),
+              ),
+            ),
+          Expanded(
+            child: FadeTransition(
+              opacity: _fade,
+              child: _isShowingCardsAndForex 
+                ? CardsAndForexScreen(
+                    showFreezeCard: true, 
+                    onBack: () => setState(() => _isShowingCardsAndForex = false),
+                  )
+                : (_isShowingBillAndRecharge
+                    ? _buildBillAndRechargeContent()
+                    : (_isShowingLoans
+                        ? _buildLoansContent()
+                        : (_isShowingDashboard 
+                          ? _buildDashboard() 
+                          : _buildTabContent()))),
+            ),
+          ),
+          BottomNav(
+            currentIndex: _isShowingDashboard ? -1 : _navIdx,
+            onTap: (i) => setState(() {
+              _navIdx = i;
+              _isShowingDashboard = false;
+              _isShowingCardsAndForex = false;
+              _isShowingBillAndRecharge = false;
+              _isShowingLoans = false;
+            }),
+          ),
+        ]),
                   _isShowingServices = false;
                 }),
                 onLogoutTap: _handleLogout,
@@ -319,6 +358,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildTabContent() {
+    if (_navIdx == 1) return TransactionScreen(onBack: () => setState(() => _isShowingDashboard = true));
+    if (_navIdx == 3) return InvestmentsScreen(onBack: () => setState(() => _isShowingDashboard = true));
+    if (_navIdx == 4) return SmartLockScreen(onBack: () => setState(() => _isShowingDashboard = true));
     if (_navIdx == 0) return const ProfilePage();
     if (_navIdx == 1) {
       return TransactionScreen(

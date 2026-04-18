@@ -70,7 +70,7 @@ class InsuranceCategoryScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     // Plans List
-                    ...category.plans.map((plan) => _buildPlanCard(plan)).toList(),
+                    ...category.plans.map((plan) => _buildPlanCard(plan)),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -95,7 +95,7 @@ class InsuranceCategoryScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),
@@ -122,7 +122,7 @@ class InsuranceCategoryScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          ...plan.features.map((feature) => _buildFeatureItem(feature)).toList(),
+          ...plan.features.map((feature) => _buildFeatureItem(feature)),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
@@ -259,3 +259,4 @@ final Map<String, InsuranceCategoryData> insuranceCategoryDataMap = {
     ],
   ),
 };
+

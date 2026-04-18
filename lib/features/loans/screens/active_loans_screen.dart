@@ -3,8 +3,6 @@ import '../../home/widgets/home_navigation_widgets.dart';
 import '../../home/screens/notifications_screen.dart';
 import '../widgets/loan_header.dart';
 import '../widgets/active_loan_card.dart';
-import 'loan_statement_screen.dart';
-import 'application_status_screen.dart';
 
 class ActiveLoansScreen extends StatelessWidget {
   final VoidCallback onBack;
@@ -36,9 +34,9 @@ class ActiveLoansScreen extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                     decoration: BoxDecoration(
-                      color: kMid.withOpacity(0.05),
+                      color: kMid.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: kMid.withOpacity(0.1)),
+                      border: Border.all(color: kMid.withValues(alpha: 0.1)),
                     ),
                     child: Row(
                       children: [
@@ -47,7 +45,7 @@ class ActiveLoansScreen extends StatelessWidget {
                         Expanded(
                           child: Text(
                             'You have 3 loans currently active and being tracked.',
-                            style: TextStyle(color: kInk.withOpacity(0.8), fontSize: 13, fontWeight: FontWeight.w500),
+                            style: TextStyle(color: kInk.withValues(alpha: 0.8), fontSize: 13, fontWeight: FontWeight.w500),
                           ),
                         ),
                       ],
@@ -118,3 +116,4 @@ class ActiveLoansScreen extends StatelessWidget {
     );
   }
 }
+

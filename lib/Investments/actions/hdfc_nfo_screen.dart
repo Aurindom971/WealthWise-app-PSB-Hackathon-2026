@@ -1,0 +1,470 @@
+import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import '../../features/home/widgets/home_navigation_widgets.dart';
+import '../../features/send/screens/send_transfer_screen.dart';
+
+class HDFCIndexNFOScreen extends StatefulWidget {
+  const HDFCIndexNFOScreen({super.key});
+
+  @override
+  State<HDFCIndexNFOScreen> createState() => _HDFCIndexNFOScreenState();
+}
+
+class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
+  final double _minInvestment = 500;
+  late DateTime _expiryDate;
+  late Duration _remainingTime;
+
+  int _selectedPaymentIndex = 0;
+  String? _selectedAccount;
+
+  final List<Map<String, dynamic>> _paymentMethods = [
+    {
+      'title': 'Bank Account',
+      'icon': Icons.account_balance_outlined,
+    },
+    {
+      'title': 'UPI',
+      'icon': Icons.phone_android_outlined,
+    },
+    {
+      'title': 'Net Banking',
+      'icon': Icons.language_outlined,
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _expiryDate = DateTime(2026, 4, 19, 15, 0, 0); // April 19, 3 PM
+    _calculateRemainingTime();
+  }
+
+  void _calculateRemainingTime() {
+    _remainingTime = _expiryDate.difference(DateTime.now());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: kForest, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'NFO Application',
+          style: TextStyle(
+            color: kForest,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 32),
+                  _buildKeyStats(),
+                  const SizedBox(height: 32),
+                  _buildSectoralBreakup(),
+                  const SizedBox(height: 32),
+                  _buildTaxCalculator(),
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+          ),
+          _buildBottomCTA(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'HDFC Nifty Next 50\nIndex Fund',
+              style: TextStyle(
+                color: kForest,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                height: 1.2,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'LIVE NOW',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          'Passive exposure to Indias next 50 heavyweights. Low expense ratio, high growth potential.',
+          style: TextStyle(color: kSub, fontSize: 14),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildKeyStats() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildStatItem('NAV PRICE', '₹ 10.00', 'Launch Value', Colors.green),
+        _buildStatItem(
+          'CLOSES IN',
+          '${_remainingTime.inDays} Days',
+          'Apr 19 Deadline',
+          Colors.orange,
+        ),
+        _buildStatItem('MIN. INVEST', '₹ 500', 'Entry Barrier', kForest),
+      ],
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, String sub, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: kSub,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(sub, style: const TextStyle(color: kSub, fontSize: 10)),
+      ],
+    );
+  }
+
+  Widget _buildSectoralBreakup() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Sectoral Distribution',
+          style: TextStyle(
+            color: kForest,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            SizedBox(
+              width: 120,
+              height: 120,
+              child: PieChart(
+                PieChartData(
+                  sectionsSpace: 2,
+                  centerSpaceRadius: 35,
+                  sections: [
+                    PieChartSectionData(
+                      color: kForest,
+                      value: 35,
+                      title: '',
+                      radius: 15,
+                    ),
+                    PieChartSectionData(
+                      color: kForest.withValues(alpha: 0.6),
+                      value: 25,
+                      title: '',
+                      radius: 15,
+                    ),
+                    PieChartSectionData(
+                      color: kForest.withValues(alpha: 0.3),
+                      value: 20,
+                      title: '',
+                      radius: 15,
+                    ),
+                    PieChartSectionData(
+                      color: kCream,
+                      value: 20,
+                      title: '',
+                      radius: 15,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 24),
+            Expanded(
+              child: Column(
+                children: [
+                  _buildLegendItem('Financial Services', '35%'),
+                  _buildLegendItem('Consumer Goods', '25%'),
+                  _buildLegendItem('Healthcare', '20%'),
+                  _buildLegendItem('Others', '20%'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLegendItem(String label, String p) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: kSub, fontSize: 12)),
+          Text(
+            p,
+            style: const TextStyle(
+              color: kForest,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaxCalculator() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: kCream,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.calculate_outlined, color: kForest, size: 20),
+              const SizedBox(width: 12),
+              const Text(
+                'Tax Efficiency Calculator',
+                style: TextStyle(
+                  color: kForest,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildCalcRow('Long Term Capital Gains (>1Y)', '10% Tax'),
+          _buildCalcRow('Indexation Benefit', 'Available'),
+          const Divider(height: 24),
+          const Text(
+            'Passive funds typically have lower turnover, leading to fewer taxable events compared to active funds.',
+            style: TextStyle(color: kSub, fontSize: 11, height: 1.4),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCalcRow(String label, String val) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: kSub, fontSize: 12)),
+          Text(
+            val,
+            style: const TextStyle(
+              color: kForest,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomCTA() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Application Amount',
+                style: TextStyle(color: kSub, fontSize: 12),
+              ),
+              Text(
+                '₹ ${_minInvestment.toStringAsFixed(0)}',
+                style: const TextStyle(
+                  color: kForest,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: _paymentMethods.asMap().entries.map((entry) {
+              int idx = entry.key;
+              var method = entry.value;
+              bool isSelected = _selectedPaymentIndex == idx;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedPaymentIndex = idx),
+                  child: Container(
+                    margin: EdgeInsets.only(right: idx == 2 ? 0 : 8),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected ? kForest.withValues(alpha: 0.05) : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isSelected ? kForest : Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(method['icon'], color: isSelected ? kForest : kSub, size: 20),
+                        const SizedBox(height: 4),
+                        Text(method['title'], style: TextStyle(color: isSelected ? kForest : kSub, fontSize: 10, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          if (_selectedPaymentIndex == 0) ...[
+            const SizedBox(height: 16),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: userAccounts.where((a) => a.contains('Savings')).map((acc) {
+                  bool isAccSelected = _selectedAccount == acc;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _selectedAccount = acc),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isAccSelected ? kForest.withValues(alpha: 0.05) : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: isAccSelected ? kForest : Colors.grey.shade100),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(isAccSelected ? Icons.radio_button_checked : Icons.radio_button_off, color: isAccSelected ? kForest : kSub, size: 14),
+                            const SizedBox(width: 8),
+                            Text(acc, style: TextStyle(color: kForest, fontSize: 11, fontWeight: isAccSelected ? FontWeight.bold : FontWeight.normal)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: () {
+                if (_selectedPaymentIndex == 0 || _selectedPaymentIndex == 2) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BankTransferScreen(
+                        toAccount: "987654321012",
+                        toIfsc: "PSIB0001234",
+                        toNominee: "PSB Investment Portal",
+                        toBank: "Punjab National Bank",
+                        amount: _minInvestment.toStringAsFixed(2),
+                        purpose: "Investment",
+                        fromAccount: _selectedPaymentIndex == 0 ? _selectedAccount : null,
+                      ),
+                    ),
+                  );
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => UpiScreen(
+                        prefilledUpiId: "psb.invest@upi",
+                        prefilledAmount: _minInvestment.toStringAsFixed(2),
+                      ),
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kForest,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Confirm Application',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

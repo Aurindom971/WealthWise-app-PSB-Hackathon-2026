@@ -290,6 +290,116 @@ class _SmartLockHeader extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
+                color: const Color(0xFF2E9461),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Stack(
+                children: [
+                  // Decorative circles
+                  Positioned(
+                    top: -32,
+                    right: -32,
+                    child: Container(
+                      width: 128,
+                      height: 128,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -16,
+                    left: -16,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.05),
+                      ),
+                    ),
+                  ),
+                  // Content
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Account Status',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _accountLocked ? 'Account Frozen' : 'Account Active',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _accountLocked ? 'All transactions are blocked' : 'All services are running normally',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    color: Colors.white60,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: _handleAccountToggle,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              width: 64,
+                              height: 64,
+                              decoration: BoxDecoration(
+                                color: _accountLocked ? cs.error : Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Icon(
+                                _accountLocked ? Icons.shield_outlined : Icons.shield,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          _PulsingDot(
+                            color: _accountLocked ? cs.error : Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _accountLocked ? 'Protection active — tap shield to unfreeze' : 'Tap shield to freeze account',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
                 color: AppColors.muted,
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -380,7 +490,7 @@ class _LockStatusCard extends StatelessWidget {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: _toggles[f.id]! ? const Color(0xFF2E9461).withOpacity(0.1) : const Color(0xFFEAF3EF),
+                        color: _toggles[f.id]! ? const Color(0xFF2E9461).withValues(alpha: 0.1) : const Color(0xFFEAF3EF),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -410,6 +520,10 @@ class _LockStatusCard extends StatelessWidget {
                           isLocked ? AppColors.destructive : Colors.white,
                       shape: BoxShape.circle,
                     ),
+                    Switch.adaptive(
+                      value: _toggles[f.id]!,
+                      onChanged: (_) => _handleFeatureToggle(f.id),
+                      activeTrackColor: const Color(0xFF2E9461),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -423,6 +537,25 @@ class _LockStatusCard extends StatelessWidget {
                   ),
                 ],
               ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconButton(IconData icon, ColorScheme cs) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
             ],
           ),
         ],
@@ -582,6 +715,12 @@ class _EmergencyConfirmSheetState extends State<_EmergencyConfirmSheet> {
               clipBehavior: Clip.hardEdge,
               child: Stack(
                 children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 30),
+                    width: (MediaQuery.of(context).size.width - 48) *
+                        (_holdProgress / 100),
+                    height: 56,
+                    color: Colors.white.withValues(alpha: 0.2),
                   FractionallySizedBox(
                     widthFactor: _progress / 100,
                     child: Container(color: Colors.white.withOpacity(0.2)),

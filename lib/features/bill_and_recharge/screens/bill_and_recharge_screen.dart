@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
 import '../models/bill_models.dart';
-import 'utility_payment_screen.dart';
 
 class BillAndRechargeScreen extends StatefulWidget {
   final VoidCallback onBack;
@@ -135,7 +134,7 @@ class _BillAndRechargeScreenState extends State<BillAndRechargeScreen> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withValues(alpha: 0.05),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               )
@@ -298,7 +297,7 @@ class _UtilityCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: provider.color.withOpacity(0.08),
+              color: provider.color.withValues(alpha: 0.08),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -340,7 +339,7 @@ class _BillTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )
@@ -351,7 +350,7 @@ class _BillTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: bill.iconColor.withOpacity(0.08),
+              color: bill.iconColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(bill.typeIcon, color: bill.iconColor, size: 24),
@@ -417,7 +416,7 @@ class _RecentPaymentTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: kForest.withOpacity(0.08),
+              color: kForest.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -462,3 +461,4 @@ class _RecentPaymentTile extends StatelessWidget {
     );
   }
 }
+
