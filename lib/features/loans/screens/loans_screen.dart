@@ -2,34 +2,51 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import '../../home/screens/home_screen.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
-import '../../home/screens/notifications_screen.dart';
 import '../widgets/active_loan_card.dart';
-import 'active_loans_screen.dart';
-import 'loan_statement_screen.dart';
-import 'loan_eligibility_screen.dart';
-import 'apply_loan_screen.dart';
-import 'compare_loans_screen.dart';
 
 class LoansScreen extends StatefulWidget {
   final VoidCallback onBack;
   final Function(LoanSubState, {String? loanType, String? loanId}) onNavigate;
+  final String? highlightType;
 
-  const LoansScreen({super.key, required this.onBack, required this.onNavigate});
+  const LoansScreen({super.key, required this.onBack, required this.onNavigate, this.highlightType});
 
   @override
   State<LoansScreen> createState() => _LoansScreenState();
 }
 
 class _LoansScreenState extends State<LoansScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _loanKeys = {
+    'Personal Loan': GlobalKey(),
+    'Home Loan': GlobalKey(),
+    'Education Loan': GlobalKey(),
+    'Car Loan': GlobalKey(),
+  };
+
   // EMI Calculator Controllers
   final _amtController = TextEditingController();
   final _tenureController = TextEditingController();
   final _rateController = TextEditingController();
   String _emiResult = '₹ 0 / mo';
 
-  // Eligibility Controllers
-  final _incomeController = TextEditingController();
-  final _scoreController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.highlightType != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final key = _loanKeys[widget.highlightType];
+        if (key?.currentContext != null) {
+          Scrollable.ensureVisible(
+            key!.currentContext!,
+            duration: const Duration(milliseconds: 800),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
+  }
 
   void _calculateEMI() {
     double p = double.tryParse(_amtController.text.replaceAll(',', '')) ?? 0;
@@ -46,24 +63,6 @@ class _LoansScreenState extends State<LoansScreen> {
     }
   }
 
-  void _checkEligibility() {
-    double income = double.tryParse(_incomeController.text.replaceAll(',', '')) ?? 0;
-    int score = int.tryParse(_scoreController.text) ?? 0;
-
-    if (income > 0 && score > 0) {
-      bool isEligible = income >= 30000 && score >= 750;
-      _showStyledDialog(
-        title: isEligible ? 'Congratulations!' : 'Almost there...',
-        message: isEligible 
-          ? 'Based on your income and credit score, you are eligible for an instant loan up to ₹ 10 Lakh!' 
-          : 'Your current eligibility is low. We recommend improving your credit score or income stability.',
-        isSuccess: isEligible,
-      );
-    } else {
-      _showStyledSnackBar('Please enter your income and credit score');
-    }
-  }
-
   void _showStyledSnackBar(String message, {bool isError = true}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -77,70 +76,12 @@ class _LoansScreenState extends State<LoansScreen> {
     );
   }
 
-  void _showStyledDialog({required String title, required String message, bool isSuccess = true}) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isSuccess ? const Color(0xFFEAF6F0) : const Color(0xFFFFF4F4),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isSuccess ? Icons.check_circle_outline : Icons.info_outline,
-                  color: isSuccess ? kMid : const Color(0xFFE74C3C),
-                  size: 40,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: kInk),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, color: kSub, height: 1.5),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kMid,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 0,
-                  ),
-                  child: const Text('OK', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   void dispose() {
     _amtController.dispose();
     _tenureController.dispose();
     _rateController.dispose();
-    _incomeController.dispose();
-    _scoreController.dispose();
+
     super.dispose();
   }
 
@@ -150,6 +91,7 @@ class _LoansScreenState extends State<LoansScreen> {
       children: [
         Expanded(
           child: SingleChildScrollView(
+            controller: _scrollController,
             physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
@@ -157,7 +99,11 @@ class _LoansScreenState extends State<LoansScreen> {
                     const SizedBox(height: 24),
                     _ActiveLoansSection(onNavigate: widget.onNavigate),
                     const SizedBox(height: 24),
-                    _AvailableOptionsSection(onNavigate: widget.onNavigate),
+                    _AvailableOptionsSection(
+                      onNavigate: widget.onNavigate, 
+                      highlightType: widget.highlightType,
+                      itemKeys: _loanKeys,
+                    ),
                     _CompareOptionsCard(onNavigate: widget.onNavigate),
                     
                     _PaymentPlanningSection(
@@ -166,9 +112,6 @@ class _LoansScreenState extends State<LoansScreen> {
                       rateController: _rateController,
                       emiResult: _emiResult,
                       onCalc: _calculateEMI,
-                      incomeController: _incomeController,
-                      scoreController: _scoreController,
-                      onCheck: _checkEligibility,
                     ),
                     
                     const _TrackApplicationSection(),
@@ -317,7 +260,13 @@ class _ActiveLoansSection extends StatelessWidget {
 
 class _AvailableOptionsSection extends StatelessWidget {
   final Function(LoanSubState, {String? loanType, String? loanId}) onNavigate;
-  const _AvailableOptionsSection({required this.onNavigate});
+  final String? highlightType;
+  final Map<String, GlobalKey> itemKeys;
+  const _AvailableOptionsSection({
+    required this.onNavigate, 
+    this.highlightType,
+    required this.itemKeys,
+  });
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -328,6 +277,7 @@ class _AvailableOptionsSection extends StatelessWidget {
           const Text('Available Loan Options', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kInk)),
           const SizedBox(height: 16),
           _LoanOptionCard(
+            key: itemKeys['Personal Loan'],
             title: 'Personal Loan',
             desc: 'Quick funds for your personal needs',
             emiStart: '₹8,850/month',
@@ -337,9 +287,11 @@ class _AvailableOptionsSection extends StatelessWidget {
             tagColor: Colors.orange,
             icon: Icons.person_outline,
             onNavigate: onNavigate,
+            isHighlighted: highlightType == 'Personal Loan',
           ),
           const SizedBox(height: 16),
           _LoanOptionCard(
+            key: itemKeys['Home Loan'],
             title: 'Home Loan',
             desc: 'Fulfill your dream of owning a home',
             emiStart: '₹7,689/month',
@@ -349,9 +301,11 @@ class _AvailableOptionsSection extends StatelessWidget {
             tagColor: Colors.orangeAccent,
             icon: Icons.home_outlined,
             onNavigate: onNavigate,
+            isHighlighted: highlightType == 'Home Loan',
           ),
           const SizedBox(height: 16),
           _LoanOptionCard(
+            key: itemKeys['Education Loan'],
             title: 'Education Loan',
             desc: 'Invest in your future education',
             emiStart: '₹12,668/month',
@@ -359,9 +313,11 @@ class _AvailableOptionsSection extends StatelessWidget {
             interest: '9.0% p.a.',
             icon: Icons.school_outlined,
             onNavigate: onNavigate,
+            isHighlighted: highlightType == 'Education Loan',
           ),
           const SizedBox(height: 16),
           _LoanOptionCard(
+            key: itemKeys['Car Loan'],
             title: 'Car Loan',
             desc: 'Drive home your dream car today',
             emiStart: '₹10,455/month',
@@ -371,6 +327,7 @@ class _AvailableOptionsSection extends StatelessWidget {
             tagColor: Colors.redAccent,
             icon: Icons.directions_car_outlined,
             onNavigate: onNavigate,
+            isHighlighted: highlightType == 'Car Loan',
           ),
           const SizedBox(height: 24),
         ],
@@ -389,8 +346,10 @@ class _LoanOptionCard extends StatelessWidget {
   final Color? tagColor;
   final IconData icon;
   final Function(LoanSubState, {String? loanType, String? loanId}) onNavigate;
+  final bool isHighlighted;
 
   const _LoanOptionCard({
+    super.key,
     required this.title, 
     required this.desc, 
     required this.emiStart, 
@@ -400,6 +359,7 @@ class _LoanOptionCard extends StatelessWidget {
     this.tagColor, 
     required this.icon,
     required this.onNavigate,
+    this.isHighlighted = false,
   });
 
   @override
@@ -409,8 +369,20 @@ class _LoanOptionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCard,
         borderRadius: BorderRadius.circular(24),
+        border: isHighlighted
+            ? Border.all(color: const Color(0xFF2E9461), width: 2)
+            : null,
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          if (isHighlighted)
+            BoxShadow(
+              color: const Color(0xFF2E9461).withOpacity(0.15),
+              blurRadius: 15,
+              spreadRadius: 2,
+            ),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -559,9 +531,6 @@ class _PaymentPlanningSection extends StatelessWidget {
   final TextEditingController rateController;
   final String emiResult;
   final VoidCallback onCalc;
-  final TextEditingController incomeController;
-  final TextEditingController scoreController;
-  final VoidCallback onCheck;
 
   const _PaymentPlanningSection({
     required this.amtController,
@@ -569,9 +538,6 @@ class _PaymentPlanningSection extends StatelessWidget {
     required this.rateController,
     required this.emiResult,
     required this.onCalc,
-    required this.incomeController,
-    required this.scoreController,
-    required this.onCheck,
   });
 
   @override
@@ -590,12 +556,7 @@ class _PaymentPlanningSection extends StatelessWidget {
             emiResult: emiResult,
             onCalc: onCalc,
           ),
-          const SizedBox(height: 16),
-          _EligibilityCheckCard(
-            incomeController: incomeController,
-            scoreController: scoreController,
-            onCheck: onCheck,
-          ),
+
           const SizedBox(height: 24),
         ],
       ),
@@ -667,66 +628,6 @@ class _EMICalculatorCard extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text('Calculate EMI', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EligibilityCheckCard extends StatelessWidget {
-  final TextEditingController incomeController;
-  final TextEditingController scoreController;
-  final VoidCallback onCheck;
-
-  const _EligibilityCheckCard({
-    required this.incomeController,
-    required this.scoreController,
-    required this.onCheck,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: kCard,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: const Color(0xFFEAF6F0), borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.shield_outlined, color: Color(0xFF1F7A5A), size: 24),
-              ),
-              const SizedBox(width: 14),
-              const Text('Check Eligibility', style: TextStyle(color: kInk, fontSize: 16, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _SmallInput(label: 'Monthly Income (₹)', controller: incomeController, hint: 'e.g. 50000'),
-          const SizedBox(height: 12),
-          _SmallInput(label: 'Credit Score', controller: scoreController, hint: 'e.g. 750'),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onCheck,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kMid,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: const Text('Check Eligibility', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
         ],

@@ -85,8 +85,8 @@ const List<LoginItem> _loginLog = [
 
 class SmartLockScreen extends StatefulWidget {
   final VoidCallback? onBack;
-
-  const SmartLockScreen({super.key, this.onBack});
+  final String? highlightId;
+  const SmartLockScreen({super.key, this.onBack, this.highlightId});
 
   @override
   State<SmartLockScreen> createState() => _SmartLockScreenState();
@@ -350,43 +350,44 @@ class _LockStatusCard extends StatelessWidget {
               ),
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Account Status',
-                            style: _font(13, FontWeight.w500,
-                                Colors.white.withOpacity(0.7))),
-                        const SizedBox(height: 4),
-                        Text(
-                          isLocked ? 'Account Frozen' : 'Account Active',
-                          style: _font(22, FontWeight.w800, Colors.white),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isLocked
-                              ? 'All transactions are blocked'
-                              : 'All services are running normally',
-                          style: _font(13, FontWeight.w500,
-                              Colors.white.withOpacity(0.6)),
-                        ),
-                      ],
-                    ),
+
+          // ── TOGGLE LIST ──
+          ...List.generate(_features.length, (i) {
+            final f = _features[i];
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: f.id == widget.highlightId ? const Color(0xFF2E9461).withOpacity(0.5) : const Color(0xFFE0E8E4),
+                    width: f.id == widget.highlightId ? 2 : 1,
                   ),
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: isLocked
-                          ? AppColors.destructive
-                          : Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(18),
+                  boxShadow: f.id == widget.highlightId ? [
+                    BoxShadow(
+                      color: const Color(0xFF2E9461).withOpacity(0.15),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    )
+                  ] : [],
+                ),
+                child: Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: _toggles[f.id]! ? const Color(0xFF2E9461).withOpacity(0.1) : const Color(0xFFEAF3EF),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        f.icon,
+                        size: 20,
+                        color: _toggles[f.id]! ? const Color(0xFF2E9461) : const Color(0xFF6B7F74),
+                      ),
                     ),
                     child: Icon(
                       isLocked

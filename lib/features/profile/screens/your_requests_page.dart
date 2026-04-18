@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
+import 'package:securewealth_twin/features/loans/screens/loans_screen.dart';
+import 'package:securewealth_twin/features/insurance/screens/insurance_screen.dart';
+import 'package:securewealth_twin/features/home/screens/home_screen.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../home/screens/notifications_screen.dart';
 
@@ -55,6 +58,34 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
       'category': 'Insurance',
     },
   ];
+
+  void _navigateToLoans(String highlightType) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => _FeatureWrapper(
+          subtitle: "Loans",
+          icon: Icons.monetization_on_outlined,
+          child: LoansScreen(
+            highlightType: highlightType,
+            onBack: () => Navigator.pop(context),
+            onNavigate: (LoanSubState state, {String? loanType, String? loanId}) {
+              // Handle sub-navigation if needed, or just stay on main
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToInsurance() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const InsuranceScreen(),
+      ),
+    );
+  }
 
   void _showApplyDialog(Map<String, String> app) {
     showDialog(
@@ -307,7 +338,18 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
             ),
           ),
           GestureDetector(
-            onTap: () => _showApplyDialog(app),
+            onTap: () {
+              final title = app['title']!;
+              if (title == 'Apply for Personal Loan') {
+                _navigateToLoans('Personal Loan');
+              } else if (title == 'Apply for Home Loan') {
+                _navigateToLoans('Home Loan');
+              } else if (title == 'Apply for Insurance') {
+                _navigateToInsurance();
+              } else {
+                _showApplyDialog(app);
+              }
+            },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -397,6 +439,53 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FeatureWrapper extends StatelessWidget {
+  final String subtitle;
+  final IconData icon;
+  final Widget child;
+
+  const _FeatureWrapper({
+    required this.subtitle,
+    required this.icon,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: kCream,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                onHomeTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onLogoutTap: () =>
+                    Navigator.popUntil(context, (route) => route.isFirst),
+                onNotificationTap: () => showNotifications(context),
+              ),
+            ),
+            LoanHeader(
+              title: "",
+              subtitle: subtitle,
+              icon: icon,
+              onBack: () => Navigator.pop(context),
+            ),
+            Expanded(child: child),
+            BottomNav(
+              currentIndex: -1,
+              onTap: (i) =>
+                  Navigator.popUntil(context, (route) => route.isFirst),
+            ),
+          ],
+        ),
       ),
     );
   }

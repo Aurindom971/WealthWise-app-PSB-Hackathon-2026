@@ -1,11 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
 import 'package:securewealth_twin/features/cards_and_forex/screens/cards_and_forex_screen.dart';
+import 'package:securewealth_twin/features/home/screens/smart_lock_screen.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../home/screens/notifications_screen.dart';
 
 class CardServicesPage extends StatelessWidget {
   const CardServicesPage({super.key});
+
+  void _navigateToSmartLock(BuildContext context, String? highlightId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          backgroundColor: kCream,
+          body: SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  child: TopBar(
+                    onHomeTap: () =>
+                        Navigator.popUntil(context, (route) => route.isFirst),
+                    onLogoutTap: () =>
+                        Navigator.popUntil(context, (route) => route.isFirst),
+                    onNotificationTap: () => showNotifications(context),
+                  ),
+                ),
+                LoanHeader(
+                  title: "",
+                  subtitle: "Smart Lock",
+                  icon: Icons.lock_outline_rounded,
+                  onBack: () => Navigator.pop(context),
+                ),
+                Expanded(
+                  child: SmartLockScreen(
+                    onBack: () => Navigator.pop(context),
+                    highlightId: highlightId,
+                  ),
+                ),
+                BottomNav(
+                  currentIndex: -1,
+                  onTap: (i) =>
+                      Navigator.popUntil(context, (route) => route.isFirst),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   void _navigateToCards(BuildContext context, String? highlight) {
     Navigator.push(
@@ -182,6 +228,8 @@ class CardServicesPage extends StatelessWidget {
       onTap: () {
         if (title == 'Report lost card') {
           _showReportLostCardModal(context);
+        } else if (title == 'Block / Unblock card') {
+          _navigateToSmartLock(context, 'card');
         } else {
           _navigateToCards(context, highlight);
         }
