@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../features/home/widgets/home_navigation_widgets.dart';
-import '../../features/send/screens/send_transfer_screen.dart';
+import '../../home/widgets/home_navigation_widgets.dart';
+import '../../send/screens/send_transfer_screen.dart';
 
 class SIPInvestmentScreen extends StatefulWidget {
   final String fundName;
@@ -85,52 +85,75 @@ class _SIPInvestmentScreenState extends State<SIPInvestmentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9F8),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 16.0),
-          child: IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.arrow_back, color: kForest, size: 20),
-            ),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-        title: const Text(
-          'Start SIP',
-          style: TextStyle(
-            color: kForest,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      backgroundColor: kCream,
+      body: SafeArea(
         child: Column(
           children: [
-            _buildFundSelectionCard(),
-            const SizedBox(height: 20),
-            _buildAmountCard(),
-            const SizedBox(height: 20),
-            _buildFrequencyCard(),
-            const SizedBox(height: 20),
-            _buildDeductionDateCard(),
-            const SizedBox(height: 20),
-            _buildEMandateCard(),
-            const SizedBox(height: 20),
-            _buildPaymentMethodCard(),
-            const SizedBox(height: 20),
-            _buildCalculatorCard(),
-            const SizedBox(height: 32),
-            _buildSetupButton(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                searchText: 'Search in Investments',
+                onHomeTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+                onNotificationTap: () {},
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                            child: const Icon(Icons.arrow_back, color: kForest, size: 20),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Start SIP',
+                          style: TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 20),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    _buildFundSelectionCard(),
+                    const SizedBox(height: 20),
+                    _buildAmountCard(),
+                    const SizedBox(height: 20),
+                    _buildFrequencyCard(),
+                    const SizedBox(height: 20),
+                    _buildDeductionDateCard(),
+                    const SizedBox(height: 20),
+                    _buildEMandateCard(),
+                    const SizedBox(height: 20),
+                    _buildPaymentMethodCard(),
+                    const SizedBox(height: 20),
+                    _buildCalculatorCard(),
+                    const SizedBox(height: 32),
+                    _buildSetupButton(),
+                  ],
+                ),
+              ),
+            ),
+            BottomNav(
+              currentIndex: 4,
+              onTap: (index) {
+                if (index == 4) return;
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/home',
+                  (route) => false,
+                  arguments: {'index': index},
+                );
+              },
+              onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+              onNotificationTap: () {},
+            ),
           ],
         ),
       ),
@@ -166,7 +189,7 @@ class _SIPInvestmentScreenState extends State<SIPInvestmentScreen> {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(color: const Color(0xFF4CAF7A).withValues(alpha: 0.3), borderRadius: BorderRadius.circular(6)),
+                        decoration: BoxDecoration(color: const Color(0xFF2E7D5B).withValues(alpha: 0.3), borderRadius: BorderRadius.circular(6)),
                         child: Text(selectedItem['type']!.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
                       ),
                       const SizedBox(width: 8),

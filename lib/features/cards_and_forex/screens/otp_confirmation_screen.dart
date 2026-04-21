@@ -84,7 +84,7 @@ class _OTPConfirmationScreenState extends State<OTPConfirmationScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle_rounded, color: Color(0xFF2ECC71), size: 64),
+              const Icon(Icons.check_circle_rounded, color: Color(0xFF2E7D5B), size: 64),
               const SizedBox(height: 20),
               Text(
                 'Success!',
@@ -162,7 +162,7 @@ class _OTPConfirmationScreenState extends State<OTPConfirmationScreen> {
                         : 'Resend Code',
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.bold,
-                      color: _secondsRemaining > 0 ? Colors.grey : const Color(0xFF2ECC71),
+                      color: _secondsRemaining > 0 ? Colors.grey : const Color(0xFF2E7D5B),
                     ),
                   ),
                 ],
@@ -185,7 +185,7 @@ class _OTPConfirmationScreenState extends State<OTPConfirmationScreen> {
         color: const Color(0xFFF5F7F5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: hasValue ? const Color(0xFF2ECC71) : Colors.transparent,
+          color: hasValue ? const Color(0xFF2E7D5B) : Colors.transparent,
           width: 2,
         ),
       ),

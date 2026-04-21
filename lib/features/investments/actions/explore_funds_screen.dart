@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../features/home/widgets/home_navigation_widgets.dart';
+import '../../home/widgets/home_navigation_widgets.dart';
 import 'filtered_market_screen.dart';
 
 class ExploreFundsScreen extends StatefulWidget {
@@ -56,13 +56,42 @@ class _ExploreFundsScreenState extends State<ExploreFundsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _buildAppBar(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                searchText: 'Search for Mutual Funds',
+                onHomeTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+                onNotificationTap: () {},
+              ),
+            ),
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                              child: const Icon(Icons.arrow_back, color: kForest, size: 20),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Mutual Fund Discovery',
+                            style: TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 18),
+                          ),
+                        ],
+                      ),
+                    ),
                     _buildSearchBar(),
                     _buildRecentlyViewed(),
                     _buildSectionTitle('Trending Collections'),
@@ -72,34 +101,25 @@ class _ExploreFundsScreenState extends State<ExploreFundsScreen> {
                 ),
               ),
             ),
+            BottomNav(
+              currentIndex: 4,
+              onTap: (index) {
+                if (index == 4) return;
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/home',
+                  (route) => false,
+                  arguments: {'index': index},
+                );
+              },
+              onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+              onNotificationTap: () {},
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAppBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-              child: const Icon(Icons.arrow_back, color: kForest, size: 20),
-            ),
-          ),
-          const SizedBox(width: 16),
-          const Text(
-            'Mutual Fund Discovery',
-            style: TextStyle(color: kForest, fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSearchBar() {
     return Padding(

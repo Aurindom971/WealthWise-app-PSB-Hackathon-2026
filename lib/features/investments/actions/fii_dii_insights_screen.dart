@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import '../../home/widgets/home_navigation_widgets.dart';
 
 class FIIDIIInsightsScreen extends StatelessWidget {
   const FIIDIIInsightsScreen({super.key});
 
-  final Color kDarkGreen = const Color(0xFF1B422B);
-  final Color kDeepGreen = const Color(0xFF1B422B);
+  final Color kDarkGreen = const Color(0xFF1F5D3A);
+  final Color kDeepGreen = const Color(0xFF1F5D3A);
   final Color kLightGreen = const Color(0xFFEAF1ED);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: kCream,
       appBar: AppBar(
         title: Text(
           'FII & DII Insights',

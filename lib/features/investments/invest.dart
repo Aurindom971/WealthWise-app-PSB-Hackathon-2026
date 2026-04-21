@@ -14,7 +14,7 @@ import 'actions/sbi_innovation_nfo_screen.dart';
 import 'actions/icici_business_cycle_nfo_screen.dart';
 import 'actions/stock_analysis_screen.dart';
 import 'actions/fii_dii_insights_screen.dart';
-import '../features/send/screens/send_transfer_screen.dart';
+import '../send/screens/send_transfer_screen.dart';
 
 class InvestmentsScreen extends StatefulWidget {
   final VoidCallback onBack;
@@ -58,7 +58,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     super.dispose();
   }
 
-  final Color kDarkGreen = const Color(0xFF1B422B); // Matches screenshot
+  final Color kDarkGreen = const Color(0xFF1F5D3A); // Matches screenshot
   final Color kOrange = const Color(
     0xFFDD754E,
   ); // Matches screenshot donut chart
@@ -67,7 +67,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
+      color: const Color(0xFFF2F0EB), // kCream background
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -720,46 +720,69 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
             fontSize: 14,
           ),
         ),
-        const SizedBox(height: 20),
-        _buildStockRow(
-          'INFY',
-          'Infosys Ltd',
-          '1,316',
-          '+0.82',
-          true,
-          [1305, 1318, 1310, 1322, 1316],
-        ),
-        _buildStockRow(
-          'TCS',
-          'Tata Consultancy',
-          '2,573',
-          '+0.71',
-          true,
-          [2554, 2580, 2570, 2590, 2573],
-        ),
-        _buildStockRow(
-          'RELIANCE',
-          'Reliance Industries',
-          '1,345',
-          '+0.13',
-          true,
-          [1344, 1350, 1340, 1348, 1345],
-        ),
-        _buildStockRow(
-          'HDFCBANK',
-          'HDFC Bank Ltd',
-          '794',
-          '-1.96',
-          false,
-          [810, 805, 812, 798, 794],
-        ),
-        _buildStockRow(
-          'WIPRO',
-          'Wipro Ltd',
-          '210',
-          '+0.19',
-          true,
-          [209, 211, 210, 212, 210],
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              _buildStockRow(
+                'INFY',
+                'Infosys Ltd',
+                '1,316',
+                '+0.82',
+                true,
+                [1305, 1318, 1310, 1322, 1316],
+              ),
+              Divider(color: Colors.grey.shade100, height: 1),
+              _buildStockRow(
+                'TCS',
+                'Tata Consultancy',
+                '2,573',
+                '+0.71',
+                true,
+                [2554, 2580, 2570, 2590, 2573],
+              ),
+              Divider(color: Colors.grey.shade100, height: 1),
+              _buildStockRow(
+                'RELIANCE',
+                'Reliance Industries',
+                '1,345',
+                '+0.13',
+                true,
+                [1344, 1350, 1340, 1348, 1345],
+              ),
+              Divider(color: Colors.grey.shade100, height: 1),
+              _buildStockRow(
+                'HDFCBANK',
+                'HDFC Bank Ltd',
+                '794',
+                '-1.96',
+                false,
+                [810, 805, 812, 798, 794],
+              ),
+              Divider(color: Colors.grey.shade100, height: 1),
+              _buildStockRow(
+                'WIPRO',
+                'Wipro Ltd',
+                '210',
+                '+0.19',
+                true,
+                [209, 211, 210, 212, 210],
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -1718,7 +1741,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                 child: Text(
                   'Results: $title',
                   style: TextStyle(
-                    color: Color(0xFF1B422B),
+                    color: Color(0xFF1F5D3A),
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),

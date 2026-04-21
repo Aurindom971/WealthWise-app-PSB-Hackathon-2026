@@ -14,14 +14,14 @@ class CreditCardWidget extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF38B27C),
-            Color(0xFF2D8B61),
+            Color(0xFF1A3328), // kForest
+            Color(0xFF245C3F), // kMid
           ],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF38B27C).withValues(alpha: 0.3),
+            color: const Color(0xFF1A3328).withValues(alpha: 0.45),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -85,7 +85,7 @@ class CreditCardWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'ALEX MORGAN',
+                    'RAJESH KUMAR',
                     style: GoogleFonts.inter(
                       color: Colors.white,
                       fontSize: 15,

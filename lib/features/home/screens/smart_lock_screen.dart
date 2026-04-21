@@ -11,6 +11,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
+import '../../../services/security_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THEME
@@ -20,7 +23,7 @@ class AppColors {
   static const primary = Color(0xFF2E9461);
 static const primaryGlow = Color(0xFF5CCFA0);
   static const primaryFg = Colors.white;
-  static const background = Color(0xFFF8FAFC);
+  static const background = Color(0xFFF2F0EB);
   static const card = Colors.white;
   static const border = Color(0xFFE2E8F0);
   static const muted = Color(0xFFF1F5F9);
@@ -60,24 +63,15 @@ const List<LockFeature> _features = [
       'Disable point-of-sale terminal transactions'),
   LockFeature('atm', Icons.account_balance_wallet_rounded, 'ATM Withdrawal',
       'Block cash withdrawals from ATMs'),
-  LockFeature('qr', Icons.qr_code_rounded, 'QR Code Payments',
-      'Disable scan-and-pay QR transactions'),
 ];
 
 class LoginItem {
   final String device;
   final String time;
-  const LoginItem(this.device, this.time);
+  final String location;
+  final String ip;
+  const LoginItem(this.device, this.time, this.location, this.ip);
 }
-
-const List<LoginItem> _loginLog = [
-  LoginItem('Mobile Banking App · iPhone 15 Pro', 'Today, 10:42 AM'),
-  LoginItem('Net Banking · Chrome · MacBook', 'Yesterday, 08:30 PM'),
-  LoginItem('Mobile Banking App · iPhone 15 Pro', 'Yesterday, 09:15 AM'),
-  LoginItem('Mobile Banking App · iPhone 15 Pro', '2 days ago, 07:48 PM'),
-  LoginItem('Net Banking · Safari · iPad', '3 days ago, 11:02 AM'),
-  LoginItem('Mobile Banking App · iPhone 15 Pro', '4 days ago, 08:30 AM'),
-];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN SCREEN
@@ -102,6 +96,31 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
   void initState() {
     super.initState();
     _toggles = {for (final f in _features) f.id: f.id == 'international'};
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final settings = await SecurityService.getSettings();
+    if (settings != null && mounted) {
+      setState(() {
+        _toggles['card'] = settings['card_freeze_enabled'] ?? false;
+        _toggles['schedule'] = settings['night_lock_enabled'] ?? false;
+        _toggles['online'] = settings['online_enabled'] ?? false;
+        _toggles['upi'] = settings['upi_enabled'] ?? false;
+        _toggles['pos'] = settings['pos_enabled'] ?? false;
+        _toggles['atm'] = settings['atm_enabled'] ?? false;
+        _accountLocked = settings['emergency_freeze'] ?? false;
+        
+        if (settings['night_lock_start'] != null) {
+          final parts = settings['night_lock_start'].split(':');
+          _nightStart = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+        }
+        if (settings['night_lock_end'] != null) {
+          final parts = settings['night_lock_end'].split(':');
+          _nightEnd = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+        }
+      });
+    }
   }
 
   String _fmt(TimeOfDay t) {
@@ -116,6 +135,18 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
       _accountLocked = true;
       _toggles = {for (final f in _features) f.id: true};
     });
+    // Persist ALL toggles to local DB
+    SecurityService.updateSmartLockSettings({
+      'online_enabled': true,
+      'upi_enabled': true,
+      'pos_enabled': true,
+      'atm_enabled': true,
+      'card_freeze_enabled': true,
+      'emergency_freeze': true,
+    });
+    // Sync card freeze & ATM limits
+    SecurityService.toggleGlobalCardFreeze(true);
+    SecurityService.syncGlobalAtmLimits(true);
     _toast('Emergency freeze activated', 'All account activity has been blocked.',
         AppColors.destructive);
   }
@@ -125,6 +156,18 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
       _accountLocked = false;
       _toggles = {for (final f in _features) f.id: f.id == 'international'};
     });
+    // Persist ALL toggles as OFF
+    SecurityService.updateSmartLockSettings({
+      'online_enabled': false,
+      'upi_enabled': false,
+      'pos_enabled': false,
+      'atm_enabled': false,
+      'card_freeze_enabled': false,
+      'emergency_freeze': false,
+    });
+    // Sync card unfreeze & ATM limit restore
+    SecurityService.toggleGlobalCardFreeze(false);
+    SecurityService.syncGlobalAtmLimits(false);
     _toast('Emergency freeze lifted', 'Your account activity has been restored.',
         AppColors.primary);
   }
@@ -136,15 +179,29 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
       } else {
         setState(() {
           _toggles[id] = false;
-          if (_toggles.values.every((v) => !v)) _accountLocked = false;
         });
+        SecurityService.updateSmartLockSettings({'night_lock_enabled': false});
       }
       return;
     }
+    
+    final newVal = !(_toggles[id] ?? false);
     setState(() {
-      _toggles[id] = !(_toggles[id] ?? false);
-      if (_toggles.values.every((v) => !v)) _accountLocked = false;
+      _toggles[id] = newVal;
     });
+
+    if (id == 'card') {
+      SecurityService.toggleGlobalCardFreeze(newVal);
+    } else if (id == 'online') {
+      SecurityService.updateSmartLockSettings({'online_enabled': newVal});
+    } else if (id == 'upi') {
+      SecurityService.updateSmartLockSettings({'upi_enabled': newVal});
+    } else if (id == 'pos') {
+      SecurityService.updateSmartLockSettings({'pos_enabled': newVal});
+    } else if (id == 'atm') {
+      SecurityService.updateSmartLockSettings({'atm_enabled': newVal});
+      SecurityService.syncGlobalAtmLimits(newVal);
+    }
   }
 
   void _toast(String title, String desc, Color color) {
@@ -154,7 +211,7 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
         SnackBar(
           backgroundColor: color,
           behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 90, left: 16, right: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,6 +238,11 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
         _nightStart = result['start']!;
         _nightEnd = result['end']!;
         _toggles['schedule'] = true;
+      });
+      SecurityService.updateSmartLockSettings({
+        'night_lock_enabled': true,
+        'night_lock_start': '${_nightStart.hour}:${_nightStart.minute}',
+        'night_lock_end': '${_nightEnd.hour}:${_nightEnd.minute}',
       });
     }
   }
@@ -216,7 +278,7 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
                 ListView(
                   padding: const EdgeInsets.only(bottom: 110),
                   children: [
-                    const _SmartLockHeader(),
+                    _SmartLockHeader(onBack: widget.onBack),
                     _LockStatusCard(isLocked: _accountLocked),
                     _EmergencyFreezeButton(
                       isFrozen: _accountLocked,
@@ -232,6 +294,7 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
                     ),
                     ..._features.map((f) {
                       final on = _toggles[f.id] ?? false;
+                      final isHigh = widget.highlightId == f.id;
                       String title = f.title;
                       String desc = f.description;
                       if (f.id == 'schedule' && on) {
@@ -240,13 +303,14 @@ class _SmartLockScreenState extends State<SmartLockScreen> {
                         desc = 'Tap to change schedule';
                       }
                       return Padding(
-                        padding:
-                            const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                         child: _LockToggleItem(
                           icon: f.icon,
                           title: title,
                           description: desc,
                           enabled: on,
+                          isHighlighted: isHigh,
+                          isAccountLocked: _accountLocked,
                           onChanged: (_) => _toggleFeature(f.id),
                         ),
                       );
@@ -283,132 +347,20 @@ class _SmartLockHeader extends StatelessWidget {
               if (Navigator.canPop(context)) {
                 Navigator.pop(context);
               } else {
-                onBack?.call(); // ✅ FIXED
+                onBack?.call();
               }
             },
             child: Container(
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: const Color(0xFF2E9461),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Stack(
-                children: [
-                  // Decorative circles
-                  Positioned(
-                    top: -32,
-                    right: -32,
-                    child: Container(
-                      width: 128,
-                      height: 128,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.1),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: -16,
-                    left: -16,
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.05),
-                      ),
-                    ),
-                  ),
-                  // Content
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Account Status',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white70,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _accountLocked ? 'Account Frozen' : 'Account Active',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _accountLocked ? 'All transactions are blocked' : 'All services are running normally',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13,
-                                    color: Colors.white60,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: _handleAccountToggle,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                color: _accountLocked ? cs.error : Colors.white.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Icon(
-                                _accountLocked ? Icons.shield_outlined : Icons.shield,
-                                color: Colors.white,
-                                size: 28,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          _PulsingDot(
-                            color: _accountLocked ? cs.error : Colors.white,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _accountLocked ? 'Protection active — tap shield to unfreeze' : 'Tap shield to freeze account',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
                 color: AppColors.muted,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.arrow_back_rounded),
             ),
           ),
-
           const SizedBox(width: 12),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -421,8 +373,6 @@ class _SmartLockHeader extends StatelessWidget {
               ],
             ),
           ),
-
-          
         ],
       ),
     );
@@ -436,6 +386,7 @@ class _SmartLockHeader extends StatelessWidget {
 class _LockStatusCard extends StatelessWidget {
   final bool isLocked;
   const _LockStatusCard({required this.isLocked});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -443,119 +394,99 @@ class _LockStatusCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppColors.primary,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Stack(
         clipBehavior: Clip.hardEdge,
         children: [
+          // Decorative background circle
           Positioned(
-            top: -32,
-            right: -32,
+            top: -20,
+            right: -30,
             child: Container(
-              width: 128,
-              height: 128,
+              width: 140,
+              height: 140,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.10),
+                color: Colors.white.withOpacity(0.08),
                 shape: BoxShape.circle,
               ),
             ),
           ),
-
-          // ── TOGGLE LIST ──
-          ...List.generate(_features.length, (i) {
-            final f = _features[i];
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: f.id == widget.highlightId ? const Color(0xFF2E9461).withOpacity(0.5) : const Color(0xFFE0E8E4),
-                    width: f.id == widget.highlightId ? 2 : 1,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Left Side Text
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Account Status',
+                          style: _font(12, FontWeight.w500,
+                              Colors.white.withOpacity(0.7)),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          isLocked ? 'Account Frozen' : 'Account Active',
+                          style: _font(24, FontWeight.w800, Colors.white),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isLocked
+                              ? 'Emergency freeze is active'
+                              : 'All services are running normally',
+                          style: _font(13, FontWeight.w500,
+                              Colors.white.withOpacity(0.8)),
+                        ),
+                      ],
+                    ),
                   ),
-                  boxShadow: f.id == widget.highlightId ? [
-                    BoxShadow(
-                      color: const Color(0xFF2E9461).withOpacity(0.15),
-                      blurRadius: 15,
-                      spreadRadius: 2,
-                    )
-                  ] : [],
-                ),
-                child: Row(
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: _toggles[f.id]! ? const Color(0xFF2E9461).withValues(alpha: 0.1) : const Color(0xFFEAF3EF),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        f.icon,
-                        size: 20,
-                        color: _toggles[f.id]! ? const Color(0xFF2E9461) : const Color(0xFF6B7F74),
-                      ),
+
+                  // Right Side Icon
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                          color: Colors.white.withOpacity(0.1), width: 1),
                     ),
                     child: Icon(
-                      isLocked
-                          ? Icons.gpp_bad_rounded
-                          : Icons.shield_rounded,
+                      isLocked ? Icons.gpp_bad_rounded : Icons.shield_outlined,
                       color: Colors.white,
-                      size: 28,
+                      size: 32,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
+              // Bottom Indicator Row
               Row(
                 children: [
                   Container(
-                    width: 10,
-                    height: 10,
+                    width: 8,
+                    height: 8,
                     decoration: BoxDecoration(
-                      color:
-                          isLocked ? AppColors.destructive : Colors.white,
+                      color: isLocked ? AppColors.destructive : Colors.white,
                       shape: BoxShape.circle,
                     ),
-                    Switch.adaptive(
-                      value: _toggles[f.id]!,
-                      onChanged: (_) => _handleFeatureToggle(f.id),
-                      activeTrackColor: const Color(0xFF2E9461),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       isLocked
                           ? 'Protection active — use Emergency Freeze to unlock'
                           : 'Use Emergency Freeze below to lock account',
-                      style: _font(11, FontWeight.w500,
+                      style: _font(12, FontWeight.w500,
                           Colors.white.withOpacity(0.75)),
                     ),
                   ),
                 ],
               ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _iconButton(IconData icon, ColorScheme cs) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
             ],
           ),
         ],
@@ -715,23 +646,22 @@ class _EmergencyConfirmSheetState extends State<_EmergencyConfirmSheet> {
               clipBehavior: Clip.hardEdge,
               child: Stack(
                 children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 30),
-                    width: (MediaQuery.of(context).size.width - 48) *
-                        (_holdProgress / 100),
-                    height: 56,
-                    color: Colors.white.withValues(alpha: 0.2),
-                  FractionallySizedBox(
-                    widthFactor: _progress / 100,
-                    child: Container(color: Colors.white.withOpacity(0.2)),
-                  ),
-                  Center(
-                    child: Text(
-                      _progress > 0
-                          ? 'Freezing... ${_progress.toInt()}%'
-                          : 'Hold to Freeze Account',
-                      style: _font(14, FontWeight.w800, Colors.white),
-                    ),
+                  Stack(
+                    children: [
+                      FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: _progress / 100,
+                        child: Container(color: Colors.white.withOpacity(0.2)),
+                      ),
+                      Center(
+                        child: Text(
+                          _progress > 0
+                              ? 'Freezing... ${_progress.toInt()}%'
+                              : 'Hold to Freeze Account',
+                          style: _font(14, FontWeight.w800, Colors.white),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -780,8 +710,83 @@ class _SecurityActivityButton extends StatelessWidget {
   }
 }
 
-class _SecurityActivitySheet extends StatelessWidget {
+class _SecurityActivitySheet extends StatefulWidget {
   const _SecurityActivitySheet();
+
+  @override
+  State<_SecurityActivitySheet> createState() => _SecurityActivitySheetState();
+}
+
+class _SecurityActivitySheetState extends State<_SecurityActivitySheet> {
+  final _supabase = Supabase.instance.client;
+  List<LoginItem> _logs = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchActivity();
+  }
+
+  Future<void> _fetchActivity() async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) throw Exception("User not logged in");
+
+      final response = await _supabase.rpc('get_security_activity', params: {
+        'p_email': user.email,
+      });
+
+      if (response != null) {
+        debugPrint("RAW SECURITY LOG DATA: $response");
+        final List<dynamic> data = response as List<dynamic>;
+        setState(() {
+          _logs = data.map((item) {
+            final dt = DateTime.parse(item['created_at']);
+            return LoginItem(
+              item['device_info'] ?? 'Unknown Device',
+              _formatSmartTimestamp(dt),
+              item['location'] ?? 'Unknown Location',
+              item['ip_address'] ?? 'Unknown IP',
+            );
+          }).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching security activity: $e");
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  String _formatSmartTimestamp(DateTime dt) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final dtClean = DateTime(dt.year, dt.month, dt.day);
+
+    final timeStr = DateFormat('hh:mm a').format(dt);
+
+    if (dtClean == today) {
+      return "Today, $timeStr";
+    } else if (dtClean == yesterday) {
+      return "Yesterday, $timeStr";
+    } else {
+      final diff = now.difference(dt).inDays;
+      if (diff < 7) {
+        return "$diff days ago, $timeStr";
+      } else {
+        return DateFormat('MMM dd, hh:mm a').format(dt);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
@@ -829,63 +834,69 @@ class _SecurityActivitySheet extends StatelessWidget {
                 style: _font(12, FontWeight.w500, AppColors.mutedFg)),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView.separated(
-                controller: controller,
-                itemCount: _loginLog.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (_, i) {
-                  final item = _loginLog[i];
-                  return Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      border: Border.all(color: AppColors.border),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.smartphone_rounded,
-                              color: AppColors.primary, size: 20),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Logged in',
-                                  style: _font(13, FontWeight.w700)),
-                              const SizedBox(height: 2),
-                              Text(item.device,
-                                  style: _font(11, FontWeight.w500,
-                                      AppColors.mutedFg)),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Icon(Icons.access_time_rounded,
-                                      size: 12,
-                                      color: AppColors.mutedFg),
-                                  const SizedBox(width: 4),
-                                  Text(item.time,
-                                      style: _font(11, FontWeight.w500,
-                                          AppColors.mutedFg)),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                  : _error != null
+                      ? Center(child: Text("Error loading logs: $_error", style: _font(12, FontWeight.w500, AppColors.destructive)))
+                      : _logs.isEmpty
+                          ? Center(child: Text("No recent activity found.", style: _font(12, FontWeight.w500, AppColors.mutedFg)))
+                          : ListView.separated(
+                              controller: controller,
+                              itemCount: _logs.length,
+                              separatorBuilder: (_, __) => const SizedBox(height: 10),
+                              itemBuilder: (_, i) {
+                                final item = _logs[i];
+                                return Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.background,
+                                    border: Border.all(color: AppColors.border),
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(Icons.smartphone_rounded,
+                                            color: AppColors.primary, size: 20),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Logged in from ${item.location}',
+                                                style: _font(13, FontWeight.w700)),
+                                            const SizedBox(height: 4),
+                                            Text('IP: ${item.ip}',
+                                                style: _font(11, FontWeight.w600,
+                                                    AppColors.primary.withOpacity(0.7))),
+                                            const SizedBox(height: 8),
+                                            Row(
+                                              children: [
+                                                const Icon(Icons.access_time_rounded,
+                                                    size: 12,
+                                                    color: AppColors.mutedFg),
+                                                const SizedBox(width: 4),
+                                                Text(item.time,
+                                                    style: _font(11, FontWeight.w500,
+                                                        AppColors.mutedFg)),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
             ),
             const SizedBox(height: 12),
             Container(
@@ -927,60 +938,76 @@ class _LockToggleItem extends StatelessWidget {
   final String title;
   final String description;
   final bool enabled;
+  final bool isHighlighted;
+  final bool isAccountLocked;
   final ValueChanged<bool> onChanged;
+
   const _LockToggleItem({
     required this.icon,
     required this.title,
     required this.description,
     required this.enabled,
+    required this.isHighlighted,
+    required this.isAccountLocked,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: enabled
-                  ? AppColors.primary.withOpacity(0.1)
-                  : AppColors.muted,
-              borderRadius: BorderRadius.circular(12),
+    return Opacity(
+      opacity: isAccountLocked ? 0.6 : 1.0,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          border: Border.all(
+            color: isHighlighted ? AppColors.primary.withOpacity(0.5) : AppColors.border,
+            width: isHighlighted ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: isHighlighted ? [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.15),
+              blurRadius: 15,
+              spreadRadius: 2,
+            )
+          ] : null,
+        ),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: enabled
+                    ? AppColors.primary.withOpacity(0.1)
+                    : AppColors.muted,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon,
+                  size: 20,
+                  color: enabled ? AppColors.primary : AppColors.mutedFg),
             ),
-            child: Icon(icon,
-                size: 20,
-                color:
-                    enabled ? AppColors.primary : AppColors.mutedFg),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: _font(13, FontWeight.w700)),
-                const SizedBox(height: 2),
-                Text(description,
-                    style:
-                        _font(11, FontWeight.w500, AppColors.mutedFg)),
-              ],
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: _font(13, FontWeight.w700)),
+                  const SizedBox(height: 2),
+                  Text(description,
+                      style: _font(11, FontWeight.w500, AppColors.mutedFg)),
+                ],
+              ),
             ),
-          ),
-          Switch(
-            value: enabled,
-            onChanged: onChanged,
-            activeColor: AppColors.primary,
-          ),
-        ],
+            Switch(
+              value: enabled,
+              onChanged: isAccountLocked ? null : onChanged,
+              activeColor: AppColors.primary,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../features/send/screens/send_transfer_screen.dart';
+import '../../send/screens/send_transfer_screen.dart';
 
-const Color kForest = Color(0xFF1B422B);
+const Color kForest = Color(0xFF1F5D3A);
 const Color kCream = Color(0xFFFBFBF9);
 const Color kSub = Color(0xFF9A9A94);
 

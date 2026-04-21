@@ -16,8 +16,10 @@ class NomineeManagementPage extends StatelessWidget {
             child: Column(
               children: [
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 14,
+                  ),
                   child: TopBar(
                     onHomeTap: () =>
                         Navigator.popUntil(context, (route) => route.isFirst),
@@ -34,8 +36,10 @@ class NomineeManagementPage extends StatelessWidget {
                 ),
                 const Expanded(
                   child: Center(
-                    child: Text('Feature coming soon',
-                        style: TextStyle(color: kSub)),
+                    child: Text(
+                      'Feature coming soon',
+                      style: TextStyle(color: kSub),
+                    ),
                   ),
                 ),
                 BottomNav(
@@ -138,8 +142,7 @@ class NomineeManagementPage extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(Icons.lightbulb_outline_rounded,
-                  color: kAccent, size: 24),
+              Icon(Icons.lightbulb_outline_rounded, color: kAccent, size: 24),
               SizedBox(width: 10),
               Text(
                 'Why Choose a Nominee?',
@@ -153,11 +156,17 @@ class NomineeManagementPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _buildBenefitItem(
-              'Financial Security', 'Ensures your wealth reaches your loved ones smoothly.'),
+            'Financial Security',
+            'Ensures your wealth reaches your loved ones smoothly.',
+          ),
           _buildBenefitItem(
-              'No Legal Hurdles', 'Avoids complex legal processes for asset transfer.'),
+            'No Legal Hurdles',
+            'Avoids complex legal processes for asset transfer.',
+          ),
           _buildBenefitItem(
-              'Peace of Mind', 'Provides clarity and security for your family\'s future.'),
+            'Peace of Mind',
+            'Provides clarity and security for your family\'s future.',
+          ),
         ],
       ),
     );
@@ -246,7 +255,7 @@ class NomineeManagementPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 32),
-            _buildDetailRow(Icons.badge_outlined, 'Name', 'Animesh Roy'),
+            _buildDetailRow(Icons.badge_outlined, 'Name', 'Animesh Kumar'),
             _buildDetailRow(Icons.family_restroom_outlined, 'Relation', 'Son'),
             _buildDetailRow(Icons.phone_outlined, 'Contact', '+91 91234 56780'),
             const SizedBox(height: 32),
@@ -258,10 +267,15 @@ class NomineeManagementPage extends StatelessWidget {
                   backgroundColor: kMid,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   elevation: 0,
                 ),
-                child: const Text('Close', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                child: const Text(
+                  'Close',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -298,7 +312,11 @@ class NomineeManagementPage extends StatelessWidget {
               const Text(
                 'Request Triggered',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: kInk),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: kInk,
+                ),
               ),
               const SizedBox(height: 12),
               const Text(
@@ -315,10 +333,15 @@ class NomineeManagementPage extends StatelessWidget {
                     backgroundColor: kMid,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     elevation: 0,
                   ),
-                  child: const Text('Got it', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  child: const Text(
+                    'Got it',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                 ),
               ),
             ],
@@ -338,10 +361,7 @@ class NomineeManagementPage extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: const TextStyle(color: kSub, fontSize: 12),
-              ),
+              Text(label, style: const TextStyle(color: kSub, fontSize: 12)),
               Text(
                 value,
                 style: const TextStyle(
@@ -358,7 +378,11 @@ class NomineeManagementPage extends StatelessWidget {
   }
 
   Widget _buildActionTile(
-      BuildContext context, String title, String subtitle, IconData icon) {
+    BuildContext context,
+    String title,
+    String subtitle,
+    IconData icon,
+  ) {
     return GestureDetector(
       onTap: () {
         if (title == 'Check Nominee') {
@@ -409,10 +433,7 @@ class NomineeManagementPage extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      color: kSub,
-                      fontSize: 11,
-                    ),
+                    style: const TextStyle(color: kSub, fontSize: 11),
                   ),
                 ],
               ),

@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../home/screens/notifications_screen.dart';
-import '../../home/widgets/home_navigation_widgets.dart'; // Ensure kCream is available if not in the right scope, but TopBar uses it.
+import '../../home/widgets/home_navigation_widgets.dart';
 import '../../loans/widgets/loan_header.dart';
+import '../../../services/security_service.dart';
+import '../../../core/utils/security_validator.dart';
 
 const primaryGreen = kForest;
-const lightGreen = kMid;
+const lightGreen = kAccent;
 
 //////////////////// DUMMY DATA ////////////////////
 
@@ -58,8 +60,10 @@ class SendTransferScreen extends StatelessWidget {
     String title,
     String subtitle,
     IconData icon,
-    Widget screen,
-  ) {
+    Widget screen, {
+    Future<bool> Function()? lockCheck,
+    String? lockMessage,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -94,8 +98,13 @@ class SendTransferScreen extends StatelessWidget {
           color: kForest.withValues(alpha: 0.3),
           size: 16,
         ),
-        onTap: () =>
-            Navigator.push(context, MaterialPageRoute(builder: (_) => screen)),
+        onTap: () async {
+          if (lockCheck != null && await lockCheck()) {
+            _showSecurityLockToast(context, message: lockMessage);
+            return;
+          }
+          Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+        },
       ),
     );
   }
@@ -159,6 +168,9 @@ class SendTransferScreen extends StatelessWidget {
                       "Transfer funds to any bank\naccount",
                       Icons.swap_horiz,
                       const BankTransferScreen(),
+                      lockCheck: SecurityService.isOnlineLockActive,
+                      lockMessage:
+                          'Online Transactions are currently blocked by Smart Lock.',
                     ),
                     _buildOptionRow(
                       context,
@@ -166,6 +178,9 @@ class SendTransferScreen extends StatelessWidget {
                       "Transfer between your own\naccounts",
                       Icons.sync,
                       const SelfTransferScreen(),
+                      lockCheck: SecurityService.isOnlineLockActive,
+                      lockMessage:
+                          'Online Transactions are currently blocked by Smart Lock.',
                     ),
                     _buildOptionRow(
                       context,
@@ -173,6 +188,9 @@ class SendTransferScreen extends StatelessWidget {
                       "Pay via UPI ID or QR code",
                       Icons.phone_android,
                       const UpiScreen(),
+                      lockCheck: SecurityService.isUpiLockActive,
+                      lockMessage:
+                          'UPI Payments are currently blocked by Smart Lock.',
                     ),
                   ],
                 ),
@@ -219,15 +237,25 @@ Widget dropdownField(
   );
 }
 
-Widget inputField(String hint, {TextEditingController? controller}) {
+Widget inputField(
+  String hint, {
+  TextEditingController? controller,
+  int? maxLength,
+  List<TextInputFormatter>? inputFormatters,
+  Function(String)? onChanged,
+}) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
     child: TextField(
       controller: controller,
+      maxLength: maxLength,
+      onChanged: onChanged,
+      inputFormatters: inputFormatters,
       keyboardType: hint.toLowerCase().contains("amount")
           ? TextInputType.number
           : TextInputType.text,
       decoration: InputDecoration(
+        counterText: "",
         hintText: hint,
         filled: true,
         fillColor: Colors.green.shade50,
@@ -526,6 +554,7 @@ Widget customBankInput(
   bool isNumber = false,
   bool enabled = true,
   TextEditingController? controller,
+  int? maxLength,
 }) {
   return Container(
     margin: const EdgeInsets.only(top: 16),
@@ -545,12 +574,14 @@ Widget customBankInput(
           controller: controller,
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
           enabled: enabled,
+          maxLength: maxLength,
           inputFormatters: [
             if (isNumber) FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
             if (label.toLowerCase().contains("name"))
               FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
           ],
           decoration: InputDecoration(
+            counterText: "",
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 15),
             filled: true,
@@ -626,10 +657,14 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
     if (widget.amount != null) _amountController.text = widget.amount!;
     if (widget.toBank != null) toBank = widget.toBank!;
     if (widget.purpose != null) transferPurpose = widget.purpose!;
-    if (widget.otherPurpose != null) _otherPurposeController.text = widget.otherPurpose!;
+    if (widget.otherPurpose != null)
+      _otherPurposeController.text = widget.otherPurpose!;
     if (widget.fromAccount != null) {
       fromAccount = widget.fromAccount;
-      _fromAccController.text = widget.fromAccount!.replaceAll(RegExp(r'[^0-9]'), '');
+      _fromAccController.text = widget.fromAccount!.replaceAll(
+        RegExp(r'[^0-9]'),
+        '',
+      );
       _fromIfscController.text = "PSIB0001234";
       _fromNomineeController.text = "Rajesh Kumar";
     }
@@ -814,16 +849,19 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                               "Recipient Account Number",
                               isNumber: true,
                               controller: _toAccountController,
+                              maxLength: 16,
                             ),
                             customBankInput(
                               "IFSC Code",
                               "e.g. SBIN0001234",
                               controller: _toIfscController,
+                              maxLength: 11,
                             ),
                             customBankInput(
                               "Nominee Name",
                               "Recipient Name",
                               controller: _toNomineeController,
+                              maxLength: 50,
                             ),
                           ],
                         ),
@@ -887,6 +925,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                                 "Specify Purpose",
                                 "Enter your reason",
                                 controller: _otherPurposeController,
+                                maxLength: 100,
                               ),
                           ],
                         ),
@@ -934,6 +973,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                               "0.00",
                               isNumber: true,
                               controller: _amountController,
+                              maxLength: 12,
                             ),
                           ],
                         ),
@@ -974,30 +1014,57 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-              onPressed: () {
-                if (fromAccount == null ||
-                    toBank == null ||
-                    transferPurpose == null ||
-                    (transferPurpose == "Other" &&
-                        _otherPurposeController.text.trim().isEmpty) ||
-                    _toAccountController.text.trim().isEmpty ||
-                    _toIfscController.text.trim().isEmpty ||
-                    _toNomineeController.text.trim().isEmpty ||
-                    _amountController.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Please fill in all compulsory details!"),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
+              onPressed: () async {
+                if (await SecurityService.isOnlineLockActive()) {
+                  _showSecurityLockToast(context, message: 'Online Transactions are currently blocked by Smart Lock.');
                   return;
                 }
+                
+                if (fromAccount == null || toBank == null || transferPurpose == null ||
+                    (transferPurpose == "Other" && _otherPurposeController.text.trim().isEmpty) ||
+                    _toAccountController.text.trim().isEmpty || _toIfscController.text.trim().isEmpty ||
+                    _toNomineeController.text.trim().isEmpty || _amountController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fill in all compulsory details!"), backgroundColor: Colors.red));
+                  return;
+                }
+
+                // 2. Sanitize and Validate
+                final sanitizedRecipient = SecurityValidator.sanitize(_toNomineeController.text);
+                final sanitizedAccount = SecurityValidator.sanitize(_toAccountController.text);
+                final sanitizedIFSC = SecurityValidator.sanitize(_toIfscController.text).toUpperCase();
+                final rawAmount = _amountController.text.replaceAll(',', '');
+
+                if (!SecurityValidator.isValidAmount(rawAmount)) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invalid amount entered.")));
+                  return;
+                }
+
+                if (!SecurityValidator.isValidAccountNumber(sanitizedAccount)) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invalid account number format.")));
+                  return;
+                }
+
+                // 3. Payload Check
+                final payload = {
+                  "from": fromAccount,
+                  "to": sanitizedAccount,
+                  "ifsc": sanitizedIFSC,
+                  "recipient": sanitizedRecipient,
+                  "amount": rawAmount,
+                  "purpose": transferPurpose,
+                };
+
+                if (!SecurityValidator.inspectPayload(payload)) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("SECURITY: Payload rejected.")));
+                  return;
+                }
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => PinScreen(
-                      recipientName: _toNomineeController.text,
-                      amount: _amountController.text,
+                      recipientName: sanitizedRecipient,
+                      amount: rawAmount,
                     ),
                   ),
                 );
@@ -1399,7 +1466,15 @@ class _SelfTransferScreenState extends State<SelfTransferScreen> {
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-              onPressed: () {
+              onPressed: () async {
+                if (await SecurityService.isOnlineLockActive()) {
+                  _showSecurityLockToast(
+                    context,
+                    message:
+                        'Online Transactions are currently blocked by Smart Lock.',
+                  );
+                  return;
+                }
                 if (fromAccount == null ||
                     toAccount == null ||
                     transferPurpose == null ||
@@ -1566,11 +1641,7 @@ class UpiScreen extends StatefulWidget {
   final String? prefilledUpiId;
   final String? prefilledAmount;
 
-  const UpiScreen({
-    super.key,
-    this.prefilledUpiId,
-    this.prefilledAmount,
-  });
+  const UpiScreen({super.key, this.prefilledUpiId, this.prefilledAmount});
 
   @override
   State<UpiScreen> createState() => _UpiScreenState();
@@ -1777,7 +1848,9 @@ class _UpiScreenState extends State<UpiScreen> {
                             const SizedBox(height: 10),
                             TextField(
                               controller: _upiIdController,
+                              maxLength: 50,
                               decoration: InputDecoration(
+                                counterText: "",
                                 hintText: "example@ybl",
                                 hintStyle: TextStyle(
                                   color: Colors.grey.shade400,
@@ -1812,7 +1885,9 @@ class _UpiScreenState extends State<UpiScreen> {
                               controller: _amountController,
                               focusNode: _amountFocusNode,
                               keyboardType: TextInputType.number,
+                              maxLength: 12,
                               decoration: InputDecoration(
+                                counterText: "",
                                 hintText: "0.00",
                                 hintStyle: TextStyle(
                                   color: Colors.grey.shade400,
@@ -2020,32 +2095,43 @@ class _UpiScreenState extends State<UpiScreen> {
                           ],
                         ),
                         child: ElevatedButton(
-                          onPressed: () {
-                            if (_amountController.text.trim().isEmpty ||
-                                _upiIdController.text.trim().isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    "Please enter UPI ID and Amount",
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
+                          onPressed: () async {
+                            if (await SecurityService.isUpiLockActive()) {
+                              _showSecurityLockToast(context, message: 'UPI Payments are currently blocked by Smart Lock.');
                               return;
                             }
+                            if (_amountController.text.trim().isEmpty || _upiIdController.text.trim().isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter UPI ID and Amount"), backgroundColor: Colors.red));
+                              return;
+                            }
+
+                            // 2. Sanitize and Validate
+                            final sanitizedUpi = SecurityValidator.sanitize(_upiIdController.text);
+                            final rawAmount = _amountController.text.replaceAll(',', '');
+
+                            if (!SecurityValidator.isValidAmount(rawAmount)) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invalid amount entered.")));
+                              return;
+                            }
+
+                            // 3. Payload Check
+                            final payload = {
+                              "upi_id": sanitizedUpi,
+                              "amount": rawAmount,
+                            };
+
+                            if (!SecurityValidator.inspectPayload(payload)) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("SECURITY: Payload rejected.")));
+                              return;
+                            }
+
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => PinScreen(
-                                  recipientName:
-                                      _upiIdController.text.isNotEmpty
-                                      ? _upiIdController.text
-                                            .split('@')
-                                            .first
-                                            .toUpperCase()
-                                      : "VERIFIED PERSON",
-                                  upiId: _upiIdController.text,
-                                  amount: _amountController.text,
+                                  recipientName: sanitizedUpi.isNotEmpty ? sanitizedUpi.split('@').first.toUpperCase() : "VERIFIED PERSON",
+                                  upiId: sanitizedUpi,
+                                  amount: rawAmount,
                                   isUpi: true,
                                 ),
                               ),
@@ -2873,4 +2959,19 @@ class _PremiumSuccessAnimationState extends State<PremiumSuccessAnimation>
       },
     );
   }
+}
+
+void _showSecurityLockToast(BuildContext context, {String? message}) {
+  ScaffoldMessenger.of(context).removeCurrentSnackBar();
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        message ?? 'Account Locked: Night Lock or Global Freeze is active.',
+      ),
+      backgroundColor: Colors.red.shade800,
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.only(bottom: 90, left: 16, right: 16),
+      duration: const Duration(seconds: 1),
+    ),
+  );
 }

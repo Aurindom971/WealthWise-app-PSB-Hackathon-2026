@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../features/home/widgets/home_navigation_widgets.dart';
+import '../../home/widgets/home_navigation_widgets.dart';
 
 class FilteredMarketScreen extends StatefulWidget {
   final String categoryName;
@@ -74,35 +74,76 @@ class _FilteredMarketScreenState extends State<FilteredMarketScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kCream,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: kForest, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Best ${widget.categoryName} Funds',
-          style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildRiskHeader(),
-          _buildFilterChips(),
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: ListView.builder(
-                key: ValueKey('${widget.categoryName}_$_selectedFilter'),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                itemCount: _getFilteredFunds().length,
-                itemBuilder: (context, index) => _buildFundRow(_getFilteredFunds()[index]),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                searchText: 'Search in ${widget.categoryName}',
+                onHomeTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+                onNotificationTap: () {},
               ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                      child: const Icon(Icons.arrow_back, color: kForest, size: 18),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Best ${widget.categoryName} Funds',
+                      style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 18),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildRiskHeader(),
+                  _buildFilterChips(),
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: ListView.builder(
+                        key: ValueKey('${widget.categoryName}_$_selectedFilter'),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        itemCount: _getFilteredFunds().length,
+                        itemBuilder: (context, index) => _buildFundRow(_getFilteredFunds()[index]),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            BottomNav(
+              currentIndex: 4,
+              onTap: (index) {
+                if (index == 4) return;
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/home',
+                  (route) => false,
+                  arguments: {'index': index},
+                );
+              },
+              onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+              onNotificationTap: () {},
+            ),
+          ],
+        ),
       ),
     );
   }

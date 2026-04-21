@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../features/home/widgets/home_navigation_widgets.dart';
-import '../../features/send/screens/send_transfer_screen.dart';
+import '../../home/widgets/home_navigation_widgets.dart';
+import '../../send/screens/send_transfer_screen.dart';
 
 class SBIInnovationNFOScreen extends StatefulWidget {
   const SBIInnovationNFOScreen({super.key});
@@ -48,44 +48,72 @@ class _SBIInnovationNFOScreenState extends State<SBIInnovationNFOScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: kForest, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Thematic NFO',
-          style: TextStyle(
-            color: kForest,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                searchText: 'Search Innovation Funds',
+                onHomeTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+                onNotificationTap: () {},
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              child: Row(
                 children: [
-                  _buildHeroSection(),
-                  const SizedBox(height: 32),
-                  _buildPriceAnchor(),
-                  const SizedBox(height: 32),
-                  _buildInvestmentLogic(),
-                  const SizedBox(height: 32),
-                  _buildPortfolioPreview(),
-                  const SizedBox(height: 100),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(color: Color(0xFFF7F9F8), shape: BoxShape.circle),
+                      child: const Icon(Icons.arrow_back, color: kForest, size: 18),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Thematic NFO',
+                    style: TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
                 ],
               ),
             ),
-          ),
-          _buildBottomCTA(),
-        ],
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeroSection(),
+                    const SizedBox(height: 32),
+                    _buildPriceAnchor(),
+                    const SizedBox(height: 32),
+                    _buildInvestmentLogic(),
+                    const SizedBox(height: 32),
+                    _buildPortfolioPreview(),
+                    const SizedBox(height: 100),
+                  ],
+                ),
+              ),
+            ),
+            _buildBottomCTA(),
+            BottomNav(
+              currentIndex: 4,
+              onTap: (index) {
+                if (index == 4) return;
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/home',
+                  (route) => false,
+                  arguments: {'index': index},
+                );
+              },
+              onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+              onNotificationTap: () {},
+            ),
+          ],
+        ),
       ),
     );
   }

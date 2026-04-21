@@ -46,7 +46,7 @@ class AccountDetailsPage extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      _buildRow('Account Holder', 'John Doe'),
+                      _buildRow('Account Holder', 'Rajesh Kumar'),
                       _buildDivider(),
                       _buildRow('Account Number', '0012345678901234'),
                       _buildDivider(),
@@ -61,8 +61,6 @@ class AccountDetailsPage extends StatelessWidget {
                       _buildRow('Opening Date', '15 March 2019'),
                       _buildDivider(),
                       _buildRow('Nomination', 'Registered'),
-                      _buildDivider(),
-                      _buildRow('Balance', '₹1,25,340.56', isBoldValue: true),
                     ],
                   ),
                 ),

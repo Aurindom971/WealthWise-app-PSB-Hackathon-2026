@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum UtilityType {
-  electricity,
-  water,
-  broadband,
-  fastag,
-  gas,
-  mobile,
-}
+enum UtilityType { electricity, water, broadband, fastag, gas, mobile }
 
 class UtilityProvider {
   final UtilityType type;
@@ -46,23 +39,35 @@ class Bill {
 
   IconData get typeIcon {
     switch (type) {
-      case UtilityType.electricity: return Icons.bolt_rounded;
-      case UtilityType.water: return Icons.water_drop_rounded;
-      case UtilityType.broadband: return Icons.router_rounded;
-      case UtilityType.fastag: return Icons.minor_crash_rounded;
-      case UtilityType.gas: return Icons.local_fire_department_rounded;
-      case UtilityType.mobile: return Icons.phone_android_rounded;
+      case UtilityType.electricity:
+        return Icons.bolt_rounded;
+      case UtilityType.water:
+        return Icons.water_drop_rounded;
+      case UtilityType.broadband:
+        return Icons.router_rounded;
+      case UtilityType.fastag:
+        return Icons.minor_crash_rounded;
+      case UtilityType.gas:
+        return Icons.local_fire_department_rounded;
+      case UtilityType.mobile:
+        return Icons.phone_android_rounded;
     }
   }
 
   Color get iconColor {
     switch (type) {
-      case UtilityType.electricity: return const Color(0xFFFFB300);
-      case UtilityType.water: return const Color(0xFF0288D1);
-      case UtilityType.broadband: return const Color(0xFF7B1FA2);
-      case UtilityType.fastag: return const Color(0xFF388E3C);
-      case UtilityType.gas: return const Color(0xFFF4511E);
-      case UtilityType.mobile: return const Color(0xFF1E88E5);
+      case UtilityType.electricity:
+        return const Color(0xFFFFB300);
+      case UtilityType.water:
+        return const Color(0xFF0288D1);
+      case UtilityType.broadband:
+        return const Color(0xFF7B1FA2);
+      case UtilityType.fastag:
+        return const Color(0xFF388E3C);
+      case UtilityType.gas:
+        return const Color(0xFFF4511E);
+      case UtilityType.mobile:
+        return const Color(0xFF1E88E5);
     }
   }
 

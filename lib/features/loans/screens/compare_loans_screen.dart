@@ -132,7 +132,7 @@ class _CompareLoansScreenState extends State<CompareLoansScreen> {
               ..._selectedTypes.map((type) => DataColumn(
                 label: Text(
                   type.replaceAll(' Loan', ''),
-                  style: const TextStyle(color: Color(0xFF1F7A5A), fontSize: 13, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: Color(0xFF1F5D3A), fontSize: 13, fontWeight: FontWeight.bold),
                 ),
               )),
             ],

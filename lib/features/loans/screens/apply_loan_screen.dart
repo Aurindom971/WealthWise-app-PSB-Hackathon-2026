@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import '../../home/widgets/home_navigation_widgets.dart';
 import '../widgets/loan_header.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/utils/security_validator.dart';
 
 class ApplyLoanScreen extends StatefulWidget {
   final String? initialLoanType;
@@ -15,7 +17,10 @@ class ApplyLoanScreen extends StatefulWidget {
 
 class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
   int _currentStep = 1;
+  bool _isSubmitting = false;
+  String? _generatedId;
   final ScrollController _scrollController = ScrollController();
+  final _supabase = Supabase.instance.client;
 
   // Step 1: Loan Type
   String? _selectedLoanType;
@@ -95,12 +100,115 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
   void _nextStep() {
     if (_currentStep == 1 && !_isStep1Valid) return;
     if (_currentStep == 2 && !_isStep2Valid) return;
-    if (_currentStep == 3 && !_isStep3Valid) return;
+    if (_currentStep == 3) {
+      if (!_isStep3Valid) return;
+      _submitApplication();
+      return;
+    }
 
     setState(() {
       if (_currentStep < 4) _currentStep++;
     });
     _scrollToTop();
+  }
+
+  Future<void> _submitApplication() async {
+    setState(() => _isSubmitting = true);
+    
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) throw Exception("User not logged in");
+
+      // Generate Unique ID
+      final typeCode = _selectedLoanType?.toLowerCase().contains('personal') ?? false ? 'PL' 
+                    : _selectedLoanType?.toLowerCase().contains('home') ?? false ? 'HL'
+                    : _selectedLoanType?.toLowerCase().contains('education') ?? false ? 'EL'
+                    : 'CL';
+      
+      final random = Random().nextInt(90000) + 10000;
+      final year = DateTime.now().year;
+      final loanId = '$typeCode-$year-$random';
+
+      final amountStr = _amountController.text.replaceAll(',', '');
+      final rawPurpose = _purposeController.text;
+      final rawName = _nameController.text;
+      final rawPhone = _phoneController.text;
+      final rawEmail = _emailController.text;
+      final rawPan = _panController.text;
+
+      // 1. Sanitize
+      final sanitizedName = SecurityValidator.sanitize(rawName);
+      final sanitizedPurpose = SecurityValidator.sanitize(rawPurpose);
+      final sanitizedEmail = SecurityValidator.sanitize(rawEmail);
+      final sanitizedPan = SecurityValidator.sanitize(rawPan).toUpperCase();
+
+      // 2. Validate Specific Formats
+      if (!SecurityValidator.isValidAmount(amountStr)) {
+        throw Exception("Invalid loan amount.");
+      }
+      if (!SecurityValidator.isValidEmail(sanitizedEmail)) {
+        throw Exception("Invalid email address.");
+      }
+      if (!SecurityValidator.isValidPhone(rawPhone)) {
+        throw Exception("Invalid phone number.");
+      }
+      if (!SecurityValidator.isValidPan(sanitizedPan)) {
+        throw Exception("Invalid PAN number format.");
+      }
+
+      final amount = double.parse(amountStr);
+      final tenure = int.tryParse(_selectedTenure?.split(' ')[0] ?? '0') ?? 0;
+      final emiAmount = double.tryParse(_emiResult.replaceAll('₹ ', '').replaceAll(',', '')) ?? 0;
+
+      // 3. Payload Inspection
+      final payload = {
+        'p_email': sanitizedEmail,
+        'p_full_name': sanitizedName,
+        'p_loan_type': _selectedLoanType ?? 'Personal Loan',
+        'p_amount': amount,
+        'p_tenure': tenure,
+        'p_purpose': sanitizedPurpose,
+        'p_pan': sanitizedPan,
+        'p_phone': rawPhone,
+        'p_interest_rate': 10.5,
+        'p_emi_amount': emiAmount,
+      };
+
+      if (!SecurityValidator.inspectPayload(payload)) {
+        throw Exception("SECURITY: Payload rejected. Too much data.");
+      }
+
+      final response = await _supabase.rpc('apply_loan', params: {
+        'p_email': payload['p_email'],
+        'p_loan_id': loanId,
+        'p_loan_type': payload['p_loan_type'],
+        'p_amount': payload['p_amount'],
+        'p_tenure': payload['p_tenure'],
+        'p_interest_rate': payload['p_interest_rate'],
+        'p_emi_amount': payload['p_emi_amount'],
+      });
+
+      if (response == null || (response is Map && response['success'] != true)) {
+        throw Exception("Failed to submit loan application via backend.");
+      }
+
+      setState(() {
+        _generatedId = loanId;
+        _currentStep = 4;
+        _isSubmitting = false;
+      });
+      _scrollToTop();
+    } catch (e) {
+      debugPrint("Error submitting loan: $e");
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Submission failed: $e'),
+          backgroundColor: const Color(0xFFE74C3C),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _prevStep() {
@@ -504,7 +612,9 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
-                  child: const Text('Submit Application', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  child: _isSubmitting 
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text('Submit Application', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 ),
               ),
             ],
@@ -516,7 +626,7 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
 
   Widget _buildSuccessPage() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
@@ -531,74 +641,71 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
         ],
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // Big green tick
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(24),
             decoration: const BoxDecoration(
               color: Color(0xFF3BB77E),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.check, color: Colors.white, size: 40),
+            child: const Icon(Icons.check_rounded, color: Colors.white, size: 56),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 28),
+          // Success text
           const Text(
-            'Application Submitted!',
+            'Success!',
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: kInk,
+              color: Color(0xFF2D5A47),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
-            'Your ${_selectedLoanType ?? 'Personal Loan'} application has been received',
+            'Your ${_selectedLoanType ?? 'Loan'} application\nhas been submitted successfully.',
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 14,
-              color: kSub,
-            ),
+            style: const TextStyle(fontSize: 15, color: kSub, height: 1.5),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
+          // Reference ID card
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
               color: const Color(0xFFEAF5F0),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Column(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildSummaryRow('Application ID', 'LA-048046', isBold: true),
-                const Divider(height: 24, color: Colors.white24),
-                _buildSummaryRow('Loan Type', _selectedLoanType ?? 'Personal Loan'),
-                const SizedBox(height: 12),
-                _buildSummaryRow('Amount', '₹ ${_amountController.text}'),
-                const SizedBox(height: 12),
-                _buildSummaryRow('Tenure', _selectedTenure ?? ''),
-                const SizedBox(height: 12),
-                _buildSummaryRow('Est. EMI', _emiResult, valueColor: const Color(0xFF2D5A47)),
+                const Text('Reference ID', style: TextStyle(color: kSub, fontSize: 14)),
+                Text(
+                  _generatedId ?? 'LA-PENDING',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Color(0xFF2D5A47),
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          const Text(
-            'We\'ll review your application and contact you within 24 hours.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: kSub),
-          ),
-          const SizedBox(height: 24),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: widget.onBack,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kMid,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          const SizedBox(height: 40),
+          // Back to Home button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: widget.onBack,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kMid,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: const Text('Back to Home', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             ),
-            child: const Text('Back to Home', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           ),
-        ),
         ],
       ),
     );

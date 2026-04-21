@@ -10,7 +10,7 @@ class PriceGainersScreen extends StatefulWidget {
 }
 
 class _PriceGainersScreenState extends State<PriceGainersScreen> {
-  final Color kForest = const Color(0xFF1B422B);
+  final Color kForest = const Color(0xFF1F5D3A);
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +53,7 @@ class _PriceGainersScreenState extends State<PriceGainersScreen> {
               padding: EdgeInsets.fromLTRB(20, 32, 20, 16),
               child: Text(
                 'Top Performers',
-                style: TextStyle(color: Color(0xFF1B422B), fontWeight: FontWeight.bold, fontSize: 18),
+                style: TextStyle(color: Color(0xFF1F5D3A), fontWeight: FontWeight.bold, fontSize: 18),
               ),
             ),
             _buildGridCards(),

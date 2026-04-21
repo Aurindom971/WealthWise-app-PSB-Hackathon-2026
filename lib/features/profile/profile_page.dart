@@ -137,7 +137,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'John Doe',
+                      'Rajesh Kumar',
                       style: TextStyle(
                         color: kForest,
                         fontSize: 18,

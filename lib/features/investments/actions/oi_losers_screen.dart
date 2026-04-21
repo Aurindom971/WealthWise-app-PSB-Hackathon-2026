@@ -8,7 +8,7 @@ class OILosersScreen extends StatefulWidget {
 }
 
 class _OILosersScreenState extends State<OILosersScreen> {
-  final Color kForest = const Color(0xFF1B422B);
+  final Color kForest = const Color(0xFF1F5D3A);
   final Color kCream = const Color(0xFFFBFBF9);
   final int _hoveredRowIndex = 0; // Simulate first row being hovered
 

@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../features/home/widgets/home_navigation_widgets.dart';
+import '../../home/widgets/home_navigation_widgets.dart';
 
 class InvestmentTransactionScreen extends StatefulWidget {
   final String fundName;

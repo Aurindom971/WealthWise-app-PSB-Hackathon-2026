@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../features/home/widgets/home_navigation_widgets.dart';
+import '../../home/widgets/home_navigation_widgets.dart';
 import 'lumpsum_investment_screen.dart';
 import 'sip_investment_screen.dart';
 

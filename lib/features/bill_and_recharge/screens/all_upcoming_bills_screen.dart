@@ -178,15 +178,26 @@ class _FullBillTile extends StatelessWidget {
                   ),
                 ],
               ),
-              ElevatedButton(
-                onPressed: onPay,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kAccent,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF1F5D3A), Color(0xFF2E7D5B)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text('Pay Now', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                child: ElevatedButton(
+                  onPressed: onPay,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
+                  child: const Text('Pay Now', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                ),
               ),
             ],
           ),

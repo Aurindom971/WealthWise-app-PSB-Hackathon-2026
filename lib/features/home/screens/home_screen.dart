@@ -18,9 +18,10 @@ import 'package:securewealth_twin/features/loans/screens/active_loans_screen.dar
 import 'package:securewealth_twin/features/loans/screens/apply_loan_screen.dart';
 import 'package:securewealth_twin/features/loans/screens/compare_loans_screen.dart';
 import 'package:securewealth_twin/features/loans/screens/application_status_screen.dart';
-import 'package:securewealth_twin/Investments/invest.dart';
+import 'package:securewealth_twin/features/investments/invest.dart';
 import 'package:securewealth_twin/features/profile/profile_page.dart';
 import 'package:securewealth_twin/features/service/services_page.dart';
+import '../../../services/security_service.dart';
 
 enum LoanSubState {
   main,
@@ -32,9 +33,10 @@ enum LoanSubState {
   status,
 }
 
-// ─── HOME SCREEN ──────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ HOME SCREEN Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final int? initialIndex;
+  const HomeScreen({super.key, this.initialIndex});
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -49,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   // Sub-navigation state for Bill & Recharge
   BillRechargeSubState _billSubState = BillRechargeSubState.main;
+  BillRechargeSubState _previousBillSubState = BillRechargeSubState.main;
   UtilityProvider? _selectedUtility;
   Bill? _selectedBill;
 
@@ -59,15 +62,96 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String? _selectedLoanType;
   String? _selectedLoanId;
 
+  // Data State
+  bool _isLoading = true;
+  String? _fullName;
+  List<dynamic> _accounts = [];
+  List<dynamic> _cards = [];
+  List<dynamic> _investments = [];
+  List<dynamic> _loans = [];
+  double _totalInvestment = 0;
+  double _totalLoan = 0;
+
   @override
   void initState() {
     super.initState();
+    _navIdx = widget.initialIndex ?? 0;
+    _isShowingDashboard = _navIdx == 0;
+
     _fadeCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
     _fade = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
     _fadeCtrl.forward();
+
+    _fetchHomeData();
+  }
+
+  double _parseAmount(dynamic val) {
+    if (val == null) return 0.0;
+    if (val is num) return val.toDouble();
+    if (val is String) {
+      final cleaned = val.replaceAll(RegExp(r'[^0-9.]'), '');
+      return double.tryParse(cleaned) ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  Future<void> _fetchHomeData() async {
+    try {
+      final supabase = Supabase.instance.client;
+      final user = supabase.auth.currentUser;
+
+      if (user == null) {
+        debugPrint('[Home] Error: No authenticated user found.');
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final userEmail = user.email;
+      debugPrint('[Home] Fetching get_home_data for: $userEmail');
+
+      final response = await supabase.rpc(
+        'get_home_data',
+        params: {'user_email': userEmail},
+      );
+
+      debugPrint('[Home] get_home_data Response: $response');
+
+      if (response == null) {
+        debugPrint('[Home] Warning: get_home_data returned null');
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final data = response as Map<String, dynamic>;
+
+      if (mounted) {
+        setState(() {
+          _accounts = data['accounts'] as List<dynamic>? ?? [];
+          _cards = data['cards'] as List<dynamic>? ?? [];
+
+          final investmentValue =
+              data['investments'] ??
+              data['total_investments'] ??
+              data['investment'] ??
+              0;
+          final loanValue =
+              data['loans'] ?? data['total_loans'] ?? data['loan'] ?? 0;
+
+          _totalInvestment = _parseAmount(investmentValue);
+          _totalLoan = _parseAmount(loanValue);
+
+          _fullName = 'Rajesh Kumar';
+
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('[Home] RPC Execution Error: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -122,11 +206,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: kCream,
       body: SafeArea(
-        child: Column(children: [
-          if (_isShowingDashboard || _isShowingCardsAndForex || _isShowingBillAndRecharge || _isShowingLoans || _navIdx == 3)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              child: TopBar(
         child: Column(
           children: [
             Padding(
@@ -142,42 +221,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   _isShowingCardsAndForex = false;
                   _isShowingBillAndRecharge = false;
                   _isShowingLoans = false;
-                }),
-                onLogoutTap: _handleLogout,
-                onNotificationTap: () => showNotifications(context),
-              ),
-            ),
-          Expanded(
-            child: FadeTransition(
-              opacity: _fade,
-              child: _isShowingCardsAndForex 
-                ? CardsAndForexScreen(
-                    showFreezeCard: true, 
-                    onBack: () => setState(() => _isShowingCardsAndForex = false),
-                  )
-                : (_isShowingBillAndRecharge
-                    ? _buildBillAndRechargeContent()
-                    : (_isShowingLoans
-                        ? _buildLoansContent()
-                        : (_isShowingDashboard 
-                          ? _buildDashboard() 
-                          : _buildTabContent()))),
-            ),
-          ),
-          BottomNav(
-            currentIndex: _isShowingDashboard ? -1 : _navIdx,
-            onTap: (i) => setState(() {
-              _navIdx = i;
-              _isShowingDashboard = false;
-              _isShowingCardsAndForex = false;
-              _isShowingBillAndRecharge = false;
-              _isShowingLoans = false;
-            }),
-          ),
-        ]),
                   _isShowingServices = false;
                 }),
                 onLogoutTap: _handleLogout,
+                onNotificationTap: () => showNotifications(context),
               ),
             ),
             Expanded(
@@ -210,8 +257,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 _isShowingLoans = false;
                 _isShowingServices = false;
               }),
-              onLogoutTap: _handleLogout,
-              onNotificationTap: () => showNotifications(context),
             ),
           ],
         ),
@@ -227,8 +272,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           padding: const EdgeInsets.symmetric(horizontal: 18),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              const SizedBox(height: 6),
-              const _CardStack(),
+              const SizedBox(height: 4),
+              if (_isLoading)
+                const SizedBox(
+                  height: 200,
+                  child: Center(
+                    child: CircularProgressIndicator(color: kForest),
+                  ),
+                )
+              else
+                _CardStack(
+                  fullName: _fullName ?? 'User',
+                  accounts: _accounts,
+                  cards: _cards,
+                  investments: _investments,
+                  loans: _loans,
+                  totalInvestment: _totalInvestment,
+                  totalLoan: _totalLoan,
+                ),
               const SizedBox(height: 16),
               const _AIBanner(),
               const SizedBox(height: 22),
@@ -265,6 +326,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           }),
           onPayBill: (bill) => setState(() {
             _selectedBill = bill;
+            _previousBillSubState = _billSubState;
             _billSubState = BillRechargeSubState.paymentGateway;
           }),
         );
@@ -275,6 +337,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               setState(() => _billSubState = BillRechargeSubState.main),
           onProceedToPay: (bill) => setState(() {
             _selectedBill = bill;
+            _previousBillSubState = _billSubState;
             _billSubState = BillRechargeSubState.paymentGateway;
           }),
         );
@@ -284,6 +347,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               setState(() => _billSubState = BillRechargeSubState.main),
           onPayBill: (bill) => setState(() {
             _selectedBill = bill;
+            _previousBillSubState = _billSubState;
             _billSubState = BillRechargeSubState.paymentGateway;
           }),
         );
@@ -291,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return PaymentGatewayScreen(
           bill: _selectedBill!,
           onBack: () => setState(
-            () => _billSubState = BillRechargeSubState.utilityDetails,
+            () => _billSubState = _previousBillSubState,
           ),
           onSuccess: () => setState(() {
             _billSubState = BillRechargeSubState.main;
@@ -329,8 +393,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return LoanStatementScreen(
           loanType: _selectedLoanType ?? 'Personal Loan',
           loanId: _selectedLoanId ?? 'PL-000',
-          onBack: () =>
-              setState(() => _loanSubState = LoanSubState.activeLoans),
+          onBack: () => setState(() => _loanSubState = LoanSubState.main),
         );
       case LoanSubState.apply:
         return ApplyLoanScreen(
@@ -358,9 +421,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildTabContent() {
-    if (_navIdx == 1) return TransactionScreen(onBack: () => setState(() => _isShowingDashboard = true));
-    if (_navIdx == 3) return InvestmentsScreen(onBack: () => setState(() => _isShowingDashboard = true));
-    if (_navIdx == 4) return SmartLockScreen(onBack: () => setState(() => _isShowingDashboard = true));
+    if (_navIdx == 1)
+      return TransactionScreen(
+        onBack: () => setState(() => _isShowingDashboard = true),
+      );
+    if (_navIdx == 3)
+      return InvestmentsScreen(
+        onBack: () => setState(() => _isShowingDashboard = true),
+      );
+    if (_navIdx == 4)
+      return SmartLockScreen(
+        onBack: () => setState(() => _isShowingDashboard = true),
+      );
     if (_navIdx == 0) return const ProfilePage();
     if (_navIdx == 1) {
       return TransactionScreen(
@@ -401,7 +473,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     color: kForest,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
                   'Coming soon to SecureWealth Twin',
                   style: TextStyle(color: kSub),
@@ -415,9 +487,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 }
 
-// ─── STACKED CARDS ────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ STACKED CARDS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 class _CardStack extends StatefulWidget {
-  const _CardStack();
+  final String fullName;
+  final List<dynamic> accounts;
+  final List<dynamic> cards;
+  final List<dynamic> investments;
+  final List<dynamic> loans;
+  final double totalInvestment;
+  final double totalLoan;
+
+  const _CardStack({
+    this.fullName = 'User',
+    this.accounts = const [],
+    this.cards = const [],
+    this.investments = const [],
+    this.loans = const [],
+    this.totalInvestment = 0,
+    this.totalLoan = 0,
+  });
+
   @override
   State<_CardStack> createState() => _CardStackState();
 }
@@ -512,15 +601,35 @@ class _CardStackState extends State<_CardStack> with TickerProviderStateMixin {
   }
 
   Widget _buildCard(int index) {
-    if (index == 0)
-      return _SavingsCard(obscured: _obscureBalances, onToggle: _toggleObscure);
-    if (index == 1)
+    // Summing savings balances
+    double totalSavings = 0;
+    for (var acc in widget.accounts) {
+      totalSavings += (acc['balance'] ?? 0).toDouble();
+    }
+
+    if (index == 0) {
+      return _SavingsCard(
+        obscured: _obscureBalances,
+        onToggle: _toggleObscure,
+        fullName: widget.fullName,
+        balance: totalSavings,
+      );
+    }
+    if (index == 1) {
       return _PortfolioCard(
         obscured: _obscureBalances,
         onToggle: _toggleObscure,
+        fullName: widget.fullName,
+        totalInvestment: widget.totalInvestment,
       );
-    if (index == 2)
-      return _LoanCard(obscured: _obscureBalances, onToggle: _toggleObscure);
+    }
+    if (index == 2) {
+      return _LoanCard(
+        obscured: _obscureBalances,
+        onToggle: _toggleObscure,
+        totalLoan: widget.totalLoan,
+      );
+    }
     return const SizedBox.shrink();
   }
 
@@ -603,14 +712,19 @@ class _CardStackState extends State<_CardStack> with TickerProviderStateMixin {
 class _LoanCard extends StatelessWidget {
   final bool obscured;
   final VoidCallback onToggle;
-  const _LoanCard({required this.obscured, required this.onToggle});
+  final double totalLoan;
+  const _LoanCard({
+    required this.obscured,
+    required this.onToggle,
+    this.totalLoan = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ClipRect(
       child: Container(
-        height: 164,
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+        height: 170,
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFF6B4E2A), Color(0xFFA37848)],
@@ -640,9 +754,9 @@ class _LoanCard extends StatelessWidget {
                 const _Dot(true),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
             Text(
-              '•••• •••• •••• 9876',
+              '\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 9876',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.65),
                 fontSize: 13,
@@ -650,7 +764,7 @@ class _LoanCard extends StatelessWidget {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -682,21 +796,27 @@ class _LoanCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      obscured ? '₹ ••••••' : '₹4,20,000',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.5,
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        obscured
+                            ? '\u20B9 \u2022\u2022\u2022\u2022\u2022\u2022'
+                            : '\u20B9${totalLoan.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const Spacer(),
+            const SizedBox(height: 4),
             Center(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -728,13 +848,21 @@ class _LoanCard extends StatelessWidget {
 class _PortfolioCard extends StatelessWidget {
   final bool obscured;
   final VoidCallback onToggle;
-  const _PortfolioCard({required this.obscured, required this.onToggle});
+  final String fullName;
+  final double totalInvestment;
+
+  const _PortfolioCard({
+    required this.obscured,
+    required this.onToggle,
+    this.fullName = 'User',
+    this.totalInvestment = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 164,
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+      height: 170,
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF1E3A5F), Color(0xFF3B5998)],
@@ -764,9 +892,9 @@ class _PortfolioCard extends StatelessWidget {
               const _Dot(false),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
           Text(
-            '•••• •••• •••• 5678',
+            '\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 5678',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.65),
               fontSize: 13,
@@ -774,7 +902,7 @@ class _PortfolioCard extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -806,14 +934,19 @@ class _PortfolioCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    obscured ? '₹ ••••••' : '₹8,45,200',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.5,
+                  const SizedBox(height: 2),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      obscured
+                          ? '\u20B9 \u2022\u2022\u2022\u2022\u2022\u2022'
+                          : '\u20B9${totalInvestment.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
+                      ),
                     ),
                   ),
                 ],
@@ -822,14 +955,14 @@ class _PortfolioCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'Rahul Kumar',
+                    fullName,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Row(
                     children: [22.0, 14.0, 18.0, 10.0, 16.0]
                         .map(
@@ -853,7 +986,8 @@ class _PortfolioCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const Spacer(),
+          const SizedBox(height: 4),
           Center(
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -884,13 +1018,21 @@ class _PortfolioCard extends StatelessWidget {
 class _SavingsCard extends StatelessWidget {
   final bool obscured;
   final VoidCallback onToggle;
-  const _SavingsCard({required this.obscured, required this.onToggle});
+  final String fullName;
+  final double balance;
+
+  const _SavingsCard({
+    required this.obscured,
+    required this.onToggle,
+    this.fullName = 'User',
+    this.balance = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 164,
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+      height: 170,
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [kForest, kMid],
@@ -920,9 +1062,9 @@ class _SavingsCard extends StatelessWidget {
               const _Dot(false),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
           Text(
-            '•••• •••• •••• 2345',
+            '\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 2345',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.65),
               fontSize: 13,
@@ -930,7 +1072,7 @@ class _SavingsCard extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -962,14 +1104,19 @@ class _SavingsCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    obscured ? '₹ ••••••' : '₹1,24,500',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.5,
+                  const SizedBox(height: 2),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      obscured
+                          ? '\u20B9 \u2022\u2022\u2022\u2022\u2022\u2022'
+                          : '\u20B9${balance.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.5,
+                      ),
                     ),
                   ),
                 ],
@@ -978,14 +1125,14 @@ class _SavingsCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'Rahul Kumar',
+                    fullName,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Row(
                     children: [10.0, 16.0, 22.0, 14.0, 8.0]
                         .map(
@@ -1007,7 +1154,8 @@ class _SavingsCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const Spacer(),
+          const SizedBox(height: 4),
           Center(
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1065,7 +1213,7 @@ class _Dot extends StatelessWidget {
   Widget build(BuildContext context) => AnimatedContainer(
     duration: const Duration(milliseconds: 300),
     width: a ? 14 : 6,
-    height: 6,
+    height: 4,
     decoration: BoxDecoration(
       color: a ? kAccent : Colors.white.withValues(alpha: 0.3),
       borderRadius: BorderRadius.circular(3),
@@ -1073,7 +1221,7 @@ class _Dot extends StatelessWidget {
   );
 }
 
-// ─── AI BANNER ────────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ AI BANNER Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 class _AIBanner extends StatelessWidget {
   const _AIBanner();
   @override
@@ -1164,7 +1312,7 @@ class _AIBanner extends StatelessWidget {
   }
 }
 
-// ─── QUICK ACTIONS ────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ QUICK ACTIONS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 class _QuickActions extends StatelessWidget {
   final VoidCallback onCardsForexTap;
   final VoidCallback onBillRechargeTap;
@@ -1197,7 +1345,7 @@ class _QuickActions extends StatelessWidget {
       'Loans',
       Color(0xFFEAF6F0),
       Color(0xFFEAF6F0),
-      Color(0xFF1F7A5A),
+      Color(0xFF1F5D3A),
     ),
     _AData(
       Icons.credit_card_rounded,
@@ -1338,7 +1486,22 @@ class _TileState extends State<_Tile> with SingleTickerProviderStateMixin {
                 if (widget.onTap != null) {
                   widget.onTap!();
                 } else if (widget.d.label == 'Send /\nTransfer') {
-                  Navigator.pushNamed(context, '/send_transfer');
+                  // Entry-level guard for Send/Transfer
+                  SecurityService.isOnlineLockActive().then((blocked) {
+                    if (blocked) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Online Transactions are currently blocked by Smart Lock.'),
+                          backgroundColor: Colors.red.shade800,
+                          behavior: SnackBarBehavior.floating,
+                          margin: const EdgeInsets.only(bottom: 90, left: 16, right: 16),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    } else {
+                      Navigator.pushNamed(context, '/send_transfer');
+                    }
+                  });
                 } else if (widget.d.label == 'Loans') {
                   Navigator.push(
                     context,
@@ -1393,4 +1556,3 @@ class _TileState extends State<_Tile> with SingleTickerProviderStateMixin {
     );
   }
 }
-

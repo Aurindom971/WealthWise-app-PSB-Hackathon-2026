@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 import '../../home/screens/home_screen.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
 import '../widgets/active_loan_card.dart';
@@ -30,10 +32,17 @@ class _LoansScreenState extends State<LoansScreen> {
   final _rateController = TextEditingController();
   String _emiResult = '₹ 0 / mo';
 
+  List<dynamic> _activeLoans = [];
+  List<dynamic> _applications = [];
+  bool _isLoading = true;
+  String? _customerId;
+  final _supabase = Supabase.instance.client;
+
 
   @override
   void initState() {
     super.initState();
+    _fetchDashboardData();
     if (widget.highlightType != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final key = _loanKeys[widget.highlightType];
@@ -45,6 +54,58 @@ class _LoansScreenState extends State<LoansScreen> {
           );
         }
       });
+    }
+  }
+
+  Future<void> _fetchDashboardData() async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // Step 1: Lookup Customer ID (e.g. CUST1) from Email
+      // Fetch active loans using User Email directly
+      // Use the verified CUST1 ID directly to bypass table lookup issues
+      final response = await _supabase.rpc('get_user_loans_dashboard', params: {
+        'p_cus_id': 'CUST1',
+      });
+
+      if (response != null) {
+        setState(() {
+          final List<dynamic> rawActive = response['active_loans'] ?? [];
+          final List<dynamic> rawApps = response['applications'] ?? [];
+
+          List<dynamic> realActive = [];
+          Map<String, dynamic> uniqueApps = {};
+
+          // Process all incoming data, assigning it to the correct list
+          for (var item in [...rawActive, ...rawApps]) {
+            // Simplified: Status is the source of truth
+            final bool isApp = item['status'] == 'pending';
+            
+            if (isApp) {
+              final id = item['loan_id'];
+              if (id != null && !uniqueApps.containsKey(id)) {
+                uniqueApps[id] = item;
+              }
+            } else {
+              // Ensure we don't duplicate active loans either
+              if (!realActive.any((e) => e['loan_id'] == item['loan_id'])) {
+                realActive.add(item);
+              }
+            }
+          }
+
+          _activeLoans = realActive;
+          _applications = uniqueApps.values.toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching loans dashboard: $e");
+      setState(() => _isLoading = false);
     }
   }
 
@@ -97,7 +158,11 @@ class _LoansScreenState extends State<LoansScreen> {
               children: [
                     _EligibilityBanner(onNavigate: widget.onNavigate),
                     const SizedBox(height: 24),
-                    _ActiveLoansSection(onNavigate: widget.onNavigate),
+                    _ActiveLoansSection(
+                      onNavigate: widget.onNavigate,
+                      isLoading: _isLoading,
+                      loans: _activeLoans,
+                    ),
                     const SizedBox(height: 24),
                     _AvailableOptionsSection(
                       onNavigate: widget.onNavigate, 
@@ -114,7 +179,10 @@ class _LoansScreenState extends State<LoansScreen> {
                       onCalc: _calculateEMI,
                     ),
                     
-                    const _TrackApplicationSection(),
+                    _TrackApplicationSection(
+                      isLoading: _isLoading,
+                      applications: _applications,
+                    ),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -188,7 +256,30 @@ class _EligibilityBanner extends StatelessWidget {
 
 class _ActiveLoansSection extends StatelessWidget {
   final Function(LoanSubState, {String? loanType, String? loanId}) onNavigate;
-  const _ActiveLoansSection({required this.onNavigate});
+  final bool isLoading;
+  final List<dynamic> loans;
+
+  const _ActiveLoansSection({
+    required this.onNavigate,
+    required this.isLoading,
+    required this.loans,
+  });
+
+  String _formatCurrency(dynamic value) {
+    final format = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
+    return format.format(value ?? 0);
+  }
+
+  String _formatDate(dynamic dateStr) {
+    if (dateStr == null) return "Pending";
+    try {
+      final dt = DateTime.parse(dateStr.toString());
+      return DateFormat('d MMM yyyy').format(dt);
+    } catch (_) {
+      return dateStr.toString();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -220,38 +311,58 @@ class _ActiveLoansSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          ActiveLoanCard(
-            type: 'Personal Loan',
-            loanId: 'PL-2024-00891',
-            principal: '₹5,00,000',
-            outstanding: '₹2,75,000',
-            emi: '₹15,000',
-            nextDue: '5 Apr 2026',
-            paidText: '9 of 20 EMIs paid',
-            progress: 0.45,
-            onViewStatement: () => onNavigate(
-              LoanSubState.statement,
-              loanType: 'Personal Loan',
-              loanId: 'PL-2024-00891',
+          if (isLoading)
+            const Center(child: CircularProgressIndicator(color: kMid))
+          else if (loans.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: kCard,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: kMid.withValues(alpha: 0.1)),
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.info_outline, color: kSub, size: 32),
+                  const SizedBox(height: 12),
+                  const Text('No active loans found',
+                      style: TextStyle(color: kInk, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  const Text('Apply for a loan to get started',
+                      style: TextStyle(color: kSub, fontSize: 12)),
+                ],
+              ),
+            )
+          else
+            Column(
+              children: loans.map((loan) {
+                final type = "${loan['loan_type'][0].toUpperCase()}${loan['loan_type'].substring(1)} Loan";
+                final paid = loan['emis_paid'] ?? 0;
+                final total = loan['total_emis'] ?? 1;
+                final progress = (paid / total).toDouble();
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: ActiveLoanCard(
+                    type: type,
+                    loanId: loan['loan_id'],
+                    principal: _formatCurrency(loan['principal_amount']),
+                    outstanding: _formatCurrency(loan['outstanding_amount']),
+                    emi: _formatCurrency(loan['emi_amount']),
+                    nextDue: _formatDate(loan['next_due_date'] ?? loan['submission_date']),
+                    paidText: '$paid of $total EMIs paid',
+                    progress: progress,
+                    onViewStatement: () => onNavigate(
+                      LoanSubState.statement,
+                      loanType: type,
+                      loanId: loan['loan_id'],
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
-          ),
-          const SizedBox(height: 16),
-          ActiveLoanCard(
-            type: 'Car Loan',
-            loanId: 'CL-2023-01234',
-            principal: '₹8,00,000',
-            outstanding: '₹5,60,000',
-            emi: '₹18,500',
-            nextDue: '10 Apr 2026',
-            paidText: '18 of 60 EMIs paid',
-            progress: 0.30,
-            onViewStatement: () => onNavigate(
-              LoanSubState.statement,
-              loanType: 'Car Loan',
-              loanId: 'CL-2023-01234',
-            ),
-          ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -393,7 +504,7 @@ class _LoanOptionCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(color: const Color(0xFFEAF6F0), borderRadius: BorderRadius.circular(12)),
-                child: Icon(icon, color: const Color(0xFF1F7A5A), size: 24),
+                child: Icon(icon, color: const Color(0xFF1F5D3A), size: 24),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -497,7 +608,7 @@ class _CompareOptionsCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(color: const Color(0xFFEAF6F0), borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.compare_arrows_rounded, color: Color(0xFF1F7A5A), size: 24),
+            child: const Icon(Icons.compare_arrows_rounded, color: Color(0xFF1F5D3A), size: 24),
           ),
           const SizedBox(width: 14),
           const Expanded(
@@ -598,12 +709,12 @@ class _EMICalculatorCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(color: const Color(0xFFEAF6F0), borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.calculate_outlined, color: Color(0xFF1F7A5A), size: 24),
+                child: const Icon(Icons.calculate_outlined, color: Color(0xFF1F5D3A), size: 24),
               ),
               const SizedBox(width: 14),
               const Text('EMI Calculator', style: TextStyle(color: kInk, fontSize: 16, fontWeight: FontWeight.bold)),
               const Spacer(),
-              Text(emiResult, style: const TextStyle(color: Color(0xFF1F7A5A), fontWeight: FontWeight.bold)),
+              Text(emiResult, style: const TextStyle(color: Color(0xFF1F5D3A), fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 16),
@@ -670,7 +781,13 @@ class _SmallInput extends StatelessWidget {
 
 // ─── TRACK APPLICATION SECTION ───────────────────────────────────────────────
 class _TrackApplicationSection extends StatefulWidget {
-  const _TrackApplicationSection();
+  final bool isLoading;
+  final List<dynamic> applications;
+
+  const _TrackApplicationSection({
+    required this.isLoading,
+    required this.applications,
+  });
 
   @override
   State<_TrackApplicationSection> createState() => _TrackApplicationSectionState();
@@ -679,12 +796,6 @@ class _TrackApplicationSection extends StatefulWidget {
 class _TrackApplicationSectionState extends State<_TrackApplicationSection> {
   bool _isExpanded = false;
   int? _selectedAppIndex;
-
-  final List<Map<String, String>> _applications = [
-    {'id': 'PL-2024-00891', 'type': 'Personal Loan', 'amount': '₹5,00,000'},
-    {'id': 'HL-2024-01254', 'type': 'Home Loan', 'amount': '₹45,00,000'},
-    {'id': 'CL-2024-00732', 'type': 'Car Loan', 'amount': '₹12,50,000'},
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -702,7 +813,7 @@ class _TrackApplicationSectionState extends State<_TrackApplicationSection> {
       ),
       child: Column(
         children: [
-          // Header Row (Matches Secure Wealth AI)
+          // Header Row
           InkWell(
             onTap: () => setState(() {
               _isExpanded = !_isExpanded;
@@ -773,99 +884,144 @@ class _TrackApplicationSectionState extends State<_TrackApplicationSection> {
           // Dropdown Details
           if (_isExpanded) ...[
             const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Column(
-                children: List.generate(_applications.length, (index) {
-                  final app = _applications[index];
-                  final isSelected = _selectedAppIndex == index;
-                  
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        child: InkWell(
-                          onTap: () => setState(() {
-                            _selectedAppIndex = isSelected ? null : index;
-                          }),
-                          borderRadius: BorderRadius.circular(12),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isSelected ? kMid.withValues(alpha: 0.05) : Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isSelected ? kMid.withValues(alpha: 0.2) : Colors.transparent,
+            if (widget.isLoading)
+              const Padding(
+                padding: EdgeInsets.all(20),
+                child: Center(child: CircularProgressIndicator(color: kMid)),
+              )
+            else if (widget.applications.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(20),
+                child: Center(child: Text("No applications found", style: TextStyle(color: kSub))),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Column(
+                  children: List.generate(widget.applications.length, (index) {
+                    final app = widget.applications[index];
+                    final isSelected = _selectedAppIndex == index;
+                    
+                    return Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          child: InkWell(
+                            onTap: () => setState(() {
+                              _selectedAppIndex = isSelected ? null : index;
+                            }),
+                            borderRadius: BorderRadius.circular(12),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: isSelected ? kMid.withValues(alpha: 0.05) : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected ? kMid.withValues(alpha: 0.2) : Colors.transparent,
+                                ),
                               ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: kMid.withValues(alpha: 0.1),
-                                    shape: BoxShape.circle,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: kMid.withValues(alpha: 0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      _getLoanIcon(app['loan_type']),
+                                      size: 16,
+                                      color: kMid,
+                                    ),
                                   ),
-                                  child: Icon(
-                                    index == 0 ? Icons.person : (index == 1 ? Icons.home : Icons.directions_car),
-                                    size: 16,
-                                    color: kMid,
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          app['loan_id'] ?? 'Unknown ID',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: kInk),
+                                        ),
+                                        Text(
+                                          '${(app['loan_type']?.toString().isNotEmpty ?? false) ? app['loan_type'][0].toUpperCase() + app['loan_type'].substring(1) : "Loan"} • ${_formatCurrency(app['principal_amount'])}',
+                                          style: const TextStyle(color: kSub, fontSize: 11),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        app['id']!,
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: kInk),
-                                      ),
-                                      Text(
-                                        '${app['type']} • ${app['amount']}',
-                                        style: const TextStyle(color: kSub, fontSize: 11),
-                                      ),
-                                    ],
+                                  Icon(
+                                    isSelected ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                                    color: kSub,
+                                    size: 20,
                                   ),
-                                ),
-                                Icon(
-                                  isSelected ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                                  color: kSub,
-                                  size: 20,
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      if (isSelected)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
-                          child: const _CompactStatusTracker(),
-                        ),
-                      if (index < _applications.length - 1)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: Divider(color: kSub.withValues(alpha: 0.1), height: 1),
-                        ),
-                    ],
-                  );
-                }),
+                        if (isSelected)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
+                            child: _CompactStatusTracker(
+                              currentStage: app['stage'] ?? 'application',
+                              currentStatus: app['status'] ?? 'pending',
+                            ),
+                          ),
+                        if (index < widget.applications.length - 1)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Divider(color: kSub.withValues(alpha: 0.1), height: 1),
+                          ),
+                      ],
+                    );
+                  }),
+                ),
               ),
-            ),
           ],
         ],
       ),
     );
   }
+
+  String _formatCurrency(dynamic value) {
+    final format = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
+    return format.format(value ?? 0);
+  }
+
+  IconData _getLoanIcon(dynamic rawType) {
+    final type = rawType?.toString().toLowerCase() ?? '';
+    if (type.contains('car')) return Icons.directions_car;
+    if (type.contains('home')) return Icons.home;
+    if (type.contains('education')) return Icons.school;
+    return Icons.person;
+  }
 }
 
 class _CompactStatusTracker extends StatelessWidget {
-  const _CompactStatusTracker();
+  final String currentStage;
+  final String currentStatus;
+
+  const _CompactStatusTracker({
+    required this.currentStage,
+    required this.currentStatus,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final stages = ['application', 'verification', 'approval', 'disbursement'];
+    final titles = ['Application', 'Verification', 'Approval', 'Disbursement'];
+    final icons = [
+      Icons.description_outlined,
+      Icons.fact_check_outlined,
+      Icons.visibility_outlined,
+      Icons.monetization_on_outlined
+    ];
+
+    int currentIdx = stages.indexOf(currentStage.toLowerCase());
+    if (currentIdx == -1) currentIdx = 0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -874,44 +1030,33 @@ class _CompactStatusTracker extends StatelessWidget {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: kInk),
         ),
         const SizedBox(height: 20),
-        const _StatusStep(
-          icon: Icons.description_outlined,
-          title: 'Application',
-          status: 'Completed',
-          statusColor: Colors.green,
-          isActive: true,
-          showLine: true,
-          isCompleted: true,
-        ),
-        const _StatusStep(
-          icon: Icons.fact_check_outlined,
-          title: 'Verification',
-          status: 'Completed',
-          statusColor: Colors.green,
-          isActive: true,
-          showLine: true,
-          isCompleted: true,
-        ),
-        _StatusStep(
-          icon: Icons.visibility_outlined,
-          title: 'Approval',
-          status: 'In Progress',
-          statusColor: Colors.blue.shade700,
-          isActive: true,
-          showLine: true,
-          isCompleted: false,
-        ),
-        const _StatusStep(
-          icon: Icons.monetization_on_outlined,
-          title: 'Disbursement',
-          status: 'Pending',
-          statusColor: kSub,
-          isActive: false,
-          showLine: false,
-          isCompleted: false,
-        ),
+        for (int i = 0; i < stages.length; i++)
+          _StatusStep(
+            icon: icons[i],
+            title: titles[i],
+            status: _getStatusText(i, currentIdx, currentStatus),
+            statusColor: _getStatusColor(i, currentIdx, currentStatus),
+            isActive: i == currentIdx,
+            showLine: i < stages.length - 1,
+            isCompleted: i < currentIdx || (i == currentIdx && currentStatus == 'completed'),
+          ),
       ],
     );
+  }
+
+  String _getStatusText(int index, int currentIdx, String status) {
+    if (index < currentIdx) return 'Completed';
+    if (index > currentIdx) return 'Pending';
+    if (status.isEmpty) return 'Pending';
+    return status[0].toUpperCase() + status.substring(1);
+  }
+
+  Color _getStatusColor(int index, int currentIdx, String status) {
+    if (index < currentIdx) return Colors.green;
+    if (index > currentIdx) return kSub;
+    if (status == 'completed') return Colors.green;
+    if (status == 'in_progress') return Colors.blue.shade700;
+    return kSub;
   }
 }
 

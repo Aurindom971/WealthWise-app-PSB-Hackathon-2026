@@ -161,7 +161,7 @@ class _ForexModalState extends State<ForexModal> {
                   decoration: BoxDecoration(
                     color: const Color(0xFFE8F5E9),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFF2ECC71).withValues(alpha: 0.1)),
+                    border: Border.all(color: const Color(0xFF2E7D5B).withValues(alpha: 0.1)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -177,14 +177,14 @@ class _ForexModalState extends State<ForexModal> {
                         const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2ECC71)),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2E7D5B)),
                         )
                       else
-                        const Icon(Icons.swap_horiz_rounded, color: Color(0xFF2ECC71)),
+                        const Icon(Icons.swap_horiz_rounded, color: Color(0xFF2E7D5B)),
                       Text(
                         '${_currentRate.toStringAsFixed(4)} $toCurrency',
                         style: GoogleFonts.inter(
-                          color: const Color(0xFF2ECC71),
+                          color: const Color(0xFF2E7D5B),
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -224,7 +224,7 @@ class _ForexModalState extends State<ForexModal> {
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: const Color(0xFF2ECC71),
+                      color: const Color(0xFF2E7D5B),
                     ),
                   ),
                 ),
@@ -236,7 +236,7 @@ class _ForexModalState extends State<ForexModal> {
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2ECC71),
+                      backgroundColor: const Color(0xFF2E7D5B),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                       padding: const EdgeInsets.symmetric(vertical: 18),

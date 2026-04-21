@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../services/security_service.dart';
 
 // ─── PALETTE ─────────────────────────────────────────────────────────────────
 const kForest = Color(0xFF1A3328);
@@ -174,7 +175,27 @@ class BottomNav extends StatelessWidget {
 
               if (isCenter) {
                 return GestureDetector(
-                  onTap: () => Navigator.pushNamed(context, '/qr_scanner'),
+                  onTap: () async {
+                    if (await SecurityService.isUpiLockActive()) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(
+                            'UPI Payments are currently blocked by Smart Lock.',
+                          ),
+                          backgroundColor: Colors.red.shade800,
+                          behavior: SnackBarBehavior.floating,
+                          margin: const EdgeInsets.only(
+                            bottom: 90,
+                            left: 16,
+                            right: 16,
+                          ),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                      return;
+                    }
+                    Navigator.pushNamed(context, '/qr_scanner');
+                  },
                   child: Container(
                     width: 60,
                     height: 38,

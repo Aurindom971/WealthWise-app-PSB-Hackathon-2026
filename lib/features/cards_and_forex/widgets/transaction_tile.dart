@@ -44,7 +44,7 @@ class TransactionTile extends StatelessWidget {
               color: Color(0xFFDCF0E5),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: const Color(0xFF2ECC71), size: 24),
+            child: Icon(icon, color: const Color(0xFF2E7D5B), size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -78,7 +78,7 @@ class TransactionTile extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: isPositive ? const Color(0xFF2ECC71) : const Color(0xFF1A1A1A),
+                  color: isPositive ? const Color(0xFF2E7D5B) : const Color(0xFF1A1A1A),
                 ),
               ),
               const SizedBox(height: 6),
@@ -87,7 +87,7 @@ class TransactionTile extends StatelessWidget {
                   Icon(
                     isCompleted ? Icons.check_circle_rounded : Icons.access_time_filled_rounded,
                     size: 14,
-                    color: isCompleted ? const Color(0xFF2ECC71) : Colors.grey.shade400,
+                    color: isCompleted ? const Color(0xFF2E7D5B) : Colors.grey.shade400,
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -95,7 +95,7 @@ class TransactionTile extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: isCompleted ? const Color(0xFF2ECC71) : Colors.grey.shade400,
+                      color: isCompleted ? const Color(0xFF2E7D5B) : Colors.grey.shade400,
                     ),
                   ),
                 ],

@@ -28,12 +28,6 @@ class CardServicesPage extends StatelessWidget {
                     onNotificationTap: () => showNotifications(context),
                   ),
                 ),
-                LoanHeader(
-                  title: "",
-                  subtitle: "Smart Lock",
-                  icon: Icons.lock_outline_rounded,
-                  onBack: () => Navigator.pop(context),
-                ),
                 Expanded(
                   child: SmartLockScreen(
                     onBack: () => Navigator.pop(context),

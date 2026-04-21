@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
-import '../../features/home/widgets/home_navigation_widgets.dart';
+import '../../home/widgets/home_navigation_widgets.dart';
 
 enum InvestmentMode { lumpsum, sip }
 

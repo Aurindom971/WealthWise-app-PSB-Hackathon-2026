@@ -59,7 +59,7 @@ class ActiveLoanCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.credit_card_rounded,
-                    color: Color(0xFF1F7A5A), size: 24),
+                    color: Color(0xFF1F5D3A), size: 24),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -84,7 +84,7 @@ class ActiveLoanCard extends StatelessWidget {
                 ),
                 child: const Text('On Time',
                     style: TextStyle(
-                        color: Color(0xFF1F7A5A),
+                        color: Color(0xFF1F5D3A),
                         fontSize: 11,
                         fontWeight: FontWeight.bold)),
               ),
@@ -159,7 +159,7 @@ class ActiveLoanCard extends StatelessWidget {
             children: [
               Text(paidText,
                   style: const TextStyle(
-                      color: Color(0xFF1F7A5A),
+                      color: Color(0xFF1F5D3A),
                       fontSize: 13,
                       fontWeight: FontWeight.w600)),
               Text('${(progress * 100).toInt()}%',
@@ -175,31 +175,26 @@ class ActiveLoanCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               backgroundColor: const Color(0xFFF2F0EB),
-              color: const Color(0xFF245C3F),
+              color: const Color(0xFF1F5D3A),
               minHeight: 10,
             ),
           ),
           const SizedBox(height: 20),
           
           // Action Buttons
-          Column(
-            children: [
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: onViewStatement,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kMid,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    elevation: 0,
-                  ),
-                  child: const Text('View Statement', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                ),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onViewStatement,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kMid,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 0,
               ),
-              const SizedBox(height: 10),
-            ],
+              child: const Text('View Statement', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            ),
           ),
         ],
       ),
@@ -228,7 +223,7 @@ class _DetailBox extends StatelessWidget {
           Row(
             children: [
               if (icon != null) ...[
-                Icon(icon, color: const Color(0xFF1F7A5A), size: 14),
+                Icon(icon, color: const Color(0xFF1F5D3A), size: 14),
                 const SizedBox(width: 6),
               ],
               Text(

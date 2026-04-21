@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomTextField extends StatefulWidget {
   final String hintText;
@@ -6,6 +7,10 @@ class CustomTextField extends StatefulWidget {
   final bool obscureText;
   final TextEditingController? controller;
   final Widget? suffixIcon;
+  final int? maxLength;
+  final List<TextInputFormatter>? inputFormatters;
+  final Function(String)? onChanged;
+  final TextInputType? keyboardType;
 
   const CustomTextField({
     super.key,
@@ -14,6 +19,10 @@ class CustomTextField extends StatefulWidget {
     this.obscureText = false,
     this.controller,
     this.suffixIcon,
+    this.maxLength,
+    this.inputFormatters,
+    this.onChanged,
+    this.keyboardType,
   });
 
   @override
@@ -41,9 +50,14 @@ class _CustomTextFieldState extends State<CustomTextField> {
       child: TextField(
         controller: widget.controller,
         obscureText: _isObscured,
+        maxLength: widget.maxLength,
+        onChanged: widget.onChanged,
+        keyboardType: widget.keyboardType,
+        inputFormatters: widget.inputFormatters,
         style: const TextStyle(fontSize: 13),
         textAlignVertical: TextAlignVertical.center, // ✅ center text
         decoration: InputDecoration(
+          counterText: "", // Hide the character counter for cleaner look
           prefixIcon: Icon(widget.prefixIcon, size: 18, color: Colors.grey),
           suffixIcon: widget.obscureText
               ? IconButton(

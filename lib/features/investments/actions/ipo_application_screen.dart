@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../features/send/screens/send_transfer_screen.dart';
+import '../../send/screens/send_transfer_screen.dart';
+import '../../home/widgets/home_navigation_widgets.dart';
+import '../../home/screens/notifications_screen.dart';
 
 class IPOApplicationScreen extends StatefulWidget {
   final String companyName;
@@ -22,7 +24,7 @@ class IPOApplicationScreen extends StatefulWidget {
 }
 
 class _IPOApplicationScreenState extends State<IPOApplicationScreen> {
-  final Color kForest = const Color(0xFF1B422B);
+  final Color kForest = const Color(0xFF1F5D3A);
   final Color kLightGreen = const Color(0xFFF1F5F2);
   final Color kBorder = const Color(0xFFE0E0E0);
   final Color kTextGrey = const Color(0xFF757575);
@@ -54,44 +56,69 @@ class _IPOApplicationScreenState extends State<IPOApplicationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: kBorder),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black, size: 20),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-        ),
-        title: Text(
-          'Apply for ${widget.companyName} IPO',
-          style: TextStyle(
-            color: kForest,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
+      backgroundColor: kCream,
+      bottomNavigationBar: BottomNav(
+        currentIndex: -1,
+        onTap: (i) => Navigator.popUntil(context, (route) => route.isFirst),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildCompanyHeader(),
-            const SizedBox(height: 24),
-            _buildBidDetails(),
-            const SizedBox(height: 24),
-            _buildPaymentMethod(),
-            const SizedBox(height: 40),
-            _buildBottomSection(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: TopBar(
+                onHomeTap: () => Navigator.popUntil(context, (route) => route.isFirst),
+                onLogoutTap: () => Navigator.popUntil(context, (route) => route.isFirst),
+                onNotificationTap: () => showNotifications(context),
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Back button + title row
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                              border: Border.all(color: const Color(0xFFE0E0E0)),
+                            ),
+                            child: const Icon(Icons.arrow_back, size: 18, color: Color(0xFF1F5D3A)),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Apply for ${widget.companyName} IPO',
+                            style: const TextStyle(
+                              color: Color(0xFF1F5D3A),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    _buildCompanyHeader(),
+                    const SizedBox(height: 24),
+                    _buildBidDetails(),
+                    const SizedBox(height: 24),
+                    _buildPaymentMethod(),
+                    const SizedBox(height: 40),
+                    _buildBottomSection(),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

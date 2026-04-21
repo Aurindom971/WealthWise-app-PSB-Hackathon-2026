@@ -322,7 +322,7 @@ class _ManageAutopayPageState extends State<ManageAutopayPage> {
       subtitle: 'Monthly • Next: 01 May 2026',
       amount: '₹2,340',
       icon: Icons.bolt_rounded,
-      iconBgColor: const Color(0xFF4CAF50),
+      iconBgColor: const Color(0xFF2E7D5B),
     ),
     AutopayMandate(
       title: 'Jio Fiber',

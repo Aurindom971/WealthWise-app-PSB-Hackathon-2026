@@ -8,7 +8,7 @@ class OIGainersScreen extends StatefulWidget {
 }
 
 class _OIGainersScreenState extends State<OIGainersScreen> {
-  final Color kForest = const Color(0xFF1B422B);
+  final Color kForest = const Color(0xFF1F5D3A);
   int _selectedSegment = 0;
 
   @override
@@ -261,7 +261,7 @@ class _OIGainersScreenState extends State<OIGainersScreen> {
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Colors.green, Color(0xFF1B422B)],
+                          colors: [Colors.green, Color(0xFF1F5D3A)],
                         ),
                         borderRadius: BorderRadius.circular(3),
                       ),

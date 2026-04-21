@@ -54,7 +54,7 @@ class PersonalInfoPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 16),
                           const Text(
-                            'John Doe',
+                            'Rajesh Kumar',
                             style: TextStyle(
                               color: kForest,
                               fontSize: 22,
@@ -92,7 +92,7 @@ class PersonalInfoPage extends StatelessWidget {
                           _buildInfoRow(
                             Icons.person_outline_rounded,
                             'Full Name',
-                            'John Doe',
+                            'Rajesh Kumar',
                           ),
                           _buildDivider(),
                           _buildInfoRow(
@@ -110,7 +110,7 @@ class PersonalInfoPage extends StatelessWidget {
                           _buildInfoRow(
                             Icons.email_outlined,
                             'Email',
-                            'johndoe@email.com',
+                            'rajeshkumar@gmail.com',
                           ),
                           _buildDivider(),
                           _buildInfoRow(

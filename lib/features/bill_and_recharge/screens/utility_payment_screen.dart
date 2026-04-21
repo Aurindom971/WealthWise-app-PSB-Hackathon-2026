@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
 import '../models/bill_models.dart';
+import '../../../services/security_service.dart';
 
 class UtilityPaymentScreen extends StatefulWidget {
   final UtilityProvider provider;
@@ -258,7 +259,13 @@ class _UtilityPaymentScreenState extends State<UtilityPaymentScreen> {
                       width: double.infinity,
                       height: 54,
                       child: ElevatedButton(
-                        onPressed: () => widget.onProceedToPay(_fetchedBill!),
+                        onPressed: () async {
+                          if (!await SecurityService.canPerformTransaction()) {
+                            _showSecurityLockToast(context);
+                            return;
+                          }
+                          widget.onProceedToPay(_fetchedBill!);
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: kAccent,
                           foregroundColor: Colors.white,
@@ -286,6 +293,18 @@ class _UtilityPaymentScreenState extends State<UtilityPaymentScreen> {
         Text(label, style: GoogleFonts.inter(color: kSub, fontSize: 14)),
         Text(value, style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: kForest, fontSize: 14)),
       ],
+    );
+  }
+
+  void _showSecurityLockToast(BuildContext context) {
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Account Locked: Night Lock or Global Freeze is active.'),
+        backgroundColor: Colors.red.shade800,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 }

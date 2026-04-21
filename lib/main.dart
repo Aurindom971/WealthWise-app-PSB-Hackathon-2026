@@ -1,17 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:screen_protector/screen_protector.dart';
 
 import 'features/auth/screens/login_screen.dart';
 import 'features/home/screens/home_screen.dart';
 import 'features/send/screens/send_transfer_screen.dart';
+import 'core/services/security_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Enable global screenshot and screen recording protection
+  await ScreenProtector.preventScreenshotOn();
+
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    debugPrint(
+      'ERROR: Supabase credentials not found.\n'
+      'Collaborators: Please copy .env.example to .env and run via VS Code,\n'
+      'or use: flutter run --dart-define-from-file=.env',
+    );
+    // In a production scenario, you would navigate to a configuration error screen here.
+    return; 
+  }
+
   await Supabase.initialize(
-    url: 'https://kbyfljxmbzzgowautqyb.supabase.co',
-    anonKey: 'sb_publishable_GZdb1XwqNJ8hPiTscRueRg_rF5uhWoI',
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
+
+  // Initialize security service (loads persisted attempts)
+  await SecurityService.instance.initialize();
 
   runApp(const SecureWealthApp());
 }
@@ -21,22 +42,33 @@ class SecureWealthApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      showPerformanceOverlay: false,
-      showSemanticsDebugger: false,
-      debugShowMaterialGrid: false,
-      checkerboardRasterCacheImages: false,
-      checkerboardOffscreenLayers: false,
-      home: Supabase.instance.client.auth.currentSession != null
-          ? const HomeScreen()
-          : const LoginScreen(),
-      routes: {
-        '/login': (context) => const LoginScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/send_transfer': (context) => const SendTransferScreen(),
-        '/qr_scanner': (context) => const QRScreen(),
-      },
+    return Listener(
+      onPointerDown: (_) => SecurityService.instance.resetInactivityTimer(),
+      onPointerMove: (_) => SecurityService.instance.resetInactivityTimer(),
+      child: MaterialApp(
+        navigatorKey: SecurityService.instance.navigatorKey,
+        debugShowCheckedModeBanner: false,
+        showPerformanceOverlay: false,
+        showSemanticsDebugger: false,
+        debugShowMaterialGrid: false,
+        checkerboardRasterCacheImages: false,
+        checkerboardOffscreenLayers: false,
+        // Always redirect to login on start as requested
+        home: const LoginScreen(),
+        routes: {
+          '/login': (context) => const LoginScreen(),
+          '/home': (context) {
+            final args =
+                ModalRoute.of(context)?.settings.arguments
+                    as Map<String, dynamic>?;
+            // Ensure timer starts on home screen
+            SecurityService.instance.resetInactivityTimer();
+            return HomeScreen(initialIndex: args?['index'] as int?);
+          },
+          '/send_transfer': (context) => const SendTransferScreen(),
+          '/qr_scanner': (context) => const QRScreen(),
+        },
+      ),
     );
   }
 }

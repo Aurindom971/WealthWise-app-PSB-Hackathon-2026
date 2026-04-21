@@ -11,10 +11,10 @@ class ModifyAccountDetailsPage extends StatefulWidget {
 }
 
 class _ModifyAccountDetailsPageState extends State<ModifyAccountDetailsPage> {
-  final _nameController = TextEditingController(text: 'Animesh Roy');
-  final _addressController = TextEditingController(text: '123, Park Street, Kolkata - 700016');
-  final _phoneController = TextEditingController(text: '+91 91234 56780');
-  final _emailController = TextEditingController(text: 'animesh.roy@email.com');
+  final _nameController = TextEditingController(text: 'Rajesh Kumar');
+  final _addressController = TextEditingController(text: '42, MG Road, New Delhi, 110001');
+  final _phoneController = TextEditingController(text: '+91 98765 43210');
+  final _emailController = TextEditingController(text: 'rajeshkumar@gmail.com');
 
   @override
   void dispose() {
@@ -199,8 +199,7 @@ class _ModifyAccountDetailsPageState extends State<ModifyAccountDetailsPage> {
                         ),
                         const SizedBox(height: 20),
                         _buildSensitiveTile('Update KYC', Icons.assignment_turned_in_outlined),
-                        _buildSensitiveTile('Update PAN Details', Icons.badge_outlined),
-                        _buildSensitiveTile('Other Bank Details', Icons.account_balance_outlined, isLast: true),
+                        _buildSensitiveTile('Update PAN Details', Icons.badge_outlined, isLast: true),
                       ],
                     ),
                   ),

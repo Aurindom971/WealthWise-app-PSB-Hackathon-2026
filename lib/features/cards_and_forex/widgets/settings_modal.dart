@@ -1,21 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../screens/otp_confirmation_screen.dart';
 
 class SettingsModal extends StatefulWidget {
-  const SettingsModal({super.key});
+  final int cardId;
+  final bool initialDomestic;
+  final bool initialDomesticEnabled;
+  final bool initialInternationalEnabled;
+  final double initialAtm;
+  final double initialMerchant;
+  final double initialTap;
+  final double initialOnline;
+  final String last4;
+  final Future<void> Function()? onSaved;
+
+  const SettingsModal({
+    super.key,
+    required this.cardId,
+    this.initialDomestic = true,
+    this.initialDomesticEnabled = true,
+    this.initialInternationalEnabled = false,
+    this.initialAtm = 0.25,
+    this.initialMerchant = 0.2,
+    this.initialTap = 0.33,
+    this.initialOnline = 0.4,
+    required this.last4,
+    this.onSaved,
+  });
 
   @override
   State<SettingsModal> createState() => _SettingsModalState();
 }
 
 class _SettingsModalState extends State<SettingsModal> {
-  bool isDomestic = true;
-  double atmValue = 0.25;
-  double merchantValue = 0.2;
-  double tapValue = 0.33;
-  double onlineValue = 0.4;
+  late bool isDomestic;
+  late bool isDomesticActive;
+  late bool isInternationalActive;
+  late double atmValue;
+  late double merchantValue;
+  late double tapValue;
+  late double onlineValue;
+
+  @override
+  void initState() {
+    super.initState();
+    isDomestic = widget.initialDomestic;
+    isDomesticActive = widget.initialDomesticEnabled;
+    isInternationalActive = widget.initialInternationalEnabled;
+    atmValue = widget.initialAtm;
+    merchantValue = widget.initialMerchant;
+    tapValue = widget.initialTap;
+    onlineValue = widget.initialOnline;
+  }
 
   final formatter = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
 
@@ -23,18 +61,38 @@ class _SettingsModalState extends State<SettingsModal> {
     return formatter.format((value * max).toInt());
   }
 
-  void _saveSettings() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => OTPConfirmationScreen(
-          title: 'Confirm Limits',
-          onVerified: () {
-            // Logic after verification
-          },
-        ),
-      ),
-    );
+  Future<void> _saveSettings() async {
+    try {
+      final supabase = Supabase.instance.client;
+      await supabase.rpc('update_card_settings', params: {
+        'id_card': widget.cardId,
+        'is_dom_on': isDomesticActive,
+        'is_intl_on': isInternationalActive,
+        'lim_atm': (atmValue * 100000).toInt(),
+        'lim_merch': (merchantValue * 500000).toInt(),
+        'lim_tap': (tapValue * 15000).toInt(),
+        'lim_online': (onlineValue * 500000).toInt(),
+      });
+
+      if (mounted) {
+        await widget.onSaved?.call(); // Wait for data to refresh in parent
+        if (mounted) {
+          Navigator.pop(context); // Close settings AFTER refresh
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Card settings updated!'),
+              backgroundColor: Color(0xFF2E7D5B),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   @override
@@ -67,7 +125,7 @@ class _SettingsModalState extends State<SettingsModal> {
             ],
           ),
           Text(
-            'Savings · •••• •••• 4821',
+            'Savings · •••• •••• ${widget.last4}',
             style: GoogleFonts.inter(
               color: Colors.grey.shade600,
               fontSize: 14,
@@ -90,11 +148,11 @@ class _SettingsModalState extends State<SettingsModal> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: isDomestic ? const Color(0xFF2ECC71) : Colors.transparent,
+                        color: isDomestic ? const Color(0xFF2E7D5B) : Colors.transparent,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: isDomestic ? [
                           BoxShadow(
-                            color: const Color(0xFF2ECC71).withValues(alpha: 0.3),
+                            color: const Color(0xFF2E7D5B).withValues(alpha: 0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           )
@@ -119,11 +177,11 @@ class _SettingsModalState extends State<SettingsModal> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: !isDomestic ? const Color(0xFF2ECC71) : Colors.transparent,
+                        color: !isDomestic ? const Color(0xFF2E7D5B) : Colors.transparent,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: !isDomestic ? [
                           BoxShadow(
-                            color: const Color(0xFF2ECC71).withValues(alpha: 0.3),
+                            color: const Color(0xFF2E7D5B).withValues(alpha: 0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           )
@@ -146,7 +204,45 @@ class _SettingsModalState extends State<SettingsModal> {
             ),
           ),
           
-          const SizedBox(height: 32),
+          // Return the toggle to the "Page" level
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: (isDomestic ? isDomesticActive : isInternationalActive) 
+                ? const Color(0xFFDCF0E5).withValues(alpha: 0.5)
+                : Colors.red.shade50,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Enable ${isDomestic ? 'Domestic' : 'International'} Transactions',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600,
+                    color: (isDomestic ? isDomesticActive : isInternationalActive) 
+                      ? const Color(0xFF1A1A1A) 
+                      : Colors.red.shade900,
+                  ),
+                ),
+                Switch.adaptive(
+                  value: isDomestic ? isDomesticActive : isInternationalActive,
+                  activeColor: const Color(0xFF2E7D5B),
+                  onChanged: (val) {
+                    setState(() {
+                      if (isDomestic) {
+                        isDomesticActive = val;
+                      } else {
+                        isInternationalActive = val;
+                      }
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 24),
           
           Expanded(
             child: ListView(
@@ -191,7 +287,7 @@ class _SettingsModalState extends State<SettingsModal> {
                   child: ElevatedButton(
                     onPressed: _saveSettings,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2ECC71),
+                      backgroundColor: const Color(0xFF2E7D5B),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                       padding: const EdgeInsets.symmetric(vertical: 18),
@@ -211,6 +307,37 @@ class _SettingsModalState extends State<SettingsModal> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildToggleItem(String title, String subtitle, bool isActive, Function(bool) onChanged, IconData icon) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isActive ? const Color(0xFFDCF0E5).withValues(alpha: 0.3) : Colors.red.shade50.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isActive ? Colors.transparent : Colors.red.shade100),
+      ),
+      child: SwitchListTile.adaptive(
+        secondary: Icon(icon, color: isActive ? const Color(0xFF1F5D3A) : Colors.red, size: 22),
+        title: Text(
+          title,
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: isActive ? const Color(0xFF1A1A1A) : Colors.red.shade900,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: GoogleFonts.inter(fontSize: 11, color: Colors.grey.shade600),
+        ),
+        value: isActive,
+        activeColor: const Color(0xFF2E7D5B),
+        onChanged: onChanged,
+        contentPadding: EdgeInsets.zero,
       ),
     );
   }
@@ -271,7 +398,7 @@ class _SettingsModalState extends State<SettingsModal> {
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: const Color(0xFF2ECC71),
+                  color: const Color(0xFF2E7D5B),
                 ),
               ),
             ],
@@ -279,12 +406,12 @@ class _SettingsModalState extends State<SettingsModal> {
           const SizedBox(height: 24),
           SliderTheme(
             data: SliderThemeData(
-              activeTrackColor: const Color(0xFF2ECC71),
+              activeTrackColor: const Color(0xFF2E7D5B),
               inactiveTrackColor: const Color(0xFFE8F5E9),
               thumbColor: Colors.white,
               trackHeight: 6,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10, elevation: 5),
-              overlayColor: const Color(0xFF2ECC71).withValues(alpha: 0.1),
+              overlayColor: const Color(0xFF2E7D5B).withValues(alpha: 0.1),
               trackShape: const RoundedRectSliderTrackShape(),
             ),
             child: Slider(

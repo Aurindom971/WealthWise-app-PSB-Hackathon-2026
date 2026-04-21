@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
 import '../models/bill_models.dart';
+import '../../../services/security_service.dart';
 
 class PaymentGatewayScreen extends StatefulWidget {
   final Bill bill;
@@ -43,6 +44,10 @@ class _PaymentGatewayScreenState extends State<PaymentGatewayScreen> with Single
   }
 
   void _processPayment() async {
+    if (!await SecurityService.canPerformTransaction()) {
+      _showSecurityLockToast(context);
+      return;
+    }
     setState(() => _isProcessing = true);
 
     // Simulate payment processing
@@ -328,6 +333,17 @@ class _PaymentGatewayScreenState extends State<PaymentGatewayScreen> with Single
         Text(label, style: GoogleFonts.inter(color: kSub, fontSize: 13)),
         Text(value, style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: kForest, fontSize: 13)),
       ],
+    );
+  }
+  void _showSecurityLockToast(BuildContext context) {
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Account Locked: Night Lock or Global Freeze is active.'),
+        backgroundColor: Colors.red.shade800,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 }

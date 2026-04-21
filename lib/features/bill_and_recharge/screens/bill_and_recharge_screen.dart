@@ -70,43 +70,48 @@ class _BillAndRechargeScreenState extends State<BillAndRechargeScreen> {
 
   final List<Bill> _upcomingBills = [
     Bill(
-        id: '1',
-        providerName: 'Electricity',
-        consumerId: '4821',
-        amount: 2340,
-        dueDate: DateTime.now().add(const Duration(days: 3)),
-        type: UtilityType.electricity),
+      id: '1',
+      providerName: 'Electricity',
+      consumerId: '4821',
+      amount: 2340,
+      dueDate: DateTime.now().add(const Duration(days: 3)),
+      type: UtilityType.electricity,
+    ),
     Bill(
-        id: '2',
-        providerName: 'Broadband',
-        consumerId: '9876',
-        amount: 999,
-        dueDate: DateTime.now().add(const Duration(days: 5)),
-        type: UtilityType.broadband),
+      id: '2',
+      providerName: 'Broadband',
+      consumerId: '9876',
+      amount: 999,
+      dueDate: DateTime.now().add(const Duration(days: 5)),
+      type: UtilityType.broadband,
+    ),
     Bill(
-        id: '3',
-        providerName: 'Water',
-        consumerId: '1234',
-        amount: 450,
-        dueDate: DateTime.now().add(const Duration(days: 7)),
-        type: UtilityType.water),
+      id: '3',
+      providerName: 'Water',
+      consumerId: '1234',
+      amount: 450,
+      dueDate: DateTime.now().add(const Duration(days: 7)),
+      type: UtilityType.water,
+    ),
   ];
 
   final List<RecentPayment> _recentPayments = [
     RecentPayment(
-        id: '101',
-        title: 'Mobile Recharge',
-        subtitle: '9876543210',
-        amount: 599,
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        type: UtilityType.mobile),
+      id: '101',
+      title: 'Mobile Recharge',
+      subtitle: '9876543210',
+      amount: 599,
+      date: DateTime.now().subtract(const Duration(days: 1)),
+      type: UtilityType.mobile,
+    ),
     RecentPayment(
-        id: '102',
-        title: 'Electricity Bill',
-        subtitle: 'Consumer #4821',
-        amount: 2120,
-        date: DateTime.parse('2026-10-12'), // Mock date
-        type: UtilityType.electricity),
+      id: '102',
+      title: 'Electricity Bill',
+      subtitle: 'Consumer #4821',
+      amount: 2120,
+      date: DateTime.parse('2026-10-12'), // Mock date
+      type: UtilityType.electricity,
+    ),
   ];
 
   @override
@@ -137,10 +142,14 @@ class _BillAndRechargeScreenState extends State<BillAndRechargeScreen> {
                                 color: Colors.black.withValues(alpha: 0.05),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
-                              )
+                              ),
                             ],
                           ),
-                          child: const Icon(Icons.arrow_back_rounded, color: kForest, size: 20),
+                          child: const Icon(
+                            Icons.arrow_back_rounded,
+                            color: kForest,
+                            size: 20,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -178,16 +187,13 @@ class _BillAndRechargeScreenState extends State<BillAndRechargeScreen> {
                 crossAxisSpacing: 16,
                 childAspectRatio: 0.95,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final item = _utilities[index];
-                  return _UtilityCard(
-                    provider: item,
-                    onTap: () => widget.onSelectUtility(item),
-                  );
-                },
-                childCount: _utilities.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final item = _utilities[index];
+                return _UtilityCard(
+                  provider: item,
+                  onTap: () => widget.onSelectUtility(item),
+                );
+              }, childCount: _utilities.length),
             ),
           ),
 
@@ -268,12 +274,13 @@ class _BillAndRechargeScreenState extends State<BillAndRechargeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
-                (context, index) => _RecentPaymentTile(payment: _recentPayments[index]),
+                (context, index) =>
+                    _RecentPaymentTile(payment: _recentPayments[index]),
                 childCount: _recentPayments.length,
               ),
             ),
           ),
-          
+
           const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],
       ),
@@ -300,7 +307,7 @@ class _UtilityCard extends StatelessWidget {
               color: provider.color.withValues(alpha: 0.08),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -342,7 +349,7 @@ class _BillTile extends StatelessWidget {
             color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Row(
@@ -362,7 +369,11 @@ class _BillTile extends StatelessWidget {
               children: [
                 Text(
                   bill.providerName,
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: kForest),
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: kForest,
+                  ),
                 ),
                 Text(
                   bill.dueDescription,
@@ -376,15 +387,28 @@ class _BillTile extends StatelessWidget {
             children: [
               Text(
                 '₹${NumberFormat('#,##0').format(bill.amount)}',
-                style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16, color: kForest),
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: kForest,
+                ),
               ),
               const SizedBox(height: 8),
-              SizedBox(
+              Container(
                 height: 32,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF1F5D3A), Color(0xFF2E7D5B)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 child: ElevatedButton(
                   onPressed: onPay,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: kAccent,
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -420,7 +444,11 @@ class _RecentPaymentTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              payment.type == UtilityType.mobile ? Icons.phone_android_rounded : (payment.type == UtilityType.electricity ? Icons.bolt_rounded : Icons.receipt_long_rounded),
+              payment.type == UtilityType.mobile
+                  ? Icons.phone_android_rounded
+                  : (payment.type == UtilityType.electricity
+                        ? Icons.bolt_rounded
+                        : Icons.receipt_long_rounded),
               color: kForest,
               size: 20,
             ),
@@ -432,7 +460,11 @@ class _RecentPaymentTile extends StatelessWidget {
               children: [
                 Text(
                   payment.title,
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14, color: kForest),
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: kForest,
+                  ),
                 ),
                 Text(
                   payment.subtitle,
@@ -446,10 +478,17 @@ class _RecentPaymentTile extends StatelessWidget {
             children: [
               Text(
                 '₹${NumberFormat('#,##0').format(payment.amount)}',
-                style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: kForest),
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: kForest,
+                ),
               ),
               Text(
-                payment.date.year == DateTime.now().year && payment.date.month == DateTime.now().month && payment.date.day == DateTime.now().subtract(const Duration(days: 1)).day
+                payment.date.year == DateTime.now().year &&
+                        payment.date.month == DateTime.now().month &&
+                        payment.date.day ==
+                            DateTime.now().subtract(const Duration(days: 1)).day
                     ? 'Yesterday'
                     : DateFormat('d MMM').format(payment.date),
                 style: GoogleFonts.inter(fontSize: 11, color: kSub),
@@ -461,4 +500,3 @@ class _RecentPaymentTile extends StatelessWidget {
     );
   }
 }
-
