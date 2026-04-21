@@ -273,7 +273,7 @@ class _ActiveLoansSection extends StatelessWidget {
   String _formatDate(dynamic dateStr) {
     if (dateStr == null) return "Pending";
     try {
-      final dt = DateTime.parse(dateStr.toString());
+      final dt = DateTime.parse(dateStr.toString()).toLocal();
       return DateFormat('d MMM yyyy').format(dt);
     } catch (_) {
       return dateStr.toString();

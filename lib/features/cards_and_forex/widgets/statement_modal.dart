@@ -320,7 +320,7 @@ class _StatementModalState extends State<StatementModal> {
               cellPadding: const pw.EdgeInsets.all(8),
               headers: ['Date', 'Counterparty', 'Category', 'Amount'],
               data: txs.map((t) {
-                final date = DateTime.parse(t['created_at']);
+                final date = DateTime.parse(t['created_at']).toLocal();
                 return [
                   df.format(date),
                   t['counterparty_name'] ?? 'Unknown',
@@ -393,7 +393,7 @@ class _StatementModalState extends State<StatementModal> {
     buffer.writeln('Date,Counterparty,Category,Amount,Status');
 
     for (var t in txs) {
-      final date = DateTime.parse(t['created_at']);
+      final date = DateTime.parse(t['created_at']).toLocal();
       buffer.writeln(
         '${df.format(date)},${t['counterparty_name']},${t['category']},${t['amount']},${t['status']}',
       );

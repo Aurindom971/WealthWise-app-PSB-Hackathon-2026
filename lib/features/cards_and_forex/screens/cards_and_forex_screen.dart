@@ -139,7 +139,7 @@ class _CardsAndForexScreenState extends State<CardsAndForexScreen> {
 
   String _formatDate(String dateStr) {
     try {
-      final dt = DateTime.parse(dateStr);
+      final dt = DateTime.parse(dateStr).toLocal();
       return DateFormat('dd MMM').format(dt);
     } catch (_) {
       return dateStr;

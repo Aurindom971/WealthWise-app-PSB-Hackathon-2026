@@ -743,7 +743,7 @@ class _SecurityActivitySheetState extends State<_SecurityActivitySheet> {
         final List<dynamic> data = response as List<dynamic>;
         setState(() {
           _logs = data.map((item) {
-            final dt = DateTime.parse(item['created_at']);
+            final dt = DateTime.parse(item['created_at']).toLocal();
             return LoginItem(
               item['device_info'] ?? 'Unknown Device',
               _formatSmartTimestamp(dt),

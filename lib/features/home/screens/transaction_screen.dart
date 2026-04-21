@@ -35,7 +35,7 @@ class Tx {
   factory Tx.fromJson(Map<String, dynamic> json) {
     final createdAt = DateTime.parse(
       json['created_at'] ?? DateTime.now().toIso8601String(),
-    );
+    ).toLocal();
     final type = json['transaction_type'] ?? 'debit';
     final category = json['category'] ?? 'merchant';
 
@@ -432,7 +432,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
-    final d = DateTime.parse(dateStr);
+    final d = DateTime.parse(dateStr).toLocal();
 
     final dClean = DateTime(d.year, d.month, d.day);
     if (dClean == today) return 'TODAY';

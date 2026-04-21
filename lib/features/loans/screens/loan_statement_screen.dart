@@ -68,7 +68,7 @@ class _LoanStatementScreenState extends State<LoanStatementScreen> {
 
   String _formatDate(String dateStr, {bool short = false}) {
     try {
-      final dt = DateTime.parse(dateStr);
+      final dt = DateTime.parse(dateStr).toLocal();
       return DateFormat(short ? 'MMM yyyy' : 'd MMM yyyy').format(dt);
     } catch (_) {
       return dateStr;
