@@ -15,7 +15,7 @@ class LocalDbService {
 
   static Future<Database> _initDb() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'securewealth_local.db');
+    final path = join(dbPath, 'WealthWise_local.db');
 
     return await openDatabase(
       path,

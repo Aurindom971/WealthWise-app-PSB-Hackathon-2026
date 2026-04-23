@@ -134,7 +134,8 @@ class _CardsAndForexScreenState extends State<CardsAndForexScreen> {
   }
 
   String _formatTransactionAmount(dynamic amount, bool isPositive) {
-    return '${isPositive ? '+' : '-'}${_formatCurrency(amount)}';
+    final absAmount = (amount is num) ? amount.abs() : 0;
+    return '${isPositive ? '+' : '-'}${_formatCurrency(absAmount)}';
   }
 
   String _formatDate(String dateStr) {

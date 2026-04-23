@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.psbhackathon.securewealth" "\0"
-            VALUE "FileDescription", "securewealth_twin" "\0"
+            VALUE "FileDescription", "wealthwise" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "securewealth_twin" "\0"
+            VALUE "InternalName", "wealthwise" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.psbhackathon.securewealth. All rights reserved." "\0"
-            VALUE "OriginalFilename", "securewealth_twin.exe" "\0"
-            VALUE "ProductName", "securewealth_twin" "\0"
+            VALUE "OriginalFilename", "wealthwise.exe" "\0"
+            VALUE "ProductName", "wealthwise" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

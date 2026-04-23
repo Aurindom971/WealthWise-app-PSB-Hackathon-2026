@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
+import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../home/screens/notifications_screen.dart';
 

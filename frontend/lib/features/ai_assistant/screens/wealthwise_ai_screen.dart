@@ -8,16 +8,16 @@ class ChatMessage {
   ChatMessage({required this.text, required this.isUser});
 }
 
-class SecureWealthAIScreen extends StatefulWidget {
+class WealthWiseAIScreen extends StatefulWidget {
   final VoidCallback onBack;
 
-  const SecureWealthAIScreen({super.key, required this.onBack});
+  const WealthWiseAIScreen({super.key, required this.onBack});
 
   @override
-  State<SecureWealthAIScreen> createState() => _SecureWealthAIScreenState();
+  State<WealthWiseAIScreen> createState() => _WealthWiseAIScreenState();
 }
 
-class _SecureWealthAIScreenState extends State<SecureWealthAIScreen> {
+class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
   final TextEditingController _controller = TextEditingController();
   final List<ChatMessage> _messages = [];
   bool _isTyping = false;
@@ -247,7 +247,8 @@ class _SecureWealthAIScreenState extends State<SecureWealthAIScreen> {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.only(left: 32, right: 32, bottom: 60),
         child: Column(
           mainAxisSize: MainAxisSize.min,

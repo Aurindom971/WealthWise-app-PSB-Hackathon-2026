@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.psbhackathon.securewealth.securewealth_twin"
+    namespace = "com.psbhackathon.wealthwise"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.psbhackathon.securewealth.securewealth_twin"
+        applicationId = "com.psbhackathon.wealthwise"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

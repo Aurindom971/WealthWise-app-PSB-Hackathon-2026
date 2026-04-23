@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
-import 'package:securewealth_twin/features/cards_and_forex/widgets/statement_modal.dart';
+import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
+import 'package:wealthwise/features/cards_and_forex/widgets/statement_modal.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../home/screens/notifications_screen.dart';
 import 'nominee_management_page.dart';

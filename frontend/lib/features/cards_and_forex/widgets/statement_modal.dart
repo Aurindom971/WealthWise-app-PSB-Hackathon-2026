@@ -270,7 +270,7 @@ class _StatementModalState extends State<StatementModal> {
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Text(
-                  'SecureWealth',
+                  'WealthWise',
                   style: pw.TextStyle(
                     color: PdfColors.white,
                     fontSize: 22,
@@ -340,7 +340,7 @@ class _StatementModalState extends State<StatementModal> {
                 borderRadius: pw.BorderRadius.circular(8),
               ),
               child: pw.Text(
-                'This is a system-generated document from SecureWealth. '
+                'This is a system-generated document from WealthWise. '
                 'For any queries, please contact your branch or call our helpline.',
                 style: const pw.TextStyle(
                   fontSize: 10,

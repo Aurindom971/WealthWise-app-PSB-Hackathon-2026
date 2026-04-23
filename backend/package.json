@@ -1,7 +1,7 @@
 {
-  "name": "securewealth-backend",
+  "name": "wealthwise-backend",
   "version": "1.0.0",
-  "description": "Backend server for SecureWealth Twin",
+  "description": "Backend server for WealthWise",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

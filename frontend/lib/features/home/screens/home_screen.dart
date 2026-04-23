@@ -2,26 +2,26 @@ import 'smart_lock_screen.dart';
 import 'transaction_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:securewealth_twin/features/cards_and_forex/screens/cards_and_forex_screen.dart';
-import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
-import 'package:securewealth_twin/features/loans/screens/loans_screen.dart';
-import 'package:securewealth_twin/features/insurance/screens/insurance_screen.dart';
-import 'package:securewealth_twin/features/home/screens/notifications_screen.dart';
-import 'package:securewealth_twin/features/bill_and_recharge/screens/bill_and_recharge_screen.dart';
-import 'package:securewealth_twin/features/bill_and_recharge/models/bill_models.dart';
-import 'package:securewealth_twin/features/bill_and_recharge/screens/utility_payment_screen.dart';
-import 'package:securewealth_twin/features/bill_and_recharge/screens/all_upcoming_bills_screen.dart';
-import 'package:securewealth_twin/features/bill_and_recharge/screens/payment_gateway_screen.dart';
-import 'package:securewealth_twin/features/loans/screens/loan_eligibility_screen.dart';
-import 'package:securewealth_twin/features/loans/screens/loan_statement_screen.dart';
-import 'package:securewealth_twin/features/loans/screens/active_loans_screen.dart';
-import 'package:securewealth_twin/features/loans/screens/apply_loan_screen.dart';
-import 'package:securewealth_twin/features/loans/screens/compare_loans_screen.dart';
-import 'package:securewealth_twin/features/loans/screens/application_status_screen.dart';
-import 'package:securewealth_twin/features/investments/invest.dart';
-import 'package:securewealth_twin/features/profile/profile_page.dart';
-import 'package:securewealth_twin/features/service/services_page.dart';
-import 'package:securewealth_twin/features/ai_assistant/screens/secure_wealth_ai_screen.dart';
+import 'package:wealthwise/features/cards_and_forex/screens/cards_and_forex_screen.dart';
+import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
+import 'package:wealthwise/features/loans/screens/loans_screen.dart';
+import 'package:wealthwise/features/insurance/screens/insurance_screen.dart';
+import 'package:wealthwise/features/home/screens/notifications_screen.dart';
+import 'package:wealthwise/features/bill_and_recharge/screens/bill_and_recharge_screen.dart';
+import 'package:wealthwise/features/bill_and_recharge/models/bill_models.dart';
+import 'package:wealthwise/features/bill_and_recharge/screens/utility_payment_screen.dart';
+import 'package:wealthwise/features/bill_and_recharge/screens/all_upcoming_bills_screen.dart';
+import 'package:wealthwise/features/bill_and_recharge/screens/payment_gateway_screen.dart';
+import 'package:wealthwise/features/loans/screens/loan_eligibility_screen.dart';
+import 'package:wealthwise/features/loans/screens/loan_statement_screen.dart';
+import 'package:wealthwise/features/loans/screens/active_loans_screen.dart';
+import 'package:wealthwise/features/loans/screens/apply_loan_screen.dart';
+import 'package:wealthwise/features/loans/screens/compare_loans_screen.dart';
+import 'package:wealthwise/features/loans/screens/application_status_screen.dart';
+import 'package:wealthwise/features/investments/invest.dart';
+import 'package:wealthwise/features/profile/profile_page.dart';
+import 'package:wealthwise/features/service/services_page.dart';
+import 'package:wealthwise/features/ai_assistant/screens/wealthwise_ai_screen.dart';
 import '../../../services/security_service.dart';
 
 enum LoanSubState {
@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String? _selectedLoanId;
 
   // AI Assistant state
-  bool _isShowingSecureWealthAI = false;
+  bool _isShowingWealthWiseAI = false;
 
   // Data State
   bool _isLoading = true;
@@ -226,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   _isShowingBillAndRecharge = false;
                   _isShowingLoans = false;
                   _isShowingServices = false;
-                  _isShowingSecureWealthAI = false;
+                  _isShowingWealthWiseAI = false;
                 }),
                 onLogoutTap: _handleLogout,
                 onNotificationTap: () => showNotifications(context),
@@ -247,9 +247,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ? _buildLoansContent()
                                 : (_isShowingServices
                                       ? ServicesPage()
-                                      : (_isShowingSecureWealthAI
-                                            ? SecureWealthAIScreen(
-                                                onBack: () => setState(() => _isShowingSecureWealthAI = false),
+                                      : (_isShowingWealthWiseAI
+                                            ? WealthWiseAIScreen(
+                                                onBack: () => setState(() => _isShowingWealthWiseAI = false),
                                               )
                                             : (_isShowingDashboard
                                                   ? _buildDashboard()
@@ -265,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 _isShowingBillAndRecharge = false;
                 _isShowingLoans = false;
                 _isShowingServices = false;
-                _isShowingSecureWealthAI = false;
+                _isShowingWealthWiseAI = false;
               }),
             ),
           ],
@@ -300,9 +300,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   totalInvestment: _totalInvestment,
                   totalLoan: _totalLoan,
                 ),
-              const SizedBox(height: 16),
-              _AIBanner(onTap: () => setState(() => _isShowingSecureWealthAI = true)),
-              const SizedBox(height: 22),
+              const SizedBox(height: 30),
+              _AIBanner(onTap: () => setState(() => _isShowingWealthWiseAI = true)),
+              const SizedBox(height: 30),
               _QuickActions(
                 onCardsForexTap: () =>
                     setState(() => _isShowingCardsAndForex = true),
@@ -485,7 +485,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Coming soon to SecureWealth Twin',
+                  'Coming soon to WealthWise Twin',
                   style: TextStyle(color: kSub),
                 ),
               ],
@@ -534,7 +534,7 @@ class _CardStackState extends State<_CardStack> with TickerProviderStateMixin {
 
   static const int _cardCount = 3;
   static const double _baseOffset = -12.0;
-  static const double _maxCardHeight = 164.0;
+  static const double _maxCardHeight = 196.0;
   static const double _headroom = 36.0;
 
   @override
@@ -733,7 +733,7 @@ class _LoanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRect(
       child: Container(
-        height: 170,
+        height: 196,
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -871,7 +871,7 @@ class _PortfolioCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 170,
+      height: 196,
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -1041,7 +1041,7 @@ class _SavingsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 170,
+      height: 196,
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(

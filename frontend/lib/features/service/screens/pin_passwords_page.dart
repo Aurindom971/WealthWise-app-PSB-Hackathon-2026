@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
-import 'package:securewealth_twin/features/service/screens/change_atm_pin_page.dart';
-import 'package:securewealth_twin/features/service/screens/change_password_page.dart';
+import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
+import 'package:wealthwise/features/service/screens/change_atm_pin_page.dart';
+import 'package:wealthwise/features/service/screens/change_password_page.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../home/screens/notifications_screen.dart';
 

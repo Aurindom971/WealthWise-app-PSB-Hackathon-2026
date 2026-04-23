@@ -1,4 +1,4 @@
-package com.psbhackathon.securewealth.securewealth_twin
+package com.psbhackathon.wealthwise
 
 import io.flutter.embedding.android.FlutterActivity
 

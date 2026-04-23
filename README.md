@@ -1,4 +1,4 @@
-# SecureWealth Twin
+# WealthWise
 
 A dynamic AI-powered wealth management app with a built-in cyber-fraud protection layer, built for the PSB Hackathon 2026.
 

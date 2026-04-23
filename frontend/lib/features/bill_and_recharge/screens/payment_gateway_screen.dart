@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
+import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
 import '../models/bill_models.dart';
 import '../../../services/security_service.dart';
 
@@ -199,7 +199,7 @@ class _PaymentGatewayScreenState extends State<PaymentGatewayScreen> with Single
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('SecureWealth UPI', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: kForest)),
+                      Text('WealthWise UPI', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: kForest)),
                       Text('rahul@swp', style: GoogleFonts.inter(color: kSub, fontSize: 12)),
                     ],
                   ),

@@ -13,14 +13,13 @@ class AIService {
   }) async {
     try {
       print("AI Service: Calling $baseUrl/ai-chat");
-      final response = await http.post(
-        Uri.parse("$baseUrl/ai-chat"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "message": message,
-          "cus_id": cusId,
-        }),
-      ).timeout(const Duration(seconds: 30));
+      final response = await http
+          .post(
+            Uri.parse("$baseUrl/ai-chat"),
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({"message": message, "cus_id": cusId}),
+          )
+          .timeout(const Duration(seconds: 30));
 
       print("AI Service: Received response ${response.statusCode}");
 
@@ -46,11 +45,13 @@ class AIService {
     required Map<String, dynamic> txn,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/fraud-check"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"cus_id": cusId, "txn": txn}),
-      ).timeout(const Duration(seconds: 20));
+      final response = await http
+          .post(
+            Uri.parse("$baseUrl/fraud-check"),
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({"cus_id": cusId, "txn": txn}),
+          )
+          .timeout(const Duration(seconds: 20));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

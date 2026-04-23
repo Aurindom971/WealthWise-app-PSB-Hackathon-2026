@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
-import 'package:securewealth_twin/features/service/screens/account_services_page.dart';
-import 'package:securewealth_twin/features/service/screens/card_services_page.dart';
-import 'package:securewealth_twin/features/service/screens/manage_deliverables_page.dart';
-import 'package:securewealth_twin/features/service/screens/order_cheque_book_page.dart';
-import 'package:securewealth_twin/features/service/screens/manage_autopay_page.dart';
-import 'package:securewealth_twin/features/service/screens/report_suspicious_activity_page.dart';
-import 'package:securewealth_twin/features/service/screens/pin_passwords_page.dart';
+import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
+import 'package:wealthwise/features/service/screens/account_services_page.dart';
+import 'package:wealthwise/features/service/screens/card_services_page.dart';
+import 'package:wealthwise/features/service/screens/manage_deliverables_page.dart';
+import 'package:wealthwise/features/service/screens/order_cheque_book_page.dart';
+import 'package:wealthwise/features/service/screens/manage_autopay_page.dart';
+import 'package:wealthwise/features/service/screens/report_suspicious_activity_page.dart';
+import 'package:wealthwise/features/service/screens/pin_passwords_page.dart';
 
 class ServicesPage extends StatelessWidget {
   const ServicesPage({super.key});

@@ -1,6 +1,6 @@
 {
-    "name": "securewealth_twin",
-    "short_name": "securewealth_twin",
+    "name": "WealthWise",
+    "short_name": "WealthWise",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
-import 'package:securewealth_twin/features/cards_and_forex/screens/cards_and_forex_screen.dart';
-import 'package:securewealth_twin/features/home/screens/smart_lock_screen.dart';
+import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
+import 'package:wealthwise/features/cards_and_forex/screens/cards_and_forex_screen.dart';
+import 'package:wealthwise/features/home/screens/smart_lock_screen.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../home/screens/notifications_screen.dart';
 

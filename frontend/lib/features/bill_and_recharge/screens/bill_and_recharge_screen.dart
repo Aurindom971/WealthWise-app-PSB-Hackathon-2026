@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
+import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
 import '../models/bill_models.dart';
 
 class BillAndRechargeScreen extends StatefulWidget {

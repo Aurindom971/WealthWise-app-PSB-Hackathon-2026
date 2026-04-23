@@ -157,7 +157,7 @@ class _LoansScreenState extends State<LoansScreen> {
             child: Column(
               children: [
                     _EligibilityBanner(onNavigate: widget.onNavigate),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     _ActiveLoansSection(
                       onNavigate: widget.onNavigate,
                       isLoading: _isLoading,
@@ -200,7 +200,7 @@ class _EligibilityBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(18, 0, 18, 24),
+      margin: const EdgeInsets.fromLTRB(18, 16, 18, 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: kMid.withValues(alpha: 0.9),
@@ -295,19 +295,6 @@ class _ActiveLoansSection extends StatelessWidget {
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: kInk)),
-              TextButton(
-                onPressed: () => onNavigate(LoanSubState.activeLoans),
-                child: const Row(
-                  children: [
-                    Text('View All',
-                        style: TextStyle(
-                            color: kSub,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600)),
-                    Icon(Icons.arrow_forward, size: 14, color: kSub),
-                  ],
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 8),

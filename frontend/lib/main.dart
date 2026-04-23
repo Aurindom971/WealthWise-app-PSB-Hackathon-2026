@@ -34,11 +34,11 @@ Future<void> main() async {
   // Initialize security service (loads persisted attempts)
   await SecurityService.instance.initialize();
 
-  runApp(const SecureWealthApp());
+  runApp(const WealthWiseApp());
 }
 
-class SecureWealthApp extends StatelessWidget {
-  const SecureWealthApp({super.key});
+class WealthWiseApp extends StatelessWidget {
+  const WealthWiseApp({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
-import 'package:securewealth_twin/features/profile/screens/account_details_page.dart';
-import 'package:securewealth_twin/features/profile/screens/feedback_page.dart';
-import 'package:securewealth_twin/features/profile/screens/personal_info_page.dart';
-import 'package:securewealth_twin/features/profile/screens/relationship_manager_page.dart';
-import 'package:securewealth_twin/features/profile/screens/terms_conditions_page.dart';
-import 'package:securewealth_twin/features/profile/screens/whats_new_page.dart';
-import 'package:securewealth_twin/features/profile/screens/your_requests_page.dart';
+import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
+import 'package:wealthwise/features/profile/screens/account_details_page.dart';
+import 'package:wealthwise/features/profile/screens/feedback_page.dart';
+import 'package:wealthwise/features/profile/screens/personal_info_page.dart';
+import 'package:wealthwise/features/profile/screens/relationship_manager_page.dart';
+import 'package:wealthwise/features/profile/screens/terms_conditions_page.dart';
+import 'package:wealthwise/features/profile/screens/whats_new_page.dart';
+import 'package:wealthwise/features/profile/screens/your_requests_page.dart';
 
 class ProfilePage extends StatefulWidget {
   final VoidCallback? onServicesTap;

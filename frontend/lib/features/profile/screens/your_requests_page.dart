@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:securewealth_twin/features/home/widgets/home_navigation_widgets.dart';
-import 'package:securewealth_twin/features/loans/screens/loans_screen.dart';
-import 'package:securewealth_twin/features/insurance/screens/insurance_screen.dart';
-import 'package:securewealth_twin/features/home/screens/home_screen.dart';
+import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
+import 'package:wealthwise/features/loans/screens/loans_screen.dart';
+import 'package:wealthwise/features/insurance/screens/insurance_screen.dart';
+import 'package:wealthwise/features/home/screens/home_screen.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../home/screens/notifications_screen.dart';
 
