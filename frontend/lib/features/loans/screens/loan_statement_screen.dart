@@ -47,7 +47,7 @@ class _LoanStatementScreenState extends State<LoanStatementScreen> {
       if (response != null) {
         setState(() {
           _loanInfo = response['loan_info'];
-          _schedule = response['schedule'] ?? [];
+          _schedule = (response['schedule'] ?? []).reversed.toList();
           _isLoading = false;
         });
       }

@@ -21,6 +21,7 @@ import 'package:securewealth_twin/features/loans/screens/application_status_scre
 import 'package:securewealth_twin/features/investments/invest.dart';
 import 'package:securewealth_twin/features/profile/profile_page.dart';
 import 'package:securewealth_twin/features/service/services_page.dart';
+import 'package:securewealth_twin/features/ai_assistant/screens/secure_wealth_ai_screen.dart';
 import '../../../services/security_service.dart';
 
 enum LoanSubState {
@@ -61,6 +62,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   LoanSubState _loanSubState = LoanSubState.main;
   String? _selectedLoanType;
   String? _selectedLoanId;
+
+  // AI Assistant state
+  bool _isShowingSecureWealthAI = false;
 
   // Data State
   bool _isLoading = true;
@@ -222,6 +226,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   _isShowingBillAndRecharge = false;
                   _isShowingLoans = false;
                   _isShowingServices = false;
+                  _isShowingSecureWealthAI = false;
                 }),
                 onLogoutTap: _handleLogout,
                 onNotificationTap: () => showNotifications(context),
@@ -242,9 +247,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ? _buildLoansContent()
                                 : (_isShowingServices
                                       ? ServicesPage()
-                                      : (_isShowingDashboard
-                                            ? _buildDashboard()
-                                            : _buildTabContent())))),
+                                      : (_isShowingSecureWealthAI
+                                            ? SecureWealthAIScreen(
+                                                onBack: () => setState(() => _isShowingSecureWealthAI = false),
+                                              )
+                                            : (_isShowingDashboard
+                                                  ? _buildDashboard()
+                                                  : _buildTabContent()))))),
               ),
             ),
             BottomNav(
@@ -256,6 +265,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 _isShowingBillAndRecharge = false;
                 _isShowingLoans = false;
                 _isShowingServices = false;
+                _isShowingSecureWealthAI = false;
               }),
             ),
           ],
@@ -291,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   totalLoan: _totalLoan,
                 ),
               const SizedBox(height: 16),
-              const _AIBanner(),
+              _AIBanner(onTap: () => setState(() => _isShowingSecureWealthAI = true)),
               const SizedBox(height: 22),
               _QuickActions(
                 onCardsForexTap: () =>
@@ -1223,90 +1233,91 @@ class _Dot extends StatelessWidget {
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ AI BANNER Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 class _AIBanner extends StatelessWidget {
-  const _AIBanner();
+  final VoidCallback onTap;
+  const _AIBanner({required this.onTap});
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: BoxDecoration(
-        color: kCard,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: kAccent.withValues(alpha: 0.22)),
-        boxShadow: [
-          BoxShadow(
-            color: kForest.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [kMid, kAccent],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: kCard,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: kAccent.withValues(alpha: 0.22)),
+          boxShadow: [
+            BoxShadow(
+              color: kForest.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: kAccent.withValues(alpha: 0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: kAccent.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/ai_logo.png',
+                  fit: BoxFit.cover,
                 ),
-              ],
+              ),
             ),
-            child: const Icon(
-              Icons.auto_awesome_rounded,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 14),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'NEED HELP?',
-                  style: TextStyle(
-                    color: kAccent,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'NEED HELP?',
+                    style: TextStyle(
+                      color: kAccent,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                    ),
                   ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Secure Wealth AI',
-                  style: TextStyle(
-                    color: kForest,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.3,
+                  SizedBox(height: 2),
+                  Text(
+                    'SAGE',
+                    style: TextStyle(
+                      color: kForest,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: kForest.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: kForest.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 12,
+                color: kForest,
+              ),
             ),
-            child: const Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 12,
-              color: kForest,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
