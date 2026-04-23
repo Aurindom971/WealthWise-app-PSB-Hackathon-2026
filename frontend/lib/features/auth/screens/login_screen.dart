@@ -306,22 +306,25 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.account_balance,
-                          color: Colors.white,
-                          size: 20,
+                        Image.asset(
+                          'assets/images/bank_logo_v2.png',
+                          width: 32,
+                          height: 32,
                         ),
-                        SizedBox(width: 8),
-                        Text(
-                          "Welcome Back",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 19,
-                            fontWeight: FontWeight.w600,
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            "Welcome Back",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 19,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -458,16 +461,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 20),
                     // 🔥 AI BUTTON
                     Center(
-                      child: OutlinedButton.icon(
+                      child: OutlinedButton(
                         onPressed: () {},
-                        icon: const Icon(Icons.support_agent_rounded, size: 18),
-                        label: const Text(
-                          "Talk to WealthBot",
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFF1F5D3A),
                           side: const BorderSide(
@@ -481,6 +476,27 @@ class _LoginScreenState extends State<LoginScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ClipOval(
+                              child: Image.asset(
+                                'assets/images/ai_logo.png',
+                                width: 20,
+                                height: 20,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              "Talk to SAGE",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
