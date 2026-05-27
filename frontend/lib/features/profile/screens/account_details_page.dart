@@ -3,11 +3,75 @@ import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../home/screens/notifications_screen.dart';
 
-class AccountDetailsPage extends StatelessWidget {
+class AccountInfo {
+  final String holder;
+  final String number;
+  final String type;
+  final String branch;
+  final String ifsc;
+  final String micr;
+  final String openingDate;
+  final String nomination;
+
+  const AccountInfo({
+    required this.holder,
+    required this.number,
+    required this.type,
+    required this.branch,
+    required this.ifsc,
+    required this.micr,
+    required this.openingDate,
+    required this.nomination,
+  });
+}
+
+class AccountDetailsPage extends StatefulWidget {
   const AccountDetailsPage({super.key});
 
   @override
+  State<AccountDetailsPage> createState() => _AccountDetailsPageState();
+}
+
+class _AccountDetailsPageState extends State<AccountDetailsPage> {
+  int _selectedAccountIndex = 0;
+
+  final List<AccountInfo> _accounts = const [
+    AccountInfo(
+      holder: 'Rajesh Kumar',
+      number: '0012345678901234',
+      type: 'Savings Account',
+      branch: 'Connaught Place, New Delhi',
+      ifsc: 'PSIB0000001',
+      micr: '110023002',
+      openingDate: '15 March 2019',
+      nomination: 'Registered',
+    ),
+    AccountInfo(
+      holder: 'Rajesh Kumar',
+      number: '9876543210987654',
+      type: 'Current Account',
+      branch: 'Sector 17, Chandigarh',
+      ifsc: 'PSIB0000204',
+      micr: '160023005',
+      openingDate: '22 September 2021',
+      nomination: 'Registered',
+    ),
+    AccountInfo(
+      holder: 'Rajesh Kumar',
+      number: '5544332211009988',
+      type: 'Salary Account',
+      branch: 'Hitech City, Hyderabad',
+      ifsc: 'PSIB0000456',
+      micr: '500023012',
+      openingDate: '10 January 2023',
+      nomination: 'Not Registered',
+    ),
+  ];
+
+  @override
   Widget build(BuildContext context) {
+    final selectedAccount = _accounts[_selectedAccountIndex];
+
     return Scaffold(
       backgroundColor: kCream,
       body: SafeArea(
@@ -46,21 +110,66 @@ class AccountDetailsPage extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      _buildRow('Account Holder', 'Rajesh Kumar'),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        margin: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: kCream,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: kMid.withOpacity(0.2)),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int>(
+                            value: _selectedAccountIndex,
+                            isExpanded: true,
+                            icon: const Icon(Icons.arrow_drop_down, color: kForest),
+                            dropdownColor: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            style: const TextStyle(
+                              color: kForest,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 0,
+                                child: Text('Savings Account (•••• 1234)'),
+                              ),
+                              DropdownMenuItem(
+                                value: 1,
+                                child: Text('Current Account (•••• 7654)'),
+                              ),
+                              DropdownMenuItem(
+                                value: 2,
+                                child: Text('Salary Account (•••• 9988)'),
+                              ),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) {
+                                setState(() {
+                                  _selectedAccountIndex = val;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ),
                       _buildDivider(),
-                      _buildRow('Account Number', '0012345678901234'),
+                      _buildRow('Account Holder', selectedAccount.holder),
                       _buildDivider(),
-                      _buildRow('Account Type', 'Savings Account'),
+                      _buildRow('Account Number', selectedAccount.number),
                       _buildDivider(),
-                      _buildRow('Branch', 'Connaught Place, New Delhi'),
+                      _buildRow('Account Type', selectedAccount.type),
                       _buildDivider(),
-                      _buildRow('IFSC Code', 'PSIB0000001'),
+                      _buildRow('Branch', selectedAccount.branch),
                       _buildDivider(),
-                      _buildRow('MICR Code', '110023002'),
+                      _buildRow('IFSC Code', selectedAccount.ifsc),
                       _buildDivider(),
-                      _buildRow('Opening Date', '15 March 2019'),
+                      _buildRow('MICR Code', selectedAccount.micr),
                       _buildDivider(),
-                      _buildRow('Nomination', 'Registered'),
+                      _buildRow('Opening Date', selectedAccount.openingDate),
+                      _buildDivider(),
+                      _buildRow('Nomination', selectedAccount.nomination),
                     ],
                   ),
                 ),

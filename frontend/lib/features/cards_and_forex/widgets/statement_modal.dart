@@ -34,6 +34,34 @@ class _StatementModalState extends State<StatementModal> {
   DateTime? fromDate;
   DateTime? toDate;
 
+  int _selectedAccountIndex = 0;
+  final List<Map<String, String>> _accounts = const [
+    {
+      'name': 'Savings Account',
+      'last4': '1234',
+      'type': 'Savings',
+      'number': '0012345678901234',
+      'branch': 'Connaught Place, New Delhi',
+      'ifsc': 'PSIB0000001',
+    },
+    {
+      'name': 'Current Account',
+      'last4': '7654',
+      'type': 'Current',
+      'number': '9876543210987654',
+      'branch': 'Sector 17, Chandigarh',
+      'ifsc': 'PSIB0000204',
+    },
+    {
+      'name': 'Salary Account',
+      'last4': '9988',
+      'type': 'Salary',
+      'number': '5544332211009988',
+      'branch': 'Hitech City, Hyderabad',
+      'ifsc': 'PSIB0000456',
+    },
+  ];
+
   bool _isAutoFetching = false;
   dynamic _cardId;
   String? _cusId;
@@ -176,26 +204,111 @@ class _StatementModalState extends State<StatementModal> {
     );
 
     try {
-      if (_cusId == null || _cardId == null) {
-        throw 'Card details not loaded yet. Please try again in a moment.';
+      final supabase = Supabase.instance.client;
+      List transactions = [];
+
+      if (_selectedAccountIndex == 0) {
+        // Try DB fetch if details are available
+        if (_cusId != null && _cardId != null) {
+          try {
+            final response = await supabase.rpc(
+              'get_statement_transactions',
+              params: {
+                'p_cus_id': _cusId,
+                'p_card_id': _cardId,
+                'p_from_date': start.toIso8601String(),
+                'p_to_date': end.toIso8601String(),
+              },
+            );
+            transactions = response ?? [];
+          } catch (e) {
+            debugPrint('Error fetching db transactions: $e');
+          }
+        }
+        
+        // Fallback to mock savings transactions if DB returned nothing
+        if (transactions.isEmpty) {
+          transactions = [
+            {
+              'created_at': DateTime.now().subtract(const Duration(days: 2)).toIso8601String(),
+              'counterparty_name': 'Aman Sharma',
+              'category': 'Transfer',
+              'amount': 2000,
+              'status': 'Success'
+            },
+            {
+              'created_at': DateTime.now().subtract(const Duration(days: 5)).toIso8601String(),
+              'counterparty_name': 'Starbucks Coffee',
+              'category': 'Food & Drinks',
+              'amount': 350,
+              'status': 'Success'
+            },
+            {
+              'created_at': DateTime.now().subtract(const Duration(days: 10)).toIso8601String(),
+              'counterparty_name': 'HDFC Mutual Fund',
+              'category': 'Investment',
+              'amount': 5000,
+              'status': 'Success'
+            },
+          ];
+        }
+      } else if (_selectedAccountIndex == 1) {
+        // Current Account mock transactions
+        transactions = [
+          {
+            'created_at': DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
+            'counterparty_name': 'Vendor A Services',
+            'category': 'Business',
+            'amount': 15000,
+            'status': 'Success'
+          },
+          {
+            'created_at': DateTime.now().subtract(const Duration(days: 4)).toIso8601String(),
+            'counterparty_name': 'Client Payment Co',
+            'category': 'Income',
+            'amount': 45000,
+            'status': 'Success'
+          },
+          {
+            'created_at': DateTime.now().subtract(const Duration(days: 8)).toIso8601String(),
+            'counterparty_name': 'Office Rent Ltd',
+            'category': 'Rent',
+            'amount': 25000,
+            'status': 'Success'
+          },
+        ];
+      } else {
+        // Salary Account mock transactions
+        transactions = [
+          {
+            'created_at': DateTime.now().subtract(const Duration(days: 3)).toIso8601String(),
+            'counterparty_name': 'TechCorp Salary',
+            'category': 'Salary',
+            'amount': 85000,
+            'status': 'Success'
+          },
+          {
+            'created_at': DateTime.now().subtract(const Duration(days: 7)).toIso8601String(),
+            'counterparty_name': 'Supermarket Mall',
+            'category': 'Groceries',
+            'amount': 3200,
+            'status': 'Success'
+          },
+          {
+            'created_at': DateTime.now().subtract(const Duration(days: 12)).toIso8601String(),
+            'counterparty_name': 'Power Grid Corp',
+            'category': 'Bills',
+            'amount': 1850,
+            'status': 'Success'
+          },
+        ];
       }
 
-      final supabase = Supabase.instance.client;
-      final response = await supabase.rpc(
-        'get_statement_transactions',
-        params: {
-          'p_cus_id': _cusId,
-          'p_card_id': _cardId,
-          'p_from_date': start.toIso8601String(),
-          'p_to_date': end.toIso8601String(),
-        },
-      );
-
-      final List transactions = response ?? [];
-
       String fileExt = selectedFormat == 'PDF' ? 'pdf' : 'csv';
+      final accType = _accounts[_selectedAccountIndex]['type']?.toLowerCase() ?? 'account';
+      final accLast4 = (_selectedAccountIndex == 0 && _last4 != null) ? _last4 : (_accounts[_selectedAccountIndex]['last4'] ?? 'xxxx');
       String fileName =
-          'Statement_${_last4 ?? 'card'}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+          'Statement_${accType}_${accLast4}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
       String filePath = '';
 
       if (selectedFormat == 'PDF') {
@@ -250,10 +363,9 @@ class _StatementModalState extends State<StatementModal> {
     );
 
     final df = DateFormat('dd MMM yyyy');
-    final displayTitle =
-        (widget.cardType ?? 'Card').toUpperCase().contains('CREDIT')
-        ? 'Credit Card Statement'
-        : 'Debit Card Statement';
+    final selectedAcc = _accounts[_selectedAccountIndex];
+    final displayTitle = '${selectedAcc['name']} Statement';
+    final accLast4 = (_selectedAccountIndex == 0 && _last4 != null) ? _last4 : (selectedAcc['last4'] ?? '----');
 
     pdf.addPage(
       pw.MultiPage(
@@ -278,7 +390,7 @@ class _StatementModalState extends State<StatementModal> {
                   ),
                 ),
                 pw.Text(
-                  'Card Statement',
+                  'Account Statement',
                   style: const pw.TextStyle(
                     color: PdfColors.white,
                     fontSize: 16,
@@ -297,8 +409,18 @@ class _StatementModalState extends State<StatementModal> {
             ),
             pw.SizedBox(height: 4),
             pw.Text(
-              'Card Number: **** **** **** ${_last4 ?? '----'}',
+              'Account Number: **** **** **** $accLast4',
               style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
+            ),
+            pw.SizedBox(height: 2),
+            pw.Text(
+              'Branch: ${selectedAcc['branch']}',
+              style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey600),
+            ),
+            pw.SizedBox(height: 2),
+            pw.Text(
+              'IFSC Code: ${selectedAcc['ifsc']}',
+              style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey600),
             ),
             pw.SizedBox(height: 20),
             pw.Text(
@@ -384,10 +506,11 @@ class _StatementModalState extends State<StatementModal> {
     final df = DateFormat('dd MMM yyyy');
 
     // Add Branded Title Row
-    final title = (widget.cardType ?? 'Card').toUpperCase().contains('CREDIT')
-        ? 'Credit Card Statement'
-        : 'Debit Card Statement';
-    buffer.writeln('$title with Card No. **** ${_last4 ?? '----'}');
+    final selectedAcc = _accounts[_selectedAccountIndex];
+    final title = '${selectedAcc['name']} Statement';
+    final accLast4 = (_selectedAccountIndex == 0 && _last4 != null) ? _last4 : (selectedAcc['last4'] ?? '----');
+    buffer.writeln('$title for Account No. **** $accLast4');
+    buffer.writeln('Branch: ${selectedAcc['branch']}, IFSC Code: ${selectedAcc['ifsc']}');
     buffer.writeln(); // Empty row for spacing
 
     buffer.writeln('Date,Counterparty,Category,Amount,Status');
@@ -467,10 +590,57 @@ class _StatementModalState extends State<StatementModal> {
                   )
                 else ...[
                   Text(
-                    'Savings · •••• •••• ${_last4 ?? '----'}',
+                    '${_accounts[_selectedAccountIndex]['type']} · •••• •••• ${(_selectedAccountIndex == 0 && _last4 != null) ? _last4 : _accounts[_selectedAccountIndex]['last4']}',
                     style: GoogleFonts.inter(
                       color: Colors.grey.shade600,
                       fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Select Account',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F7F5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int>(
+                        value: _selectedAccountIndex,
+                        isExpanded: true,
+                        icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF2E7D5B)),
+                        dropdownColor: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        style: GoogleFonts.inter(
+                          color: const Color(0xFF1A1A1A),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        items: List.generate(_accounts.length, (i) {
+                          final acc = _accounts[i];
+                          return DropdownMenuItem<int>(
+                            value: i,
+                            child: Text('${acc['name']} (•••• ${acc['last4']})'),
+                          );
+                        }),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              _selectedAccountIndex = val;
+                              _last4 = _accounts[val]['last4'];
+                            });
+                          }
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(height: 28),
