@@ -8,3 +8,13 @@ frontend/build/
 frontend/.flutter-plugins
 frontend/.flutter-plugins-dependencies
 frontend/.env
+
+# Build artifacts (Gradle / Android)
+build/
+.gradle/
+android/.gradle/
+
+# Tool & IDE caches
+.dart_tool/
+.idea/
+*.iml

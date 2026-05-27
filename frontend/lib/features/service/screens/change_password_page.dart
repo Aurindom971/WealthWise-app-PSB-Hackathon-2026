@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../home/screens/notifications_screen.dart';
@@ -27,20 +28,76 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       TextEditingController();
 
   bool _showPassword = false;
+  bool _isVerifying = false;
   String? _errorMessage;
 
-  void _nextStep() {
-    setState(() {
-      _errorMessage = null;
-      if (_currentStep < 4) {
-        _currentStep++;
-      } else {
-        _submitPasswordChange();
-      }
-    });
+  Future<void> _nextStep() async {
+    setState(() => _errorMessage = null);
+
+    if (_currentStep == 1) {
+      // Verify current password against Supabase
+      await _verifyCurrentPassword();
+    } else if (_currentStep < 4) {
+      setState(() => _currentStep++);
+    } else {
+      await _submitPasswordChange();
+    }
   }
 
-  void _submitPasswordChange() {
+  Future<void> _verifyCurrentPassword() async {
+    final password = _currentPasswordController.text.trim();
+    if (password.isEmpty) {
+      setState(() => _errorMessage = 'Please enter your current password');
+      return;
+    }
+
+    setState(() => _isVerifying = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+      final email = supabase.auth.currentUser?.email;
+
+      if (email == null) {
+        setState(() {
+          _isVerifying = false;
+          _errorMessage = 'Could not retrieve user email. Please log in again.';
+        });
+        return;
+      }
+
+      // Attempt to sign in with the entered password to verify it
+      await supabase.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+
+      // Password is correct — move to next step
+      if (mounted) {
+        setState(() {
+          _isVerifying = false;
+          _currentStep = 2;
+        });
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        setState(() {
+          _isVerifying = false;
+          _errorMessage = e.message.contains('Invalid')
+              ? 'Incorrect password. Please try again.'
+              : e.message;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isVerifying = false;
+          _errorMessage = 'Something went wrong. Please try again.';
+        });
+      }
+    }
+  }
+
+  Future<void> _submitPasswordChange() async {
     String newPass = _newPasswordController.text;
     String confirmPass = _confirmPasswordController.text;
 
@@ -64,16 +121,109 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       return;
     }
 
-    // Success
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Password has been changed successfully'),
-        backgroundColor: kForest,
+    setState(() => _isVerifying = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+      await supabase.auth.updateUser(
+        UserAttributes(password: newPass),
+      );
+
+      if (mounted) {
+        setState(() => _isVerifying = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password has been changed successfully'),
+            backgroundColor: kForest,
+          ),
+        );
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) Navigator.pop(context);
+        });
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        setState(() {
+          _isVerifying = false;
+          _errorMessage = e.message;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isVerifying = false;
+          _errorMessage = 'Failed to update password. Please try again.';
+        });
+      }
+    }
+  }
+
+  void _showForgotPasswordDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: kAccent.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.mark_email_read_outlined,
+                    color: kForest, size: 36),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Reset Instructions Sent',
+                style: TextStyle(
+                  color: kForest,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Password reset instructions have been sent to your registered email address and mobile number via SMS.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: kSub,
+                  fontSize: 13,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              GestureDetector(
+                onTap: () => Navigator.pop(ctx),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: kMid,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'OK, Got it',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) Navigator.pop(context);
-    });
   }
 
   Widget _buildStepHeader() {
@@ -272,6 +422,23 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                               ),
                             ),
                           ),
+                          const SizedBox(height: 12),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: GestureDetector(
+                              onTap: _showForgotPasswordDialog,
+                              child: const Text(
+                                'Forgot Password?',
+                                style: TextStyle(
+                                  color: kMid,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: kMid,
+                                ),
+                              ),
+                            ),
+                          ),
                         ] else if (_currentStep == 2) ...[
                           const Text(
                             'Email OTP',
@@ -375,27 +542,36 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                         ],
                         const SizedBox(height: 32),
                         GestureDetector(
-                          onTap: _nextStep,
+                          onTap: _isVerifying ? null : _nextStep,
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             decoration: BoxDecoration(
-                              color: kMid,
+                              color: _isVerifying ? kMid.withOpacity(0.5) : kMid,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Center(
-                              child: Text(
-                                _currentStep == 1
-                                    ? 'Verify & Send OTP'
-                                    : _currentStep == 2 || _currentStep == 3
-                                        ? 'Verify and Next'
-                                        : 'Change Password',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
+                              child: _isVerifying
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      ),
+                                    )
+                                  : Text(
+                                      _currentStep == 1
+                                          ? 'Verify & Send OTP'
+                                          : _currentStep == 2 || _currentStep == 3
+                                              ? 'Verify and Next'
+                                              : 'Change Password',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
                             ),
                           ),
                         ),

@@ -223,7 +223,7 @@ class CardServicesPage extends StatelessWidget {
         if (title == 'Report lost card') {
           _showReportLostCardModal(context);
         } else if (title == 'Block / Unblock card') {
-          _navigateToSmartLock(context, 'card');
+          _navigateToCards(context, highlight);
         } else {
           _navigateToCards(context, highlight);
         }
