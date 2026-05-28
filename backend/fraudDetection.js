@@ -12,6 +12,7 @@ const rules = [
   deviceAnomaly,
   locationAnomaly,
   frequencyAnomaly,
+  velocityAnomaly,
 ];
 
 // -------------------- 1. Amount --------------------
@@ -126,6 +127,39 @@ function frequencyAnomaly(txn, profile) {
   };
 }
 
+// -------------------- 6. Velocity --------------------
+function velocityAnomaly(txn, profile) {
+  if (!profile.recentTransactions?.length || !txn.timestamp) return null;
+
+  const currentTxnTime = new Date(txn.timestamp).getTime();
+
+  const recentTxns = profile.recentTransactions.filter((t) => {
+    if (!t.timestamp) return false;
+
+    const prevTxnTime = new Date(t.timestamp).getTime();
+
+    const diffMinutes =
+      Math.abs(currentTxnTime - prevTxnTime) / (1000 * 60);
+
+    return diffMinutes <= 5;
+  });
+
+  const count = recentTxns.length;
+
+  // Ignore normal behavior
+  if (count < 3) return null;
+
+  // More transactions in short time = higher score
+  const score = clamp(count / 10);
+
+  return {
+    score,
+    weight: 25,
+    reason: `${count} transactions detected within 5 minutes`,
+    flag: 'HIGH_VELOCITY',
+  };
+}
+
 // -------------------- CORE ENGINE --------------------
 function detectFraud(txn, profile) {
   const triggered = [];
@@ -140,7 +174,7 @@ function detectFraud(txn, profile) {
   }
 
   // 🔥 FINAL FIX: balanced normalization
-  const MAX_WEIGHT = 110; // 35 + 20 + 25 + 15 + 15
+  const MAX_WEIGHT = 135; // 35 + 20 + 25 + 15 + 15 + 25 = 135
 
   const normalized = totalWeightedScore / MAX_WEIGHT;
 
@@ -148,6 +182,11 @@ function detectFraud(txn, profile) {
   const curved = Math.pow(clamp(normalized), 0.85);
 
   const risk_score = Math.round(curved * 100);
+  console.log({
+    risk_score,
+    reasons: triggered.map(t => t.reason),
+    flags: triggered.map(t => t.flag),
+  });
 
   return {
     risk_score,
