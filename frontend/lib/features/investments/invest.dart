@@ -14,6 +14,9 @@ import 'actions/sbi_innovation_nfo_screen.dart';
 import 'actions/icici_business_cycle_nfo_screen.dart';
 import 'actions/stock_analysis_screen.dart';
 import 'actions/fii_dii_insights_screen.dart';
+import 'actions/search_stocks_screen.dart';
+import 'actions/market_indices_screen.dart';
+import 'actions/my_holdings_screen.dart';
 import '../send/screens/send_transfer_screen.dart';
 
 class InvestmentsScreen extends StatefulWidget {
@@ -39,6 +42,49 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   int _selectedFnOTimeframe = 0; // Starts at 1m for F&O
   int _selectedMFTimeframe = 4; // Starts at 3y for MF
   int _selectedOptionChainIndex = 0; // 0: Nifty 50, 1: Sensex, 2: Bank, 3: Fin
+
+  List<MarketIndexData> get _indicesData => [
+    MarketIndexData(
+      name: 'NIFTY 50',
+      value: '22,450.20',
+      percentageChange: '+0.45%',
+      isUp: true,
+      sparklineData: [22350.0, 22390.0, 22380.0, 22410.0, 22430.0, 22450.2],
+      high: '22,480.10',
+      low: '22,340.50',
+      prevClose: '22,348.80',
+    ),
+    MarketIndexData(
+      name: 'SENSEX',
+      value: '73,885.60',
+      percentageChange: '+0.38%',
+      isUp: true,
+      sparklineData: [73600.0, 73720.0, 73680.0, 73800.0, 73840.0, 73885.6],
+      high: '74,010.50',
+      low: '73,550.20',
+      prevClose: '73,605.10',
+    ),
+    MarketIndexData(
+      name: 'NIFTY BANK',
+      value: '48,115.30',
+      percentageChange: '-0.25%',
+      isUp: false,
+      sparklineData: [48300.0, 48250.0, 48280.0, 48190.0, 48140.0, 48115.3],
+      high: '48,390.40',
+      low: '48,050.10',
+      prevClose: '48,235.80',
+    ),
+    MarketIndexData(
+      name: 'NIFTY IT',
+      value: '34,910.15',
+      percentageChange: '+1.20%',
+      isUp: true,
+      sparklineData: [34400.0, 34550.0, 34600.0, 34750.0, 34820.0, 34910.15],
+      high: '35,050.60',
+      low: '34,350.00',
+      prevClose: '34,495.20',
+    ),
+  ];
 
   @override
   void initState() {
@@ -79,7 +125,19 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
             if (_selectedTab == 0) ...[
               _buildStockSummary(),
               const SizedBox(height: 16),
-              _buildQuickActions(),
+              _buildQuickActions(isStocks: true),
+              const SizedBox(height: 16),
+              MarketIndicesCarousel(
+                indices: _indicesData,
+                onTapIndex: (indexData) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MarketIndicesScreen(),
+                    ),
+                  );
+                },
+              ),
               const SizedBox(height: 16),
               _buildNavChart(),
               const SizedBox(height: 16),
@@ -156,25 +214,64 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   }
 
   Widget _buildStockSummary() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Stock Summary',
-            style: TextStyle(
-              color: kDarkGreen,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MyHoldingsScreen(),
           ),
-          const SizedBox(height: 24),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.015),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Stock Summary',
+                  style: TextStyle(
+                    color: kDarkGreen,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      'View All',
+                      style: TextStyle(
+                        color: kDarkGreen.withValues(alpha: 0.7),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: kDarkGreen.withValues(alpha: 0.7),
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
           Row(
             children: [
               SizedBox(
@@ -275,10 +372,62 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildQuickActions() {
+  Widget _buildQuickActions({bool isStocks = false}) {
+    if (isStocks) {
+      return Row(
+        children: [
+          Expanded(
+            child: _buildActionItem(
+              Icons.search_rounded,
+              'Search\nStocks',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SearchStocksScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildActionItem(
+              Icons.show_chart_rounded,
+              'Market\nIndices',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MarketIndicesScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildActionItem(
+              Icons.pie_chart_rounded,
+              'Stock\nPortfolio',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MyHoldingsScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    }
+
     return Row(
       children: [
         Expanded(
