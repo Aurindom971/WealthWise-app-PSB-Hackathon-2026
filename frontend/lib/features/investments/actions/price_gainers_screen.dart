@@ -1,6 +1,5 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'stock_detail_view_screen.dart';
 
 class PriceGainersScreen extends StatefulWidget {
   const PriceGainersScreen({super.key});
@@ -11,11 +10,105 @@ class PriceGainersScreen extends StatefulWidget {
 
 class _PriceGainersScreenState extends State<PriceGainersScreen> {
   final Color kForest = const Color(0xFF1F5D3A);
+  final Color kCream = const Color(0xFFF2F0EB);
+
+  final List<Map<String, dynamic>> _gainers = [
+    {
+      'contract': 'ADANIENT 30 JUN 3000 CALL',
+      'ltp': '120.00',
+      'change': '+15.50 (12.92%)',
+      'isUp': true,
+      'expiryDate': '30 Jun 2026',
+      'underlying': 'Nifty 50 Index',
+      'underlyingVal': '22,450.20',
+      'underlyingChg': '+101.40 (+0.45%)',
+    },
+    {
+      'contract': 'WIPRO 30 JUN 450 CALL',
+      'ltp': '18.20',
+      'change': '+2.10 (13.04%)',
+      'isUp': true,
+      'expiryDate': '30 Jun 2026',
+      'underlying': 'Nifty IT Index',
+      'underlyingVal': '34,910.15',
+      'underlyingChg': '+413.20 (+1.20%)',
+    },
+    {
+      'contract': 'TITAN 30 JUN 3400 CALL',
+      'ltp': '95.00',
+      'change': '+9.80 (11.50%)',
+      'isUp': true,
+      'expiryDate': '30 Jun 2026',
+      'underlying': 'Nifty 50 Index',
+      'underlyingVal': '22,450.20',
+      'underlyingChg': '+101.40 (+0.45%)',
+    },
+    {
+      'contract': 'AXISBANK 30 JUN 1100 CALL',
+      'ltp': '32.40',
+      'change': '+3.80 (13.29%)',
+      'isUp': true,
+      'expiryDate': '30 Jun 2026',
+      'underlying': 'Nifty Bank Index',
+      'underlyingVal': '48,115.30',
+      'underlyingChg': '-120.10 (-0.25%)',
+    },
+    {
+      'contract': 'LT 30 JUN 3600 CALL',
+      'ltp': '115.50',
+      'change': '+12.45 (12.08%)',
+      'isUp': true,
+      'expiryDate': '30 Jun 2026',
+      'underlying': 'Nifty 50 Index',
+      'underlyingVal': '22,450.20',
+      'underlyingChg': '+101.40 (+0.45%)',
+    },
+    {
+      'contract': 'M&M 30 JUN 2000 CALL',
+      'ltp': '78.00',
+      'change': '+8.10 (11.59%)',
+      'isUp': true,
+      'expiryDate': '30 Jun 2026',
+      'underlying': 'Nifty 50 Index',
+      'underlyingVal': '22,450.20',
+      'underlyingChg': '+101.40 (+0.45%)',
+    },
+    {
+      'contract': 'RELIANCE 30 JUN 2900 CALL',
+      'ltp': '88.50',
+      'change': '+9.20 (11.60%)',
+      'isUp': true,
+      'expiryDate': '30 Jun 2026',
+      'underlying': 'Nifty 50 Index',
+      'underlyingVal': '22,450.20',
+      'underlyingChg': '+101.40 (+0.45%)',
+    },
+    {
+      'contract': 'HDFCBANK 30 JUN 1600 CALL',
+      'ltp': '42.15',
+      'change': '+4.30 (11.36%)',
+      'isUp': true,
+      'expiryDate': '30 Jun 2026',
+      'underlying': 'Nifty Bank Index',
+      'underlyingVal': '48,115.30',
+      'underlyingChg': '-120.10 (-0.25%)',
+    },
+    {
+      'contract': 'TCS 30 JUN 4000 CALL',
+      'ltp': '110.00',
+      'change': '+11.20 (11.34%)',
+      'isUp': true,
+      'expiryDate': '30 Jun 2026',
+      'underlying': 'Nifty IT Index',
+      'underlyingVal': '34,910.15',
+      'underlyingChg': '+413.20 (+1.20%)',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F2F5),
+      backgroundColor: kCream,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -31,178 +124,111 @@ class _PriceGainersScreenState extends State<PriceGainersScreen> {
               style: TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 20),
             ),
             const Text(
-              'Updated real-time',
+              'Updated real-time \u2022 F&O Segment',
               style: TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.w500),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
-        backgroundColor: kForest,
-        icon: const Icon(Icons.bolt, color: Colors.white),
-        label: const Text('Quick Trade', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-      ),
-      body: SingleChildScrollView(
+      body: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-            _buildMomentumSlider(),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 32, 20, 16),
-              child: Text(
-                'Top Performers',
-                style: TextStyle(color: Color(0xFF1F5D3A), fontWeight: FontWeight.bold, fontSize: 18),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Options Contract',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'LTP',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView.separated(
+                physics: const BouncingScrollPhysics(),
+                itemCount: _gainers.length,
+                separatorBuilder: (context, index) => Divider(color: Colors.grey.shade100, height: 24),
+                itemBuilder: (context, index) {
+                  final gainer = _gainers[index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => StockDetailViewScreen(
+                            title: gainer['contract'],
+                            price: gainer['ltp'],
+                            change: gainer['change'],
+                            isUp: gainer['isUp'],
+                            expiryDate: gainer['expiryDate'],
+                            underlyingIndexName: gainer['underlying'],
+                            underlyingIndexValue: gainer['underlyingVal'],
+                            underlyingIndexChange: gainer['underlyingChg'],
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      color: Colors.transparent, // Ensures the entire row area is clickable
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                gainer['contract'],
+                                style: TextStyle(
+                                  color: kForest,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'NSE \u2022 Volume Booster',
+                                style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                gainer['ltp'],
+                                style: TextStyle(
+                                  color: kForest,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                gainer['change'],
+                                style: const TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-            _buildGridCards(),
-            const SizedBox(height: 100), // Padding for FAB
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMomentumSlider() {
-    return SizedBox(
-      height: 120,
-      child: PageView.builder(
-        controller: PageController(viewportFraction: 0.85),
-        itemCount: 5,
-        itemBuilder: (context, index) {
-          final stocks = ['RELIANCE', 'HDFC BANK', 'TCS', 'INFY', 'ICICI'];
-          final changes = ['+5.2%', '+4.8%', '+3.9%', '+3.5%', '+3.2%'];
-          return _buildMomentumCard(stocks[index], changes[index]);
-        },
-      ),
-    );
-  }
-
-  Widget _buildMomentumCard(String symbol, String change) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [kForest, const Color(0xFF2E7D32)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: kForest.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '# Momentum',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 10, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                symbol,
-                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          Text(
-            change,
-            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGridCards() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 0.85,
-        ),
-        itemCount: 6,
-        itemBuilder: (context, index) {
-          final symbols = ['ADANIENT', 'WIPRO', 'TITAN', 'AXISBANK', 'LT', 'M&M'];
-          return _buildGlassCard(symbols[index]);
-        },
-      ),
-    );
-  }
-
-  Widget _buildGlassCard(String symbol) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(symbol, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              const Spacer(),
-              SizedBox(
-                height: 40,
-                child: LineChart(
-                  LineChartData(
-                    gridData: const FlGridData(show: false),
-                    titlesData: const FlTitlesData(show: false),
-                    borderData: FlBorderData(show: false),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: [
-                          const FlSpot(0, 1),
-                          const FlSpot(1, 3),
-                          const FlSpot(2, 2.5),
-                          const FlSpot(3, 4.5),
-                          const FlSpot(4, 3.8),
-                          const FlSpot(5, 6),
-                        ],
-                        isCurved: true,
-                        color: Colors.green,
-                        barWidth: 2,
-                        dotData: const FlDotData(show: false),
-                        belowBarData: BarAreaData(show: true, color: Colors.green.withValues(alpha: 0.1)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('₹2,450', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text(
-                    '+5.40%',
-                    style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold, fontSize: 12),
-                  ),
-                ],
-              ),
-            ],
-          ),
         ),
       ),
     );

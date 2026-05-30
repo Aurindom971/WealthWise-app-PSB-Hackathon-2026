@@ -21,18 +21,26 @@ class _LumpsumInvestmentScreenState extends State<LumpsumInvestmentScreen> {
   String _selectedCategory = 'All';
 
   final List<Map<String, String>> _availableInvestments = [
-    {'name': 'Quant Small Cap Fund', 'type': 'Mutual Fund', 'category': 'Small Cap'},
-    {'name': 'Parag Parikh Flexi Cap', 'type': 'Mutual Fund', 'category': 'Flexi Cap'},
-    {'name': 'Nippon India Small Cap', 'type': 'Mutual Fund', 'category': 'Small Cap'},
-    {'name': 'HDFC Mid-Cap Opportunities', 'type': 'Mutual Fund', 'category': 'Mid Cap'},
-    {'name': 'Axis Bluechip Fund', 'type': 'Mutual Fund', 'category': 'Large Cap'},
-    {'name': 'SBI Magnum Equity Funds', 'type': 'Mutual Fund', 'category': 'Focused'},
-    {'name': 'Reliance Industries', 'type': 'Stock', 'category': 'Energy'},
-    {'name': 'Tata Consultancy', 'type': 'Stock', 'category': 'IT Services'},
-    {'name': 'Infosys Ltd', 'type': 'Stock', 'category': 'IT Services'},
-    {'name': 'HDFC Bank Ltd', 'type': 'Stock', 'category': 'Banking'},
-    {'name': 'Wipro Ltd', 'type': 'Stock', 'category': 'IT Services'},
-    {'name': 'ICICI Bank Ltd', 'type': 'Stock', 'category': 'Banking'},
+    {'name': 'HDFC Bank', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'Reliance Industries', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'ICICI Bank Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'Bharti Airtel', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'Larsen & Toubro (LT)', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'Infosys Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'State Bank of India', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'Hindalco Industries Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'Tata Motors Passenger Vehicles Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'Power Grid Corporation of India Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'NTPC Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'Bajaj Auto Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'Maruti Suzuki India Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'Coal India Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'Axis Bank Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'Tata Consultancy Services Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'HCL Technologies Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'Cipla Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'Kotak Mahindra Bank Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
+    {'name': 'ITC Ltd.', 'type': 'Stock', 'category': 'Large Cap'},
   ];
 
   @override
