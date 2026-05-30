@@ -18,6 +18,7 @@ import 'actions/sbi_innovation_nfo_screen.dart';
 import 'actions/icici_business_cycle_nfo_screen.dart';
 import 'actions/stock_analysis_screen.dart';
 import 'actions/search_stocks_screen.dart';
+import 'services/investment_api_service.dart';
 import 'actions/market_indices_screen.dart';
 import 'actions/my_holdings_screen.dart';
 import '../send/screens/send_transfer_screen.dart';
@@ -33,6 +34,14 @@ class InvestmentsScreen extends StatefulWidget {
 
 class _InvestmentsScreenState extends State<InvestmentsScreen>
     with SingleTickerProviderStateMixin {
+  final InvestmentApiService _apiService = InvestmentApiService();
+
+  List<Map<String, dynamic>> _suggestedStocks = [];
+  List<Map<String, dynamic>> _liveIpos = [];
+  List<Map<String, dynamic>> _tradingIdeas = [];
+  List<Map<String, dynamic>> _topFunds = [];
+  List<Map<String, dynamic>> _liveNfos = [];
+
   int? _hoveredScreenerIndex;
   int? _activeScreenerIndex;
   int? _hoveredTableRowIndex;
@@ -92,6 +101,210 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   @override
   void initState() {
     super.initState();
+    
+    // Seed initial data immediately before async fetch resolves
+    _suggestedStocks = [
+      {
+        'symbol': 'INFY',
+        'name': 'Infosys Ltd',
+        'price': '1,316',
+        'change': '+0.82',
+        'isUp': true,
+        'history': [1305.0, 1318.0, 1310.0, 1322.0, 1316.0],
+      },
+      {
+        'symbol': 'TCS',
+        'name': 'Tata Consultancy',
+        'price': '2,573',
+        'change': '+0.71',
+        'isUp': true,
+        'history': [2554.0, 2580.0, 2570.0, 2590.0, 2573.0],
+      },
+      {
+        'symbol': 'RELIANCE',
+        'name': 'Reliance Industries',
+        'price': '1,345',
+        'change': '+0.13',
+        'isUp': true,
+        'history': [1344.0, 1350.0, 1340.0, 1348.0, 1345.0],
+      },
+      {
+        'symbol': 'HDFCBANK',
+        'name': 'HDFC Bank Ltd',
+        'price': '794',
+        'change': '-1.96',
+        'isUp': false,
+        'history': [810.0, 805.0, 812.0, 798.0, 794.0],
+      },
+      {
+        'symbol': 'WIPRO',
+        'name': 'Wipro Ltd',
+        'price': '210',
+        'change': '+0.19',
+        'isUp': true,
+        'history': [209.0, 211.0, 210.0, 212.0, 210.0],
+      },
+    ];
+
+    _liveIpos = [
+      {
+        'name': 'Emiac Technologies Ltd',
+        'dates': '27 Mar - 8 Apr',
+        'price': '₹93-₹98',
+        'lot': 150,
+        'min': '₹14,700',
+      },
+      {
+        'name': 'Safety Controls & Instrumentation Ltd',
+        'dates': '6 Apr - 8 Apr',
+        'price': '₹75-₹80',
+        'lot': 180,
+        'min': '₹14,400',
+      },
+    ];
+
+    _tradingIdeas = [
+      {
+        'contract': 'NIFTY 02 JUN 23900 CALL',
+        'price': '71.50',
+        'change': '-108.25 (60.22%)',
+        'isUp': false,
+        'buy': 128.50,
+        'target': 275.00,
+        'sl': 80.00,
+        'provider': 'Investogainer Research',
+        'funds': 6425.00,
+      },
+      {
+        'contract': 'BANKNIFTY 30 JUN 51200 CALL',
+        'price': '810.00',
+        'change': '-170.55 (17.39%)',
+        'isUp': false,
+        'buy': 967.00,
+        'target': 1351.00,
+        'sl': 650.00,
+        'provider': 'Lotus Funds',
+        'funds': 12150.00,
+      },
+      {
+        'contract': 'RELIANCE 30 JUN 2900 CALL',
+        'price': '88.50',
+        'change': '+12.40 (16.29%)',
+        'isUp': true,
+        'buy': 75.00,
+        'target': 150.00,
+        'sl': 50.00,
+        'provider': 'Investogainer Research',
+        'funds': 4425.00,
+      },
+      {
+        'contract': 'TCS 30 JUN 4000 CALL',
+        'price': '110.00',
+        'change': '-15.55 (12.39%)',
+        'isUp': false,
+        'buy': 125.00,
+        'target': 220.00,
+        'sl': 80.00,
+        'provider': 'Lotus Funds',
+        'funds': 5500.00,
+      },
+      {
+        'contract': 'INFY 30 JUN 1500 CALL',
+        'price': '42.15',
+        'change': '+4.80 (12.85%)',
+        'isUp': true,
+        'buy': 35.00,
+        'target': 75.00,
+        'sl': 20.00,
+        'provider': 'Investogainer Research',
+        'funds': 2107.50,
+      },
+      {
+        'contract': 'BDL 30 JUN 1200 CALL',
+        'price': '30.55',
+        'change': '-71.27 (71.27%)',
+        'isUp': false,
+        'buy': 29.05,
+        'target': 60.00,
+        'sl': 15.00,
+        'provider': 'Investogainer Research',
+        'funds': 10192.42,
+      },
+      {
+        'contract': 'ICICIBANK 30 JUN 1100 CALL',
+        'price': '35.40',
+        'change': '+3.80 (12.02%)',
+        'isUp': true,
+        'buy': 28.00,
+        'target': 55.00,
+        'sl': 18.00,
+        'provider': 'Lotus Funds',
+        'funds': 1770.00,
+      },
+      {
+        'contract': 'SBIN 30 JUN 800 PUT',
+        'price': '22.15',
+        'change': '-2.10 (8.66%)',
+        'isUp': false,
+        'buy': 25.00,
+        'target': 45.00,
+        'sl': 15.00,
+        'provider': 'Investogainer Research',
+        'funds': 1107.50,
+      },
+    ];
+
+    _topFunds = [
+      {
+        'name': 'Quant Small Cap Fund',
+        'category': 'Equity • Small Cap',
+        'return': '45.2%',
+        'price': '214.20',
+      },
+      {
+        'name': 'Parag Parikh Flexi Cap',
+        'category': 'Equity • Flexi Cap',
+        'return': '28.5%',
+        'price': '85.40',
+      },
+      {
+        'name': 'Nippon India Small Cap',
+        'category': 'Equity • Small Cap',
+        'return': '41.8%',
+        'price': '135.10',
+      },
+      {
+        'name': 'HDFC Mid-Cap Opportunities',
+        'category': 'Equity • Mid Cap',
+        'return': '34.2%',
+        'price': '160.50',
+      },
+    ];
+
+    _liveNfos = [
+      {
+        'name': 'HDFC Nifty Next 50',
+        'date': 'Closes 19 Apr',
+        'min': 500.0,
+        'closesInDays': 14,
+        'description': 'Tracks the Nifty Next 50 index composed of high-performing large-cap companies.',
+      },
+      {
+        'name': 'SBI Innovation Opp.',
+        'date': 'Closes 22 Apr',
+        'min': 5000.0,
+        'closesInDays': 17,
+        'description': 'Invests in high-growth companies driving technological and business model innovations.',
+      },
+      {
+        'name': 'ICICI Pru Business Cycle',
+        'date': 'Closes 24 Apr',
+        'min': 1000.0,
+        'closesInDays': 19,
+        'description': 'Tactical allocation across sectors based on macroeconomic business cycle transitions.',
+      },
+    ];
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -99,6 +312,30 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    _loadApiData();
+  }
+
+  Future<void> _loadApiData() async {
+    try {
+      final stocks = await _apiService.fetchSuggestedStocks();
+      final ipos = await _apiService.fetchLiveIpos();
+      final ideas = await _apiService.fetchTradingIdeas();
+      final funds = await _apiService.fetchTopFunds();
+      final nfos = await _apiService.fetchLiveNfos();
+      
+      if (mounted) {
+        setState(() {
+          _suggestedStocks = stocks;
+          _liveIpos = ipos;
+          _tradingIdeas = ideas;
+          _topFunds = funds;
+          _liveNfos = nfos;
+        });
+      }
+    } catch (e) {
+      // Keep fallback values in case of error
+    }
   }
 
   @override
@@ -855,22 +1092,53 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Market',
-          style: TextStyle(
-            color: Color(0xFF111827),
-            fontWeight: FontWeight.w900,
-            fontSize: 28,
-            letterSpacing: -1,
-          ),
-        ),
-        const Text(
-          'Suggested Stock Prices',
-          style: TextStyle(
-            color: Color(0xFF6B7280),
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Market',
+                  style: TextStyle(
+                    color: Color(0xFF111827),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 28,
+                    letterSpacing: -1,
+                  ),
+                ),
+                const Text(
+                  'Suggested Stock Prices',
+                  style: TextStyle(
+                    color: Color(0xFF6B7280),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: _showAllSuggestedStocksModal,
+              child: Row(
+                children: [
+                  Text(
+                    'View More',
+                    style: TextStyle(
+                      color: kDarkGreen.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: kDarkGreen.withValues(alpha: 0.7),
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         Container(
@@ -888,53 +1156,182 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
             ],
           ),
           child: Column(
-            children: [
-              _buildStockRow('INFY', 'Infosys Ltd', '1,316', '+0.82', true, [
-                1305,
-                1318,
-                1310,
-                1322,
-                1316,
-              ]),
-              Divider(color: Colors.grey.shade100, height: 1),
-              _buildStockRow(
-                'TCS',
-                'Tata Consultancy',
-                '2,573',
-                '+0.71',
-                true,
-                [2554, 2580, 2570, 2590, 2573],
-              ),
-              Divider(color: Colors.grey.shade100, height: 1),
-              _buildStockRow(
-                'RELIANCE',
-                'Reliance Industries',
-                '1,345',
-                '+0.13',
-                true,
-                [1344, 1350, 1340, 1348, 1345],
-              ),
-              Divider(color: Colors.grey.shade100, height: 1),
-              _buildStockRow(
-                'HDFCBANK',
-                'HDFC Bank Ltd',
-                '794',
-                '-1.96',
-                false,
-                [810, 805, 812, 798, 794],
-              ),
-              Divider(color: Colors.grey.shade100, height: 1),
-              _buildStockRow('WIPRO', 'Wipro Ltd', '210', '+0.19', true, [
-                209,
-                211,
-                210,
-                212,
-                210,
-              ]),
-            ],
+            children: List.generate(_suggestedStocks.length > 5 ? 5 : _suggestedStocks.length, (index) {
+              final stock = _suggestedStocks[index];
+              return Column(
+                children: [
+                  _buildStockRow(
+                    stock['symbol'] as String,
+                    stock['name'] as String,
+                    stock['price'] as String,
+                    stock['change'] as String,
+                    stock['isUp'] as bool,
+                    (stock['history'] as List).cast<double>(),
+                  ),
+                  if (index < (_suggestedStocks.length > 5 ? 4 : _suggestedStocks.length - 1))
+                    Divider(color: Colors.grey.shade100, height: 1),
+                ],
+              );
+            }),
           ),
         ),
       ],
+    );
+  }
+
+  void _showAllSuggestedStocksModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Color(0xFFF2F0EB), // kCream original theme
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'All Suggested Stocks',
+                    style: TextStyle(
+                      color: kDarkGreen,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: kDarkGreen),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                itemCount: _suggestedStocks.length,
+                separatorBuilder: (context, index) => Divider(color: Colors.grey.shade200, height: 16),
+                itemBuilder: (context, index) {
+                  final stock = _suggestedStocks[index];
+                  final List<double> history = (stock['history'] as List).cast<double>();
+                  final bool isUp = stock['isUp'] as bool;
+                  
+                  return Card(
+                    color: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.shade100),
+                    ),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => StockAnalysisScreen(
+                              symbol: stock['symbol'] as String,
+                              name: stock['name'] as String,
+                              price: stock['price'] as String,
+                              change: stock['change'] as String,
+                              isUp: isUp,
+                              history: history,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    stock['symbol'] as String,
+                                    style: TextStyle(
+                                      color: kDarkGreen,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    stock['name'] as String,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade500,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              width: 60,
+                              height: 30,
+                              child: CustomPaint(
+                                painter: MiniGraphPainter(
+                                  history,
+                                  isUp ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '₹${stock['price']}',
+                                  style: TextStyle(
+                                    color: kDarkGreen,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${stock['change']}%',
+                                  style: TextStyle(
+                                    color: isUp ? Colors.green.shade700 : Colors.red.shade700,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1055,78 +1452,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   }
 
   void _showAllIPOsModal() {
-    final ipos = [
-      {
-        'name': 'Emiac Technologies Ltd',
-        'dates': '27 Mar - 8 Apr',
-        'price': '₹93-₹98',
-        'lot': 150,
-        'min': '₹14,700',
-      },
-      {
-        'name': 'Safety Controls & Instrumentation Ltd',
-        'dates': '6 Apr - 8 Apr',
-        'price': '₹75-₹80',
-        'lot': 180,
-        'min': '₹14,400',
-      },
-      {
-        'name': 'Omni Logistics India Ltd',
-        'dates': '15 Apr - 18 Apr',
-        'price': '₹120-₹128',
-        'lot': 110,
-        'min': '₹13,200',
-      },
-      {
-        'name': 'EcoVolt Energy Systems Ltd',
-        'dates': '20 Apr - 23 Apr',
-        'price': '₹210-₹225',
-        'lot': 65,
-        'min': '₹13,650',
-      },
-      {
-        'name': 'Kalyan Agro Foods Ltd',
-        'dates': '25 Apr - 28 Apr',
-        'price': '₹45-₹50',
-        'lot': 300,
-        'min': '₹13,500',
-      },
-      {
-        'name': 'Apex Biotech Industries Ltd',
-        'dates': '2 May - 5 May',
-        'price': '₹160-₹172',
-        'lot': 90,
-        'min': '₹14,400',
-      },
-      {
-        'name': 'Nova Smart Mobility Ltd',
-        'dates': '8 May - 11 May',
-        'price': '₹310-₹330',
-        'lot': 45,
-        'min': '₹13,950',
-      },
-      {
-        'name': 'Hindustan Cyber Solutions Ltd',
-        'dates': '15 May - 18 May',
-        'price': '₹180-₹195',
-        'lot': 75,
-        'min': '₹13,500',
-      },
-      {
-        'name': 'Prism Paints & Coatings Ltd',
-        'dates': '22 May - 25 May',
-        'price': '₹85-₹92',
-        'lot': 160,
-        'min': '₹13,600',
-      },
-      {
-        'name': 'Zeta Engineering Works Ltd',
-        'dates': '28 May - 31 May',
-        'price': '₹140-₹152',
-        'lot': 100,
-        'min': '₹14,000',
-      },
-    ];
+    final ipos = _liveIpos;
 
     showModalBottomSheet(
       context: context,
@@ -1274,98 +1600,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   }
 
   void _showAllTopFundsModal() {
-    final funds = [
-      {
-        'name': 'Quant Small Cap Fund',
-        'category': 'Equity \u2022 Small Cap',
-        'return': '45.2%',
-        'price': '214.20',
-      },
-      {
-        'name': 'Parag Parikh Flexi Cap',
-        'category': 'Equity \u2022 Flexi Cap',
-        'return': '28.5%',
-        'price': '85.40',
-      },
-      {
-        'name': 'Nippon India Small Cap',
-        'category': 'Equity \u2022 Small Cap',
-        'return': '41.8%',
-        'price': '135.10',
-      },
-      {
-        'name': 'HDFC Mid-Cap Opportunities',
-        'category': 'Equity \u2022 Mid Cap',
-        'return': '34.2%',
-        'price': '160.50',
-      },
-      {
-        'name': 'SBI Bluechip Fund',
-        'category': 'Equity \u2022 Large Cap',
-        'return': '22.4%',
-        'price': '92.30',
-      },
-      {
-        'name': 'ICICI Prudential Bluechip',
-        'category': 'Equity \u2022 Large Cap',
-        'return': '24.1%',
-        'price': '105.80',
-      },
-      {
-        'name': 'Mirae Asset Large & Midcap',
-        'category': 'Equity \u2022 Large & Midcap',
-        'return': '29.6%',
-        'price': '142.70',
-      },
-      {
-        'name': 'Axis Small Cap Fund',
-        'category': 'Equity \u2022 Small Cap',
-        'return': '36.8%',
-        'price': '98.20',
-      },
-      {
-        'name': 'Tata Digital India Fund',
-        'category': 'Equity \u2022 Sectoral/Thematic',
-        'return': '31.5%',
-        'price': '54.60',
-      },
-      {
-        'name': 'Kotak Emerging Equity',
-        'category': 'Equity \u2022 Mid Cap',
-        'return': '32.9%',
-        'price': '122.40',
-      },
-      {
-        'name': 'DSP Micro Cap Fund',
-        'category': 'Equity \u2022 Small Cap',
-        'return': '39.4%',
-        'price': '170.80',
-      },
-      {
-        'name': 'Motilal Oswal Midcap Fund',
-        'category': 'Equity \u2022 Mid Cap',
-        'return': '38.2%',
-        'price': '88.90',
-      },
-      {
-        'name': 'Aditya Birla Frontline Equity',
-        'category': 'Equity \u2022 Large Cap',
-        'return': '21.8%',
-        'price': '425.30',
-      },
-      {
-        'name': 'UTI Flexi Cap Fund',
-        'category': 'Equity \u2022 Flexi Cap',
-        'return': '25.7%',
-        'price': '310.10',
-      },
-      {
-        'name': 'Canara Robeco Small Cap',
-        'category': 'Equity \u2022 Small Cap',
-        'return': '37.4%',
-        'price': '48.20',
-      },
-    ];
+    final funds = _topFunds;
 
     showModalBottomSheet(
       context: context,
@@ -1538,88 +1773,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   }
 
   void _showAllLiveNFOsModal() {
-    final nfos = [
-      {
-        'name': 'HDFC Nifty Next 50',
-        'date': 'Closes 19 Apr',
-        'min': 500.0,
-        'closesInDays': 14,
-        'description':
-            'Tracks the Nifty Next 50 index composed of high-performing large-cap companies.',
-      },
-      {
-        'name': 'SBI Innovation Opp.',
-        'date': 'Closes 22 Apr',
-        'min': 5000.0,
-        'closesInDays': 17,
-        'description':
-            'Invests in high-growth companies driving technological and business model innovations.',
-      },
-      {
-        'name': 'ICICI Pru Business Cycle',
-        'date': 'Closes 24 Apr',
-        'min': 1000.0,
-        'closesInDays': 19,
-        'description':
-            'Tactical allocation across sectors based on macroeconomic business cycle transitions.',
-      },
-      {
-        'name': 'Quant Tech Fund',
-        'date': 'Closes 28 Apr',
-        'min': 5000.0,
-        'closesInDays': 23,
-        'description':
-            'Focused portfolio targeting cutting-edge technology, AI, software, and semiconductor leaders.',
-      },
-      {
-        'name': 'Nippon India Power & Infra',
-        'date': 'Closes 02 May',
-        'min': 1000.0,
-        'closesInDays': 27,
-        'description':
-            'Participates in India\'s massive infrastructure, power generation, and green energy initiatives.',
-      },
-      {
-        'name': 'Mirae Asset Balanced Advantage',
-        'date': 'Closes 05 May',
-        'min': 500.0,
-        'closesInDays': 30,
-        'description':
-            'Dynamic asset allocation utilizing proprietary models to balance equity and debt structures.',
-      },
-      {
-        'name': 'Axis Consumption Fund',
-        'date': 'Closes 10 May',
-        'min': 1000.0,
-        'closesInDays': 35,
-        'description':
-            'Captures the massive growth potential of domestic middle-class consumer demand.',
-      },
-      {
-        'name': 'Kotak Multi Asset Allocator',
-        'date': 'Closes 15 May',
-        'min': 5000.0,
-        'closesInDays': 40,
-        'description':
-            'Diversified exposure across Equities, Debt, Gold, and International ETFs.',
-      },
-      {
-        'name': 'DSP Healthcare & Pharma',
-        'date': 'Closes 18 May',
-        'min': 1000.0,
-        'closesInDays': 43,
-        'description':
-            'Invests in pharmaceuticals, hospitals, diagnostics, and global contract research labs.',
-      },
-      {
-        'name': 'Tata PSU & Infrastructure',
-        'date': 'Closes 22 May',
-        'min': 500.0,
-        'closesInDays': 47,
-        'description':
-            'Strategic thematic exposure to high-yield Public Sector Undertakings and capital goods.',
-      },
-    ];
+    final nfos = _liveNfos;
 
     showModalBottomSheet(
       context: context,
@@ -1809,23 +1963,19 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
           physics: const BouncingScrollPhysics(),
           clipBehavior: Clip.none,
           child: Row(
-            children: [
-              _buildIPOCard(
-                'Emiac Technologies Ltd',
-                '27 Mar - 8 Apr',
-                '₹93-₹98',
-                lotSize: 150,
-                minAmount: '₹14,700',
-              ),
-              const SizedBox(width: 16),
-              _buildIPOCard(
-                'Safety Controls & Instrumentation Ltd',
-                '6 Apr - 8 Apr',
-                '₹75-₹80',
-                lotSize: 180,
-                minAmount: '₹14,400',
-              ),
-            ],
+            children: List.generate(_liveIpos.length > 2 ? 2 : _liveIpos.length, (index) {
+              final ipo = _liveIpos[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: _buildIPOCard(
+                  ipo['name'] as String,
+                  ipo['dates'] as String,
+                  ipo['price'] as String,
+                  lotSize: ipo['lot'] as int,
+                  minAmount: ipo['min'] as String,
+                ),
+              );
+            }),
           ),
         ),
       ],
@@ -2335,96 +2485,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     }
   }
 
-  final List<Map<String, dynamic>> _tradingIdeas = [
-    {
-      'contract': 'NIFTY 02 JUN 23900 CALL',
-      'price': '71.50',
-      'change': '-108.25 (60.22%)',
-      'isUp': false,
-      'buy': 128.50,
-      'target': 275.00,
-      'sl': 80.00,
-      'provider': 'Investogainer Research',
-      'funds': 6425.00,
-    },
-    {
-      'contract': 'BANKNIFTY 30 JUN 51200 CALL',
-      'price': '810.00',
-      'change': '-170.55 (17.39%)',
-      'isUp': false,
-      'buy': 967.00,
-      'target': 1351.00,
-      'sl': 650.00,
-      'provider': 'Lotus Funds',
-      'funds': 12150.00,
-    },
-    {
-      'contract': 'RELIANCE 30 JUN 2900 CALL',
-      'price': '88.50',
-      'change': '+12.40 (16.29%)',
-      'isUp': true,
-      'buy': 75.00,
-      'target': 150.00,
-      'sl': 50.00,
-      'provider': 'Investogainer Research',
-      'funds': 4425.00,
-    },
-    {
-      'contract': 'TCS 30 JUN 4000 CALL',
-      'price': '110.00',
-      'change': '-15.55 (12.39%)',
-      'isUp': false,
-      'buy': 125.00,
-      'target': 220.00,
-      'sl': 80.00,
-      'provider': 'Lotus Funds',
-      'funds': 5500.00,
-    },
-    {
-      'contract': 'INFY 30 JUN 1500 CALL',
-      'price': '42.15',
-      'change': '+4.80 (12.85%)',
-      'isUp': true,
-      'buy': 35.00,
-      'target': 75.00,
-      'sl': 20.00,
-      'provider': 'Investogainer Research',
-      'funds': 2107.50,
-    },
-    {
-      'contract': 'BDL 30 JUN 1200 CALL',
-      'price': '30.55',
-      'change': '-71.27 (71.27%)',
-      'isUp': false,
-      'buy': 29.05,
-      'target': 60.00,
-      'sl': 15.00,
-      'provider': 'Investogainer Research',
-      'funds': 10192.42,
-    },
-    {
-      'contract': 'ICICIBANK 30 JUN 1100 CALL',
-      'price': '35.40',
-      'change': '+3.80 (12.02%)',
-      'isUp': true,
-      'buy': 28.00,
-      'target': 55.00,
-      'sl': 18.00,
-      'provider': 'Lotus Funds',
-      'funds': 1770.00,
-    },
-    {
-      'contract': 'SBIN 30 JUN 800 PUT',
-      'price': '22.15',
-      'change': '-2.10 (8.66%)',
-      'isUp': false,
-      'buy': 25.00,
-      'target': 45.00,
-      'sl': 15.00,
-      'provider': 'Investogainer Research',
-      'funds': 1107.50,
-    },
-  ];
+
 
   void _showAllTradingIdeasModal() {
     showModalBottomSheet(
@@ -3489,29 +3550,20 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
             ],
           ),
           const SizedBox(height: 20),
-          _buildFundRow(
-            'Quant Small Cap Fund',
-            'Equity \u2022 Small Cap',
-            '45.2%',
-          ),
-          Divider(color: Colors.grey.shade100, thickness: 1, height: 32),
-          _buildFundRow(
-            'Parag Parikh Flexi Cap',
-            'Equity \u2022 Flexi Cap',
-            '28.5%',
-          ),
-          Divider(color: Colors.grey.shade100, thickness: 1, height: 32),
-          _buildFundRow(
-            'Nippon India Small Cap',
-            'Equity \u2022 Small Cap',
-            '41.8%',
-          ),
-          Divider(color: Colors.grey.shade100, thickness: 1, height: 32),
-          _buildFundRow(
-            'HDFC Mid-Cap Opportunities',
-            'Equity \u2022 Mid Cap',
-            '34.2%',
-          ),
+          ...List.generate(_topFunds.length > 4 ? 4 : _topFunds.length, (index) {
+            final fund = _topFunds[index];
+            return Column(
+              children: [
+                _buildFundRow(
+                  fund['name'] as String,
+                  fund['category'] as String,
+                  fund['return'] as String,
+                ),
+                if (index < (_topFunds.length > 4 ? 3 : _topFunds.length - 1))
+                  Divider(color: Colors.grey.shade100, thickness: 1, height: 32),
+              ],
+            );
+          }),
         ],
       ),
     );
@@ -4003,17 +4055,17 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
           physics: const BouncingScrollPhysics(),
           clipBehavior: Clip.none,
           child: Row(
-            children: [
-              _buildNFOCard('HDFC Nifty Next 50', 'Closes 19 Apr', '₹500'),
-              const SizedBox(width: 16),
-              _buildNFOCard('SBI Innovation Opp.', 'Closes 22 Apr', '₹5,000'),
-              const SizedBox(width: 16),
-              _buildNFOCard(
-                'ICICI Pru Business Cycle',
-                'Closes 24 Apr',
-                '₹1,000',
-              ),
-            ],
+            children: List.generate(_liveNfos.length > 3 ? 3 : _liveNfos.length, (index) {
+              final nfo = _liveNfos[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: _buildNFOCard(
+                  nfo['name'] as String,
+                  nfo['date'] as String,
+                  '₹${nfo['min'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                ),
+              );
+            }),
           ),
         ),
       ],
