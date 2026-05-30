@@ -29,8 +29,8 @@ class StockDetailViewScreen extends StatefulWidget {
 }
 
 class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
-  final Color kForest = const Color(0xFF1F5D3A);
-  final Color kDarkBg = const Color(0xFF111417); // Premium dark theme matching reference image
+  static const Color kForest = Color(0xFF1F5D3A);
+  static const Color kCream = Color(0xFFF2F0EB);
   int _selectedTimeframeIndex = 2; // 1M selected by default in image
   final List<String> _timeframes = ['1D', '1W', '1M'];
   bool _isPutSelected = true;
@@ -38,7 +38,7 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kDarkBg,
+      backgroundColor: kCream,
       body: SafeArea(
         child: Column(
           children: [
@@ -54,19 +54,19 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.1),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey.shade200),
                       ),
-                      child: const Icon(Icons.arrow_back, size: 18, color: Colors.white),
+                      child: const Icon(Icons.arrow_back, size: 18, color: kForest),
                     ),
                   ),
                   Row(
                     children: [
-                      Icon(Icons.calendar_today_rounded, color: Colors.grey.shade400, size: 16),
+                      Icon(Icons.calendar_today_rounded, color: Colors.grey.shade600, size: 16),
                       const SizedBox(width: 6),
                       Text(
                         widget.expiryDate,
-                        style: TextStyle(color: Colors.grey.shade400, fontWeight: FontWeight.bold, fontSize: 13),
+                        style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold, fontSize: 13),
                       ),
                     ],
                   ),
@@ -74,9 +74,10 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: Colors.white,
+                      border: Border.all(color: Colors.grey.shade200),
                     ),
-                    child: const Icon(Icons.share_outlined, size: 18, color: Colors.white),
+                    child: const Icon(Icons.share_outlined, size: 18, color: kForest),
                   ),
                 ],
               ),
@@ -92,15 +93,15 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
                     const SizedBox(height: 16),
                     // Blue up-trending icon
                     CircleAvatar(
-                      backgroundColor: Colors.blue.withValues(alpha: 0.2),
+                      backgroundColor: Colors.blue.withValues(alpha: 0.1),
                       radius: 26,
                       child: const Icon(Icons.trending_up, color: Colors.blue, size: 28),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       widget.title,
-                      style: const TextStyle(
-                        color: Colors.grey,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
                         fontWeight: FontWeight.w500,
                         fontSize: 16,
                       ),
@@ -109,7 +110,7 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
                     Text(
                       widget.price,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: kForest,
                         fontWeight: FontWeight.w900,
                         fontSize: 38,
                         letterSpacing: -1,
@@ -122,7 +123,7 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
                         Text(
                           '1D: ${widget.change}',
                           style: TextStyle(
-                            color: widget.isUp ? Colors.greenAccent : Colors.redAccent,
+                            color: widget.isUp ? Colors.green.shade700 : Colors.red.shade700,
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
                           ),
@@ -131,7 +132,7 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
                         Text(
                           '•  1M: ${widget.change}',
                           style: TextStyle(
-                            color: widget.isUp ? Colors.greenAccent : Colors.redAccent,
+                            color: widget.isUp ? Colors.green.shade700 : Colors.red.shade700,
                             fontSize: 13,
                           ),
                         ),
@@ -167,12 +168,12 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
                                 FlSpot(10, 1.2),
                               ],
                               isCurved: true,
-                              color: widget.isUp ? Colors.greenAccent : Colors.redAccent,
+                              color: widget.isUp ? Colors.green.shade600 : Colors.red.shade600,
                               barWidth: 2,
                               dotData: const FlDotData(show: false),
                               belowBarData: BarAreaData(
                                 show: true,
-                                color: (widget.isUp ? Colors.greenAccent : Colors.redAccent).withValues(alpha: 0.05),
+                                color: (widget.isUp ? Colors.green : Colors.red).withValues(alpha: 0.05),
                               ),
                             ),
                           ],
@@ -194,18 +195,18 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.05),
+                              color: Colors.white,
                               borderRadius: BorderRadius.circular(100),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                              border: Border.all(color: Colors.grey.shade300),
                             ),
                             child: Row(
                               children: [
                                 Text(
                                   _isPutSelected ? 'Put' : 'Call',
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                  style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 13),
                                 ),
                                 const SizedBox(width: 4),
-                                const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 16),
+                                const Icon(Icons.keyboard_arrow_down, color: kForest, size: 16),
                               ],
                             ),
                           ),
@@ -221,13 +222,13 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
                                 margin: const EdgeInsets.only(left: 8),
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? const Color(0xFF10B981) : Colors.transparent,
+                                  color: isSelected ? kForest : Colors.transparent,
                                   borderRadius: BorderRadius.circular(100),
                                 ),
                                 child: Text(
                                   _timeframes[index],
                                   style: TextStyle(
-                                    color: isSelected ? Colors.white : Colors.grey.shade400,
+                                    color: isSelected ? Colors.white : Colors.grey.shade600,
                                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                                     fontSize: 13,
                                   ),
@@ -249,21 +250,21 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Divider(color: Colors.white.withValues(alpha: 0.1), height: 1),
+                    Divider(color: Colors.grey.shade300, height: 1),
                     const SizedBox(height: 24),
 
                     // Underlying Index Card
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E2229),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                        border: Border.all(color: Colors.grey.shade200),
                       ),
                       child: Row(
                         children: [
                           CircleAvatar(
-                            backgroundColor: Colors.blue.withValues(alpha: 0.2),
+                            backgroundColor: Colors.blue.withValues(alpha: 0.1),
                             radius: 18,
                             child: const Icon(Icons.electric_bolt, color: Colors.blue, size: 16),
                           ),
@@ -274,19 +275,19 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
                               children: [
                                 Text(
                                   widget.underlyingIndexName,
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                  style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 14),
                                 ),
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
                                     Text(
                                       widget.underlyingIndexValue,
-                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                      style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 13),
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
                                       widget.underlyingIndexChange,
-                                      style: TextStyle(color: Colors.red.shade400, fontSize: 12),
+                                      style: TextStyle(color: Colors.red.shade700, fontSize: 12),
                                     ),
                                   ],
                                 ),
@@ -318,7 +319,7 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: isActive ? const Color(0xFF10B981) : Colors.transparent,
+            color: isActive ? kForest : Colors.transparent,
             width: 2,
           ),
         ),
@@ -326,7 +327,7 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
       child: Text(
         label,
         style: TextStyle(
-          color: isActive ? Colors.white : Colors.grey.shade500,
+          color: isActive ? kForest : Colors.grey.shade600,
           fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
           fontSize: 14,
         ),
@@ -340,18 +341,19 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1C20),
+        color: Colors.white,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, -3),
           ),
         ],
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
       ),
       child: Row(
         children: [

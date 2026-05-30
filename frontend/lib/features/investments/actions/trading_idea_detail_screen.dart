@@ -3,6 +3,9 @@ import '../../send/screens/send_transfer_screen.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
 
 class TradingIdeaDetailScreen extends StatelessWidget {
+  static const Color kForest = Color(0xFF1F5D3A);
+  static const Color kCream = Color(0xFFF2F0EB);
+
   final String title;
   final String subtitle;
   final String price;
@@ -32,12 +35,8 @@ class TradingIdeaDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const kForest = Color(0xFF1F5D3A);
-    const kCream = Color(0xFFF2F0EB);
-    const kCardBg = Color(0xFF111417); // Dark theme matching reference image
-
     return Scaffold(
-      backgroundColor: kCardBg,
+      backgroundColor: kCream,
       body: SafeArea(
         child: Column(
           children: [
@@ -52,17 +51,17 @@ class TradingIdeaDetailScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.1),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey.shade200),
                       ),
-                      child: const Icon(Icons.arrow_back, size: 18, color: Colors.white),
+                      child: const Icon(Icons.arrow_back, size: 18, color: kForest),
                     ),
                   ),
                   const SizedBox(width: 16),
                   const Text(
                     'Trading Idea',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: kForest,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
@@ -85,6 +84,7 @@ class TradingIdeaDetailScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade200),
                           ),
                           child: const Text(
                             'B',
@@ -103,7 +103,7 @@ class TradingIdeaDetailScreen extends StatelessWidget {
                               Text(
                                 title,
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: kForest,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 20,
                                 ),
@@ -114,14 +114,14 @@ class TradingIdeaDetailScreen extends StatelessWidget {
                                   Text(
                                     subtitle,
                                     style: TextStyle(
-                                      color: Colors.grey.shade400,
+                                      color: Colors.grey.shade600,
                                       fontSize: 13,
                                     ),
                                   ),
                                   const SizedBox(width: 6),
                                   Icon(
                                     Icons.info_outline,
-                                    color: Colors.grey.shade400,
+                                    color: Colors.grey.shade600,
                                     size: 14,
                                   ),
                                 ],
@@ -135,7 +135,7 @@ class TradingIdeaDetailScreen extends StatelessWidget {
                     // SL Target range slider visual (Second Image)
                     _buildSliderWidget(),
                     const SizedBox(height: 32),
-                    Divider(color: Colors.white.withValues(alpha: 0.1), height: 1),
+                    Divider(color: Colors.grey.shade300, height: 1),
                     const SizedBox(height: 24),
                     // Timestamps Row
                     Row(
@@ -146,7 +146,7 @@ class TradingIdeaDetailScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 32),
-                    Divider(color: Colors.white.withValues(alpha: 0.1), height: 1),
+                    Divider(color: Colors.grey.shade300, height: 1),
                     const SizedBox(height: 32),
                     // Charts, Alerts, Details Action Row
                     Row(
@@ -202,14 +202,14 @@ class TradingIdeaDetailScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1B3B2B),
+                          color: const Color(0xFFEAF1ED),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.green.shade600),
+                          border: Border.all(color: kForest),
                         ),
                         child: Text(
                           '$price $percentageChange',
                           style: const TextStyle(
-                            color: Colors.greenAccent,
+                            color: kForest,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -217,7 +217,7 @@ class TradingIdeaDetailScreen extends StatelessWidget {
                       ),
                       CustomPaint(
                         size: const Size(10, 8),
-                        painter: TrianglePainter(Colors.green.shade600),
+                        painter: TrianglePainter(kForest),
                       ),
                     ],
                   ),
@@ -229,7 +229,7 @@ class TradingIdeaDetailScreen extends StatelessWidget {
                   child: Container(
                     width: 2,
                     height: 20,
-                    color: Colors.greenAccent,
+                    color: kForest,
                   ),
                 ),
               ],
@@ -254,13 +254,14 @@ class TradingIdeaDetailScreen extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade900,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.grey.shade300),
                     ),
                     child: Text(
                       'Entry: ${entryPrice.toStringAsFixed(2)}',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: Colors.black87,
                         fontSize: 10,
                         fontWeight: FontWeight.w500,
                       ),
@@ -315,7 +316,7 @@ class TradingIdeaDetailScreen extends StatelessWidget {
             Text(
               'SL:$sl',
               style: TextStyle(
-                color: Colors.red.shade300,
+                color: Colors.red.shade700,
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
               ),
@@ -323,7 +324,7 @@ class TradingIdeaDetailScreen extends StatelessWidget {
             Text(
               'Target:$target',
               style: const TextStyle(
-                color: Colors.greenAccent,
+                color: kForest,
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
               ),
@@ -340,13 +341,13 @@ class TradingIdeaDetailScreen extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+          style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
         ),
         const SizedBox(height: 6),
         Text(
           value,
           style: const TextStyle(
-            color: Colors.white,
+            color: kForest,
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
@@ -361,17 +362,17 @@ class TradingIdeaDetailScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Colors.white,
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            border: Border.all(color: Colors.grey.shade200),
           ),
-          child: Icon(icon, color: Colors.grey.shade300, size: 24),
+          child: Icon(icon, color: kForest, size: 24),
         ),
         const SizedBox(height: 8),
         Text(
           label,
           style: TextStyle(
-            color: Colors.grey.shade400,
+            color: Colors.grey.shade700,
             fontWeight: FontWeight.w500,
             fontSize: 13,
           ),
@@ -384,18 +385,19 @@ class TradingIdeaDetailScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E2229),
+        color: Colors.white,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
         ],
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -406,7 +408,7 @@ class TradingIdeaDetailScreen extends StatelessWidget {
               Text(
                 'Funds Required:',
                 style: TextStyle(
-                  color: Colors.grey.shade400,
+                  color: Colors.grey.shade600,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -414,7 +416,7 @@ class TradingIdeaDetailScreen extends StatelessWidget {
               Text(
                 '₹${fundsRequired.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: kForest,
                   fontWeight: FontWeight.bold,
                   fontSize: 22,
                 ),

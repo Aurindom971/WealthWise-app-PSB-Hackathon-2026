@@ -33,18 +33,9 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
   String? _selectedAccount;
 
   final List<Map<String, dynamic>> _paymentMethods = [
-    {
-      'title': 'Bank Account',
-      'icon': Icons.account_balance_outlined,
-    },
-    {
-      'title': 'UPI',
-      'icon': Icons.phone_android_outlined,
-    },
-    {
-      'title': 'Net Banking',
-      'icon': Icons.language_outlined,
-    },
+    {'title': 'Bank Account', 'icon': Icons.account_balance_outlined},
+    {'title': 'UPI', 'icon': Icons.phone_android_outlined},
+    {'title': 'Net Banking', 'icon': Icons.language_outlined},
   ];
 
   @override
@@ -58,8 +49,11 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               child: TopBar(
                 searchText: 'Search in NFOs',
-                onHomeTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+                onHomeTap: () =>
+                    Navigator.of(context).popUntil((route) => route.isFirst),
+                onLogoutTap: () => Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/login', (route) => false),
                 onNotificationTap: () {},
               ),
             ),
@@ -71,14 +65,21 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
                     onPressed: () => Navigator.pop(context),
                     icon: Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(color: Color(0xFFF7F9F8), shape: BoxShape.circle),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF7F9F8),
+                        shape: BoxShape.circle,
+                      ),
                       child: Icon(Icons.arrow_back, color: kForest, size: 18),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'NFO Application',
-                    style: TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 18),
+                    style: TextStyle(
+                      color: kForest,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
                 ],
               ),
@@ -112,7 +113,9 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
                   arguments: {'index': index},
                 );
               },
-              onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+              onLogoutTap: () => Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/login', (route) => false),
               onNotificationTap: () {},
             ),
           ],
@@ -158,10 +161,7 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        Text(
-          widget.description,
-          style: TextStyle(color: kSub, fontSize: 14),
-        ),
+        Text(widget.description, style: TextStyle(color: kSub, fontSize: 14)),
       ],
     );
   }
@@ -177,7 +177,12 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
           widget.date,
           Colors.orange,
         ),
-        _buildStatItem('MIN. INVEST', '₹ ${widget.minInvestment.toInt()}', 'Entry Barrier', kForest),
+        _buildStatItem(
+          'MIN. INVEST',
+          '₹ ${widget.minInvestment.toInt()}',
+          'Entry Barrier',
+          kForest,
+        ),
       ],
     );
   }
@@ -212,7 +217,7 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Sectoral Distribution',
           style: TextStyle(
             color: kForest,
@@ -308,9 +313,9 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.calculate_outlined, color: kForest, size: 20),
+              Icon(Icons.calculate_outlined, color: kForest, size: 20),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Tax Efficiency Calculator',
                 style: TextStyle(
                   color: kForest,
@@ -324,7 +329,7 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
           _buildCalcRow('Long Term Capital Gains (>1Y)', '10% Tax'),
           _buildCalcRow('Indexation Benefit', 'Available'),
           const Divider(height: 24),
-          const Text(
+          Text(
             'Dynamic thematic funds offer index-like tracking efficiency with enhanced tactical flexibility.',
             style: TextStyle(color: kSub, fontSize: 11, height: 1.4),
           ),
@@ -372,7 +377,7 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Application Amount',
                 style: TextStyle(color: kSub, fontSize: 12),
               ),
@@ -399,15 +404,32 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
                     margin: EdgeInsets.only(right: idx == 2 ? 0 : 8),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: isSelected ? kForest.withValues(alpha: 0.05) : Colors.white,
+                      color: isSelected
+                          ? kForest.withValues(alpha: 0.05)
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: isSelected ? kForest : Colors.grey.shade200),
+                      border: Border.all(
+                        color: isSelected ? kForest : Colors.grey.shade200,
+                      ),
                     ),
                     child: Column(
                       children: [
-                        Icon(method['icon'], color: isSelected ? kForest : kSub, size: 20),
+                        Icon(
+                          method['icon'],
+                          color: isSelected ? kForest : kSub,
+                          size: 20,
+                        ),
                         const SizedBox(height: 4),
-                        Text(method['title'], style: TextStyle(color: isSelected ? kForest : kSub, fontSize: 10, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                        Text(
+                          method['title'],
+                          style: TextStyle(
+                            color: isSelected ? kForest : kSub,
+                            fontSize: 10,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -420,24 +442,50 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: userAccounts.where((a) => a.contains('Savings')).map((acc) {
+                children: userAccounts.where((a) => a.contains('Savings')).map((
+                  acc,
+                ) {
                   bool isAccSelected = _selectedAccount == acc;
                   return Padding(
                     padding: const EdgeInsets.only(right: 12),
                     child: GestureDetector(
                       onTap: () => setState(() => _selectedAccount = acc),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
-                          color: isAccSelected ? kForest.withValues(alpha: 0.05) : Colors.white,
+                          color: isAccSelected
+                              ? kForest.withValues(alpha: 0.05)
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: isAccSelected ? kForest : Colors.grey.shade100),
+                          border: Border.all(
+                            color: isAccSelected
+                                ? kForest
+                                : Colors.grey.shade100,
+                          ),
                         ),
                         child: Row(
                           children: [
-                            Icon(isAccSelected ? Icons.radio_button_checked : Icons.radio_button_off, color: isAccSelected ? kForest : kSub, size: 14),
+                            Icon(
+                              isAccSelected
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_off,
+                              color: isAccSelected ? kForest : kSub,
+                              size: 14,
+                            ),
                             const SizedBox(width: 8),
-                            Text(acc, style: TextStyle(color: kForest, fontSize: 11, fontWeight: isAccSelected ? FontWeight.bold : FontWeight.normal)),
+                            Text(
+                              acc,
+                              style: TextStyle(
+                                color: kForest,
+                                fontSize: 11,
+                                fontWeight: isAccSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -464,7 +512,9 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
                         toBank: "Punjab National Bank",
                         amount: widget.minInvestment.toStringAsFixed(2),
                         purpose: "NFO Subscription",
-                        fromAccount: _selectedPaymentIndex == 0 ? _selectedAccount : null,
+                        fromAccount: _selectedPaymentIndex == 0
+                            ? _selectedAccount
+                            : null,
                       ),
                     ),
                   );
@@ -474,7 +524,9 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
                     MaterialPageRoute(
                       builder: (context) => UpiScreen(
                         prefilledUpiId: "psb.invest@upi",
-                        prefilledAmount: widget.minInvestment.toStringAsFixed(2),
+                        prefilledAmount: widget.minInvestment.toStringAsFixed(
+                          2,
+                        ),
                       ),
                     ),
                   );
