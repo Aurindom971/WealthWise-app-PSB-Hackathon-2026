@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../home/widgets/home_navigation_widgets.dart';
+import '../../home/screens/notifications_screen.dart';
+
 
 class StockAnalysisScreen extends StatefulWidget {
   final String symbol;
@@ -134,13 +137,35 @@ class _StockAnalysisScreenState extends State<StockAnalysisScreen> {
         : 'Price at ${_hourlyLabels[_selectedBarIndex ?? 23]}';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB), // gray-50
+      backgroundColor: kCream,
+      bottomNavigationBar: BottomNav(
+        currentIndex: 3,
+        onTap: (index) {
+          if (index == 3) return;
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/home',
+            (route) => false,
+            arguments: {'index': index},
+          );
+        },
+        onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+        onNotificationTap: () => showNotifications(context),
+      ),
       body: SafeArea(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                searchText: 'Search stocks...',
+                onHomeTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+                onNotificationTap: () => showNotifications(context),
+              ),
+            ),
             // Header
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Row(
                 children: [
                   GestureDetector(

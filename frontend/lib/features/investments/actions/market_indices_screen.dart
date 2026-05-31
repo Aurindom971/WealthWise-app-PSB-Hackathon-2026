@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../home/widgets/home_navigation_widgets.dart';
 
 // Sparkline Painter for lightweight, high-performance drawing
 class SparklinePainter extends CustomPainter {
@@ -272,6 +273,15 @@ class _MarketIndicesScreenState extends State<MarketIndicesScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                searchText: 'Search Market Indices',
+                onHomeTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+                onNotificationTap: () {},
+              ),
+            ),
             // Header
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -494,6 +504,19 @@ class _MarketIndicesScreenState extends State<MarketIndicesScreen> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNav(
+        currentIndex: 3,
+        onTap: (index) {
+          if (index == 3) return;
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/home',
+            (route) => false,
+            arguments: {'index': index},
+          );
+        },
+        onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+        onNotificationTap: () {},
       ),
     );
   }

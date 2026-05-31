@@ -1461,7 +1461,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.75,
         decoration: const BoxDecoration(
-          color: Color(0xFFF7F9F8),
+          color: Color(0xFFF2F0EB),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(24),
             topRight: Radius.circular(24),
@@ -1609,7 +1609,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.8,
         decoration: const BoxDecoration(
-          color: Color(0xFFF7F9F8),
+          color: Color(0xFFF2F0EB),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(24),
             topRight: Radius.circular(24),
@@ -1782,7 +1782,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.8,
         decoration: const BoxDecoration(
-          color: Color(0xFFF7F9F8),
+          color: Color(0xFFF2F0EB),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(24),
             topRight: Radius.circular(24),
@@ -2495,7 +2495,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.80,
         decoration: const BoxDecoration(
-          color: Color(0xFFF7F9F8), // Light theme background
+          color: Color(0xFFF2F0EB), // Light theme background
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(24),
             topRight: Radius.circular(24),

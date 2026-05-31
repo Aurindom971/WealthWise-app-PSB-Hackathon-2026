@@ -16,9 +16,9 @@ class _FundDetailScreenState extends State<FundDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: kCream,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: kCream,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: kForest, size: 20),

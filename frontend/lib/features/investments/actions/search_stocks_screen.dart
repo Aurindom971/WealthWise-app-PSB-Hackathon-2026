@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'stock_analysis_screen.dart';
+import '../../home/widgets/home_navigation_widgets.dart';
 
 class SearchStocksScreen extends StatefulWidget {
   const SearchStocksScreen({super.key});
@@ -180,6 +181,15 @@ class _SearchStocksScreenState extends State<SearchStocksScreen> with SingleTick
             // Main Content Area
             Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  child: TopBar(
+                    searchText: 'Search Stocks',
+                    onHomeTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                    onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+                    onNotificationTap: () {},
+                  ),
+                ),
                 // Custom Header
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -503,6 +513,19 @@ class _SearchStocksScreenState extends State<SearchStocksScreen> with SingleTick
               ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNav(
+        currentIndex: 3,
+        onTap: (index) {
+          if (index == 3) return;
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/home',
+            (route) => false,
+            arguments: {'index': index},
+          );
+        },
+        onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+        onNotificationTap: () {},
       ),
     );
   }

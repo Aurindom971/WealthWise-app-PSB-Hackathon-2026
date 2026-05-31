@@ -41,7 +41,7 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: kCream,
       body: SafeArea(
         child: Column(
           children: [
@@ -103,23 +103,21 @@ class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
               ),
             ),
             _buildBottomCTA(),
-            BottomNav(
-              currentIndex: 4,
-              onTap: (index) {
-                if (index == 4) return;
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  '/home',
-                  (route) => false,
-                  arguments: {'index': index},
-                );
-              },
-              onLogoutTap: () => Navigator.of(
-                context,
-              ).pushNamedAndRemoveUntil('/login', (route) => false),
-              onNotificationTap: () {},
-            ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNav(
+        currentIndex: 4,
+        onTap: (index) {
+          if (index == 4) return;
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/home',
+            (route) => false,
+            arguments: {'index': index},
+          );
+        },
+        onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+        onNotificationTap: () {},
       ),
     );
   }

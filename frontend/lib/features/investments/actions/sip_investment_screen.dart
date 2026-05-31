@@ -149,21 +149,21 @@ class _SIPInvestmentScreenState extends State<SIPInvestmentScreen> {
                 ),
               ),
             ),
-            BottomNav(
-              currentIndex: 4,
-              onTap: (index) {
-                if (index == 4) return;
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  '/home',
-                  (route) => false,
-                  arguments: {'index': index},
-                );
-              },
-              onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
-              onNotificationTap: () {},
-            ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNav(
+        currentIndex: 4,
+        onTap: (index) {
+          if (index == 4) return;
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/home',
+            (route) => false,
+            arguments: {'index': index},
+          );
+        },
+        onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+        onNotificationTap: () {},
       ),
     );
   }
@@ -230,7 +230,7 @@ class _SIPInvestmentScreenState extends State<SIPInvestmentScreen> {
           return Container(
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: const BoxDecoration(
-              color: Color(0xFFF7F9F8),
+              color: kCream,
               borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
             ),
             child: Column(

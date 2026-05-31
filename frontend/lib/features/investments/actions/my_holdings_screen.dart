@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'stock_analysis_screen.dart';
+import '../../home/widgets/home_navigation_widgets.dart';
 
 class MyHoldingsScreen extends StatelessWidget {
   const MyHoldingsScreen({super.key});
@@ -80,6 +81,15 @@ class MyHoldingsScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                searchText: 'Search Stock Portfolio',
+                onHomeTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+                onNotificationTap: () {},
+              ),
+            ),
             // Elegant Top Header Bar
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -356,6 +366,19 @@ class MyHoldingsScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNav(
+        currentIndex: 3,
+        onTap: (index) {
+          if (index == 3) return;
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/home',
+            (route) => false,
+            arguments: {'index': index},
+          );
+        },
+        onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+        onNotificationTap: () {},
       ),
     );
   }

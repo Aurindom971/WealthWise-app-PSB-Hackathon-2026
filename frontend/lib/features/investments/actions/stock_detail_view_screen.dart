@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../send/screens/send_transfer_screen.dart';
+import '../../home/widgets/home_navigation_widgets.dart';
 
 class StockDetailViewScreen extends StatefulWidget {
   final String title;
@@ -34,6 +35,37 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
   int _selectedTimeframeIndex = 2; // 1M selected by default in image
   final List<String> _timeframes = ['1D', '1W', '1M'];
   bool _isPutSelected = true;
+  int _activeTabSegment = 0; // 0: Overview, 1: Insights, 2: News
+
+  final List<List<FlSpot>> _timeframeSpots = [
+    // 1D spots
+    [
+      const FlSpot(0, 3.2),
+      const FlSpot(2, 3.4),
+      const FlSpot(4, 3.1),
+      const FlSpot(6, 3.5),
+      const FlSpot(8, 3.8),
+      const FlSpot(10, 3.9),
+    ],
+    // 1W spots
+    [
+      const FlSpot(0, 2.5),
+      const FlSpot(2, 3.0),
+      const FlSpot(4, 2.8),
+      const FlSpot(6, 3.2),
+      const FlSpot(8, 3.6),
+      const FlSpot(10, 3.9),
+    ],
+    // 1M spots
+    [
+      const FlSpot(0, 4.0),
+      const FlSpot(2, 2.5),
+      const FlSpot(4, 3.8),
+      const FlSpot(6, 2.0),
+      const FlSpot(8, 1.8),
+      const FlSpot(10, 1.2),
+    ],
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +74,15 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: TopBar(
+                searchText: 'Search Stocks',
+                onHomeTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+                onNotificationTap: () {},
+              ),
+            ),
             // Header: Back button, Expiry & Share
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -159,14 +200,7 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
                           borderData: FlBorderData(show: false),
                           lineBarsData: [
                             LineChartBarData(
-                              spots: const [
-                                FlSpot(0, 4),
-                                FlSpot(2, 2.5),
-                                FlSpot(4, 3.8),
-                                FlSpot(6, 2.0),
-                                FlSpot(8, 1.8),
-                                FlSpot(10, 1.2),
-                              ],
+                              spots: _timeframeSpots[_selectedTimeframeIndex],
                               isCurved: true,
                               color: widget.isUp ? Colors.green.shade600 : Colors.red.shade600,
                               barWidth: 2,
@@ -244,93 +278,206 @@ class _StockDetailViewScreenState extends State<StockDetailViewScreen> {
                     // Tabs row: Overview, Insights, News
                     Row(
                       children: [
-                        _buildSectionTab('Overview', true),
-                        _buildSectionTab('Insights', false),
-                        _buildSectionTab('News', false),
+                        _buildSectionTab('Overview', 0),
+                        _buildSectionTab('Insights', 1),
+                        _buildSectionTab('News', 2),
                       ],
                     ),
                     const SizedBox(height: 16),
                     Divider(color: Colors.grey.shade300, height: 1),
                     const SizedBox(height: 24),
 
-                    // Underlying Index Card
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: Colors.blue.withValues(alpha: 0.1),
-                            radius: 18,
-                            child: const Icon(Icons.electric_bolt, color: Colors.blue, size: 16),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  widget.underlyingIndexName,
-                                  style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 14),
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Text(
-                                      widget.underlyingIndexValue,
-                                      style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 13),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      widget.underlyingIndexChange,
-                                      style: TextStyle(color: Colors.red.shade700, fontSize: 12),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
-                        ],
-                      ),
-                    ),
+                    if (_activeTabSegment == 0) _buildOverviewTab(),
+                    if (_activeTabSegment == 1) _buildInsightsTab(),
+                    if (_activeTabSegment == 2) _buildNewsTab(),
                     const SizedBox(height: 40),
                   ],
                 ),
               ),
             ),
             
-            // Bottom sell/buy buttons
-            _buildBottomTradingActions(context),
           ],
+        ),
+      ),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildBottomTradingActions(context),
+          BottomNav(
+            currentIndex: 3,
+            onTap: (index) {
+              if (index == 3) return;
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                '/home',
+                (route) => false,
+                arguments: {'index': index},
+              );
+            },
+            onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+            onNotificationTap: () {},
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTab(String label, int index) {
+    bool isActive = _activeTabSegment == index;
+    return GestureDetector(
+      onTap: () => setState(() => _activeTabSegment = index),
+      child: Container(
+        margin: const EdgeInsets.only(right: 24),
+        padding: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isActive ? kForest : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isActive ? kForest : Colors.grey.shade600,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+            fontSize: 14,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSectionTab(String label, bool isActive) {
+  Widget _buildOverviewTab() {
     return Container(
-      margin: const EdgeInsets.only(right: 24),
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: isActive ? kForest : Colors.transparent,
-            width: 2,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.blue.withValues(alpha: 0.1),
+            radius: 18,
+            child: const Icon(Icons.electric_bolt, color: Colors.blue, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.underlyingIndexName,
+                  style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      widget.underlyingIndexValue,
+                      style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      widget.underlyingIndexChange,
+                      style: TextStyle(color: Colors.red.shade700, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInsightsTab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Put-Call Ratio (PCR)',
+                style: TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('PCR (Volume): 0.88', style: TextStyle(color: kForest, fontSize: 13)),
+                  Text('Neutral', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 13)),
+                ],
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Technical Sentiment',
+                style: TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Indicators: 12 Bullish, 4 Bearish', style: TextStyle(color: kForest, fontSize: 13)),
+                  Text('Bullish', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13)),
+                ],
+              ),
+            ],
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildNewsTab() {
+    return Column(
+      children: [
+        _buildNewsItem('Nifty F&O Trade Volume Surges to New Highs', 'Global macro changes trigger active position shifting in Financial Services index options.', '2 hours ago'),
+        _buildNewsItem('Why Option Traders are Hedging at Current Strikes', 'Implied Volatility (IV) spikes ahead of upcoming central bank interest rate announcements.', '4 hours ago'),
+      ],
+    );
+  }
+
+  Widget _buildNewsItem(String title, String summary, String time) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isActive ? kForest : Colors.grey.shade600,
-          fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-          fontSize: 14,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            summary,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            time,
+            style: TextStyle(color: Colors.grey.shade400, fontSize: 10),
+          ),
+        ],
       ),
     );
   }
