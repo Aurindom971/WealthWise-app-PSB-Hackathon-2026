@@ -10,7 +10,6 @@ import 'core/services/security_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Enable global screenshot and screen recording protection
  await ScreenProtector.preventScreenshotOn();
 
   const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
