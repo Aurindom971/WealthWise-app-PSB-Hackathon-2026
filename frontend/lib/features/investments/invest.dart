@@ -2681,29 +2681,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
           ],
         ),
         const SizedBox(height: 16),
-        // Selected Pill Options (Only Options pill remains)
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(
-                  0xFF1E88E5,
-                ), // Bright options pill color matching First Image
-                borderRadius: BorderRadius.circular(100),
-              ),
-              child: const Text(
-                'Options',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
+
         // Horizontal card slider matching First Image
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
