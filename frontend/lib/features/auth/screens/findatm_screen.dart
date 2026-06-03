@@ -10,7 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 // ⚠️ Use a Google Cloud API key with BOTH enabled:
 //    • "Maps SDK for Android" (and "Maps SDK for iOS")
 //    • "Places API (New)"
-const String kGoogleApiKey = 'AIzaSyCva3C1uMfDaH4AubCeHWG1IjlJqZabnjI'
+const String kGoogleApiKey = 'AIzaSyB3nWjPoEyj7olW7EbN3eZyp8DK6Nc1yts'
 ;
 
 const Color _primary = Color(0xFF1F5D3A);
