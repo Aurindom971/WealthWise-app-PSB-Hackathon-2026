@@ -101,21 +101,21 @@ class _ExploreFundsScreenState extends State<ExploreFundsScreen> {
                 ),
               ),
             ),
-            BottomNav(
-              currentIndex: 4,
-              onTap: (index) {
-                if (index == 4) return;
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  '/home',
-                  (route) => false,
-                  arguments: {'index': index},
-                );
-              },
-              onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
-              onNotificationTap: () {},
-            ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNav(
+        currentIndex: 4,
+        onTap: (index) {
+          if (index == 4) return;
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/home',
+            (route) => false,
+            arguments: {'index': index},
+          );
+        },
+        onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+        onNotificationTap: () {},
       ),
     );
   }

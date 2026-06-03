@@ -8,13 +8,29 @@ frontend/build/
 frontend/.flutter-plugins
 frontend/.flutter-plugins-dependencies
 frontend/.env
-
-# Build artifacts (Gradle / Android)
-build/
-.gradle/
-android/.gradle/
-
-# Tool & IDE caches
+# Flutter/Dart
 .dart_tool/
-.idea/
-*.iml
+.packages
+.pub/
+build/
+
+# Android
+android/.gradle/
+android/local.properties
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# Generated files
+*.log
+*.lockgit
+# Flutter generated
+build/
+.dart_tool/
+windows/flutter/ephemeral/
+
+# Misc
+*.pdb

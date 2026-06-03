@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'actions/ipo_application_screen.dart';
 import 'actions/price_gainers_screen.dart';
+import 'actions/trading_idea_detail_screen.dart';
+import 'actions/stock_detail_view_screen.dart';
+import 'actions/dynamic_nfo_screen.dart';
+import 'dart:ui';
 import 'dart:math' as math;
 import 'actions/explore_funds_screen.dart';
 import 'actions/track_sips_screen.dart';
@@ -13,7 +17,10 @@ import 'actions/hdfc_nfo_screen.dart';
 import 'actions/sbi_innovation_nfo_screen.dart';
 import 'actions/icici_business_cycle_nfo_screen.dart';
 import 'actions/stock_analysis_screen.dart';
-import 'actions/fii_dii_insights_screen.dart';
+import 'actions/search_stocks_screen.dart';
+import 'services/investment_api_service.dart';
+import 'actions/market_indices_screen.dart';
+import 'actions/my_holdings_screen.dart';
 import '../send/screens/send_transfer_screen.dart';
 
 class InvestmentsScreen extends StatefulWidget {
@@ -27,6 +34,14 @@ class InvestmentsScreen extends StatefulWidget {
 
 class _InvestmentsScreenState extends State<InvestmentsScreen>
     with SingleTickerProviderStateMixin {
+  final InvestmentApiService _apiService = InvestmentApiService();
+
+  List<Map<String, dynamic>> _suggestedStocks = [];
+  List<Map<String, dynamic>> _liveIpos = [];
+  List<Map<String, dynamic>> _tradingIdeas = [];
+  List<Map<String, dynamic>> _topFunds = [];
+  List<Map<String, dynamic>> _liveNfos = [];
+
   int? _hoveredScreenerIndex;
   int? _activeScreenerIndex;
   int? _hoveredTableRowIndex;
@@ -40,9 +55,256 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   int _selectedMFTimeframe = 4; // Starts at 3y for MF
   int _selectedOptionChainIndex = 0; // 0: Nifty 50, 1: Sensex, 2: Bank, 3: Fin
 
+  List<MarketIndexData> get _indicesData => [
+    MarketIndexData(
+      name: 'NIFTY 50',
+      value: '22,450.20',
+      percentageChange: '+0.45%',
+      isUp: true,
+      sparklineData: [22350.0, 22390.0, 22380.0, 22410.0, 22430.0, 22450.2],
+      high: '22,480.10',
+      low: '22,340.50',
+      prevClose: '22,348.80',
+    ),
+    MarketIndexData(
+      name: 'SENSEX',
+      value: '73,885.60',
+      percentageChange: '+0.38%',
+      isUp: true,
+      sparklineData: [73600.0, 73720.0, 73680.0, 73800.0, 73840.0, 73885.6],
+      high: '74,010.50',
+      low: '73,550.20',
+      prevClose: '73,605.10',
+    ),
+    MarketIndexData(
+      name: 'NIFTY BANK',
+      value: '48,115.30',
+      percentageChange: '-0.25%',
+      isUp: false,
+      sparklineData: [48300.0, 48250.0, 48280.0, 48190.0, 48140.0, 48115.3],
+      high: '48,390.40',
+      low: '48,050.10',
+      prevClose: '48,235.80',
+    ),
+    MarketIndexData(
+      name: 'NIFTY IT',
+      value: '34,910.15',
+      percentageChange: '+1.20%',
+      isUp: true,
+      sparklineData: [34400.0, 34550.0, 34600.0, 34750.0, 34820.0, 34910.15],
+      high: '35,050.60',
+      low: '34,350.00',
+      prevClose: '34,495.20',
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
+    
+    // Seed initial data immediately before async fetch resolves
+    _suggestedStocks = [
+      {
+        'symbol': 'INFY',
+        'name': 'Infosys Ltd',
+        'price': '1,316',
+        'change': '+0.82',
+        'isUp': true,
+        'history': [1305.0, 1318.0, 1310.0, 1322.0, 1316.0],
+      },
+      {
+        'symbol': 'TCS',
+        'name': 'Tata Consultancy',
+        'price': '2,573',
+        'change': '+0.71',
+        'isUp': true,
+        'history': [2554.0, 2580.0, 2570.0, 2590.0, 2573.0],
+      },
+      {
+        'symbol': 'RELIANCE',
+        'name': 'Reliance Industries',
+        'price': '1,345',
+        'change': '+0.13',
+        'isUp': true,
+        'history': [1344.0, 1350.0, 1340.0, 1348.0, 1345.0],
+      },
+      {
+        'symbol': 'HDFCBANK',
+        'name': 'HDFC Bank Ltd',
+        'price': '794',
+        'change': '-1.96',
+        'isUp': false,
+        'history': [810.0, 805.0, 812.0, 798.0, 794.0],
+      },
+      {
+        'symbol': 'WIPRO',
+        'name': 'Wipro Ltd',
+        'price': '210',
+        'change': '+0.19',
+        'isUp': true,
+        'history': [209.0, 211.0, 210.0, 212.0, 210.0],
+      },
+    ];
+
+    _liveIpos = [
+      {
+        'name': 'Emiac Technologies Ltd',
+        'dates': '27 Mar - 8 Apr',
+        'price': '₹93-₹98',
+        'lot': 150,
+        'min': '₹14,700',
+      },
+      {
+        'name': 'Safety Controls & Instrumentation Ltd',
+        'dates': '6 Apr - 8 Apr',
+        'price': '₹75-₹80',
+        'lot': 180,
+        'min': '₹14,400',
+      },
+    ];
+
+    _tradingIdeas = [
+      {
+        'contract': 'NIFTY 02 JUN 23900 CALL',
+        'price': '71.50',
+        'change': '-108.25 (60.22%)',
+        'isUp': false,
+        'buy': 128.50,
+        'target': 275.00,
+        'sl': 80.00,
+        'provider': 'Investogainer Research',
+        'funds': 6425.00,
+      },
+      {
+        'contract': 'BANKNIFTY 30 JUN 51200 CALL',
+        'price': '810.00',
+        'change': '-170.55 (17.39%)',
+        'isUp': false,
+        'buy': 967.00,
+        'target': 1351.00,
+        'sl': 650.00,
+        'provider': 'Lotus Funds',
+        'funds': 12150.00,
+      },
+      {
+        'contract': 'RELIANCE 30 JUN 2900 CALL',
+        'price': '88.50',
+        'change': '+12.40 (16.29%)',
+        'isUp': true,
+        'buy': 75.00,
+        'target': 150.00,
+        'sl': 50.00,
+        'provider': 'Investogainer Research',
+        'funds': 4425.00,
+      },
+      {
+        'contract': 'TCS 30 JUN 4000 CALL',
+        'price': '110.00',
+        'change': '-15.55 (12.39%)',
+        'isUp': false,
+        'buy': 125.00,
+        'target': 220.00,
+        'sl': 80.00,
+        'provider': 'Lotus Funds',
+        'funds': 5500.00,
+      },
+      {
+        'contract': 'INFY 30 JUN 1500 CALL',
+        'price': '42.15',
+        'change': '+4.80 (12.85%)',
+        'isUp': true,
+        'buy': 35.00,
+        'target': 75.00,
+        'sl': 20.00,
+        'provider': 'Investogainer Research',
+        'funds': 2107.50,
+      },
+      {
+        'contract': 'BDL 30 JUN 1200 CALL',
+        'price': '30.55',
+        'change': '-71.27 (71.27%)',
+        'isUp': false,
+        'buy': 29.05,
+        'target': 60.00,
+        'sl': 15.00,
+        'provider': 'Investogainer Research',
+        'funds': 10192.42,
+      },
+      {
+        'contract': 'ICICIBANK 30 JUN 1100 CALL',
+        'price': '35.40',
+        'change': '+3.80 (12.02%)',
+        'isUp': true,
+        'buy': 28.00,
+        'target': 55.00,
+        'sl': 18.00,
+        'provider': 'Lotus Funds',
+        'funds': 1770.00,
+      },
+      {
+        'contract': 'SBIN 30 JUN 800 PUT',
+        'price': '22.15',
+        'change': '-2.10 (8.66%)',
+        'isUp': false,
+        'buy': 25.00,
+        'target': 45.00,
+        'sl': 15.00,
+        'provider': 'Investogainer Research',
+        'funds': 1107.50,
+      },
+    ];
+
+    _topFunds = [
+      {
+        'name': 'Quant Small Cap Fund',
+        'category': 'Equity • Small Cap',
+        'return': '45.2%',
+        'price': '214.20',
+      },
+      {
+        'name': 'Parag Parikh Flexi Cap',
+        'category': 'Equity • Flexi Cap',
+        'return': '28.5%',
+        'price': '85.40',
+      },
+      {
+        'name': 'Nippon India Small Cap',
+        'category': 'Equity • Small Cap',
+        'return': '41.8%',
+        'price': '135.10',
+      },
+      {
+        'name': 'HDFC Mid-Cap Opportunities',
+        'category': 'Equity • Mid Cap',
+        'return': '34.2%',
+        'price': '160.50',
+      },
+    ];
+
+    _liveNfos = [
+      {
+        'name': 'HDFC Nifty Next 50',
+        'date': 'Closes 19 Apr',
+        'min': 500.0,
+        'closesInDays': 14,
+        'description': 'Tracks the Nifty Next 50 index composed of high-performing large-cap companies.',
+      },
+      {
+        'name': 'SBI Innovation Opp.',
+        'date': 'Closes 22 Apr',
+        'min': 5000.0,
+        'closesInDays': 17,
+        'description': 'Invests in high-growth companies driving technological and business model innovations.',
+      },
+      {
+        'name': 'ICICI Pru Business Cycle',
+        'date': 'Closes 24 Apr',
+        'min': 1000.0,
+        'closesInDays': 19,
+        'description': 'Tactical allocation across sectors based on macroeconomic business cycle transitions.',
+      },
+    ];
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -50,6 +312,30 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    _loadApiData();
+  }
+
+  Future<void> _loadApiData() async {
+    try {
+      final stocks = await _apiService.fetchSuggestedStocks();
+      final ipos = await _apiService.fetchLiveIpos();
+      final ideas = await _apiService.fetchTradingIdeas();
+      final funds = await _apiService.fetchTopFunds();
+      final nfos = await _apiService.fetchLiveNfos();
+      
+      if (mounted) {
+        setState(() {
+          _suggestedStocks = stocks;
+          _liveIpos = ipos;
+          _tradingIdeas = ideas;
+          _topFunds = funds;
+          _liveNfos = nfos;
+        });
+      }
+    } catch (e) {
+      // Keep fallback values in case of error
+    }
   }
 
   @override
@@ -79,7 +365,19 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
             if (_selectedTab == 0) ...[
               _buildStockSummary(),
               const SizedBox(height: 16),
-              _buildQuickActions(),
+              _buildQuickActions(isStocks: true),
+              const SizedBox(height: 16),
+              MarketIndicesCarousel(
+                indices: _indicesData,
+                onTapIndex: (indexData) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MarketIndicesScreen(),
+                    ),
+                  );
+                },
+              ),
               const SizedBox(height: 16),
               _buildNavChart(),
               const SizedBox(height: 16),
@@ -93,8 +391,6 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
               _buildScreenersSection(),
               const SizedBox(height: 16),
               _buildOptionChainSection(),
-              const SizedBox(height: 16),
-              _buildFIIDIISection(),
               const SizedBox(height: 16),
               _buildMarketMoversSection(),
               const SizedBox(height: 32),
@@ -156,129 +452,230 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   }
 
   Widget _buildStockSummary() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Stock Summary',
-            style: TextStyle(
-              color: kDarkGreen,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              SizedBox(
-                width: 110,
-                height: 110,
-                child: TweenAnimationBuilder<double>(
-                  key: const ValueKey('stock_donut_chart'),
-                  tween: Tween<double>(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 1000),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return CustomPaint(
-                      painter: DonutPainter(0.87, kOrange, kDarkGreen, value),
-                    );
-                  },
-                ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MyHoldingsScreen()),
+        );
+      },
+      child: CustomPaint(
+        painter: DottedBorderPainter(
+          color: Colors.grey.shade300,
+          strokeWidth: 1.2,
+          gap: 4,
+          borderRadius: 16,
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.015),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              const SizedBox(width: 28),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Total Investment',
-                      style: TextStyle(
-                        color: kDarkGreen,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Stock Summary',
+                    style: TextStyle(
+                      color: kDarkGreen,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '₹50,000',
-                      style: TextStyle(
-                        color: kDarkGreen,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22,
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        'View All',
+                        style: TextStyle(
+                          color: kDarkGreen.withValues(alpha: 0.7),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Total Profit',
-                      style: TextStyle(
-                        color: kDarkGreen,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: kDarkGreen.withValues(alpha: 0.7),
+                        size: 18,
                       ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  SizedBox(
+                    width: 110,
+                    height: 110,
+                    child: TweenAnimationBuilder<double>(
+                      key: const ValueKey('stock_donut_chart'),
+                      tween: Tween<double>(begin: 0.0, end: 1.0),
+                      duration: const Duration(milliseconds: 1000),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, child) {
+                        return CustomPaint(
+                          painter: DonutPainter(
+                            0.87,
+                            kOrange,
+                            kDarkGreen,
+                            value,
+                          ),
+                        );
+                      },
                     ),
-                    const SizedBox(height: 2),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                  ),
+                  const SizedBox(width: 28),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '₹7,500',
+                          'Total Investment',
+                          style: TextStyle(
+                            color: kDarkGreen,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '₹50,000',
                           style: TextStyle(
                             color: kDarkGreen,
                             fontWeight: FontWeight.bold,
-                            fontSize: 20,
+                            fontSize: 22,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 2),
-                          child: Text(
-                            '+15%',
-                            style: TextStyle(
-                              color: kDarkGreen,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Total Profit',
+                          style: TextStyle(
+                            color: kDarkGreen,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
                           ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '₹7,500',
+                              style: TextStyle(
+                                color: kDarkGreen,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 2),
+                              child: Text(
+                                '+15%',
+                                style: TextStyle(
+                                  color: kDarkGreen,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 28),
+              Row(
+                children: [
+                  CircleAvatar(backgroundColor: kOrange, radius: 5),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Investment (87%)',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
+                  const Spacer(),
+                  CircleAvatar(backgroundColor: kDarkGreen, radius: 5),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Profit (13%)',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
+                  const Spacer(),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 28),
-          Row(
-            children: [
-              CircleAvatar(backgroundColor: kOrange, radius: 5),
-              const SizedBox(width: 8),
-              Text(
-                'Investment (87%)',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-              ),
-              const Spacer(),
-              CircleAvatar(backgroundColor: kDarkGreen, radius: 5),
-              const SizedBox(width: 8),
-              Text(
-                'Profit (13%)',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-              ),
-              const Spacer(),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildQuickActions() {
+  Widget _buildQuickActions({bool isStocks = false}) {
+    if (isStocks) {
+      return Row(
+        children: [
+          Expanded(
+            child: _buildActionItem(
+              Icons.search_rounded,
+              'Search\nStocks',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SearchStocksScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildActionItem(
+              Icons.show_chart_rounded,
+              'Market\nIndices',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MarketIndicesScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _buildActionItem(
+              Icons.pie_chart_rounded,
+              'Stock\nPortfolio',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MyHoldingsScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    }
+
     return Row(
       children: [
         Expanded(
@@ -307,21 +704,6 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                 MaterialPageRoute(
                   builder: (context) =>
                       const SIPInvestmentScreen(fundName: 'Multiple Funds'),
-                ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildActionItem(
-            Icons.search_rounded,
-            'Explore\nFunds',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ExploreFundsScreen(),
                 ),
               );
             },
@@ -518,161 +900,168 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   Widget _buildNavChart() {
     final chartData = _getChartData();
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+    return CustomPaint(
+      painter: DottedBorderPainter(
+        color: Colors.grey.shade300,
+        strokeWidth: 1.2,
+        gap: 4,
+        borderRadius: 16,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'NAV',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'NAV',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '₹7,500',
-            style: TextStyle(
-              color: kDarkGreen,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
+            const SizedBox(height: 4),
+            Text(
+              '₹7,500',
+              style: TextStyle(
+                color: kDarkGreen,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            chartData.changeLabel,
-            style: TextStyle(
-              color: chartData.changeColor,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+            const SizedBox(height: 2),
+            Text(
+              chartData.changeLabel,
+              style: TextStyle(
+                color: chartData.changeColor,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-          const SizedBox(height: 32),
-          SizedBox(
-            height: 180,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: true,
-                  drawHorizontalLine: true,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.shade200,
-                    strokeWidth: 1,
-                    dashArray: [4, 4],
-                  ),
-                  getDrawingVerticalLine: (value) => FlLine(
-                    color: Colors.grey.shade200,
-                    strokeWidth: 1,
-                    dashArray: [4, 4],
-                  ),
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 40,
-                      interval: chartData.intervalY,
-                      getTitlesWidget: (value, meta) {
-                        return SideTitleWidget(
-                          meta: meta,
-                          space: 8.0,
-                          child: Text(
-                            value.toInt().toString(),
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontSize: 10,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
-                        );
-                      },
+            const SizedBox(height: 32),
+            SizedBox(
+              height: 180,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: true,
+                    drawHorizontalLine: true,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: Colors.grey.shade200,
+                      strokeWidth: 1,
+                      dashArray: [4, 4],
+                    ),
+                    getDrawingVerticalLine: (value) => FlLine(
+                      color: Colors.grey.shade200,
+                      strokeWidth: 1,
+                      dashArray: [4, 4],
                     ),
                   ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      interval: 2,
-                      getTitlesWidget: (value, meta) {
-                        String text = '';
-                        int idx = (value.toInt() ~/ 2);
-                        if (idx >= 0 && idx < chartData.xLabels.length) {
-                          text = chartData.xLabels[idx];
-                        }
-                        return SideTitleWidget(
-                          meta: meta,
-                          space: 8.0,
-                          child: Text(
-                            text,
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontSize: 10,
+                  titlesData: FlTitlesData(
+                    show: true,
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 40,
+                        interval: chartData.intervalY,
+                        getTitlesWidget: (value, meta) {
+                          return SideTitleWidget(
+                            meta: meta,
+                            space: 8.0,
+                            child: Text(
+                              value.toInt().toString(),
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 10,
+                              ),
+                              textAlign: TextAlign.right,
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 2,
+                        getTitlesWidget: (value, meta) {
+                          String text = '';
+                          int idx = (value.toInt() ~/ 2);
+                          if (idx >= 0 && idx < chartData.xLabels.length) {
+                            text = chartData.xLabels[idx];
+                          }
+                          return SideTitleWidget(
+                            meta: meta,
+                            space: 8.0,
+                            child: Text(
+                              text,
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 10,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
+                  borderData: FlBorderData(show: false),
+                  minX: 0,
+                  maxX: 10,
+                  minY: chartData.minY,
+                  maxY: chartData.maxY,
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: chartData.spots,
+                      isCurved: true,
+                      curveSmoothness: 0.35,
+                      color: kDarkGreen,
+                      barWidth: 2,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: false),
+                      belowBarData: BarAreaData(show: false),
+                    ),
+                  ],
                 ),
-                borderData: FlBorderData(show: false),
-                minX: 0,
-                maxX: 10,
-                minY: chartData.minY,
-                maxY: chartData.maxY,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: chartData.spots,
-                    isCurved: true,
-                    curveSmoothness: 0.35,
-                    color: kDarkGreen,
-                    barWidth: 2,
-                    isStrokeCapRound: true,
-                    dotData: const FlDotData(show: false),
-                    belowBarData: BarAreaData(show: false),
-                  ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: [
+                  _buildTimeFrame('1m', 0),
+                  const SizedBox(width: 8),
+                  _buildTimeFrame('3m', 1),
+                  const SizedBox(width: 8),
+                  _buildTimeFrame('6m', 2),
+                  const SizedBox(width: 8),
+                  _buildTimeFrame('1y', 3),
+                  const SizedBox(width: 8),
+                  _buildTimeFrame('3y', 4),
+                  const SizedBox(width: 8),
+                  _buildTimeFrame('5y', 5),
+                  const SizedBox(width: 8),
+                  _buildTimeFrame('max', 6),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            physics: const BouncingScrollPhysics(),
-            child: Row(
-              children: [
-                _buildTimeFrame('1m', 0),
-                const SizedBox(width: 8),
-                _buildTimeFrame('3m', 1),
-                const SizedBox(width: 8),
-                _buildTimeFrame('6m', 2),
-                const SizedBox(width: 8),
-                _buildTimeFrame('1y', 3),
-                const SizedBox(width: 8),
-                _buildTimeFrame('3y', 4),
-                const SizedBox(width: 8),
-                _buildTimeFrame('5y', 5),
-                const SizedBox(width: 8),
-                _buildTimeFrame('max', 6),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -703,22 +1092,53 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Market',
-          style: TextStyle(
-            color: Color(0xFF111827),
-            fontWeight: FontWeight.w900,
-            fontSize: 28,
-            letterSpacing: -1,
-          ),
-        ),
-        const Text(
-          'Suggested Stock Prices',
-          style: TextStyle(
-            color: Color(0xFF6B7280),
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Market',
+                  style: TextStyle(
+                    color: Color(0xFF111827),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 28,
+                    letterSpacing: -1,
+                  ),
+                ),
+                const Text(
+                  'Suggested Stock Prices',
+                  style: TextStyle(
+                    color: Color(0xFF6B7280),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: _showAllSuggestedStocksModal,
+              child: Row(
+                children: [
+                  Text(
+                    'View More',
+                    style: TextStyle(
+                      color: kDarkGreen.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: kDarkGreen.withValues(alpha: 0.7),
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         Container(
@@ -736,55 +1156,182 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
             ],
           ),
           child: Column(
-            children: [
-              _buildStockRow(
-                'INFY',
-                'Infosys Ltd',
-                '1,316',
-                '+0.82',
-                true,
-                [1305, 1318, 1310, 1322, 1316],
-              ),
-              Divider(color: Colors.grey.shade100, height: 1),
-              _buildStockRow(
-                'TCS',
-                'Tata Consultancy',
-                '2,573',
-                '+0.71',
-                true,
-                [2554, 2580, 2570, 2590, 2573],
-              ),
-              Divider(color: Colors.grey.shade100, height: 1),
-              _buildStockRow(
-                'RELIANCE',
-                'Reliance Industries',
-                '1,345',
-                '+0.13',
-                true,
-                [1344, 1350, 1340, 1348, 1345],
-              ),
-              Divider(color: Colors.grey.shade100, height: 1),
-              _buildStockRow(
-                'HDFCBANK',
-                'HDFC Bank Ltd',
-                '794',
-                '-1.96',
-                false,
-                [810, 805, 812, 798, 794],
-              ),
-              Divider(color: Colors.grey.shade100, height: 1),
-              _buildStockRow(
-                'WIPRO',
-                'Wipro Ltd',
-                '210',
-                '+0.19',
-                true,
-                [209, 211, 210, 212, 210],
-              ),
-            ],
+            children: List.generate(_suggestedStocks.length > 5 ? 5 : _suggestedStocks.length, (index) {
+              final stock = _suggestedStocks[index];
+              return Column(
+                children: [
+                  _buildStockRow(
+                    stock['symbol'] as String,
+                    stock['name'] as String,
+                    stock['price'] as String,
+                    stock['change'] as String,
+                    stock['isUp'] as bool,
+                    (stock['history'] as List).cast<double>(),
+                  ),
+                  if (index < (_suggestedStocks.length > 5 ? 4 : _suggestedStocks.length - 1))
+                    Divider(color: Colors.grey.shade100, height: 1),
+                ],
+              );
+            }),
           ),
         ),
       ],
+    );
+  }
+
+  void _showAllSuggestedStocksModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Color(0xFFF2F0EB), // kCream original theme
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'All Suggested Stocks',
+                    style: TextStyle(
+                      color: kDarkGreen,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: kDarkGreen),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                itemCount: _suggestedStocks.length,
+                separatorBuilder: (context, index) => Divider(color: Colors.grey.shade200, height: 16),
+                itemBuilder: (context, index) {
+                  final stock = _suggestedStocks[index];
+                  final List<double> history = (stock['history'] as List).cast<double>();
+                  final bool isUp = stock['isUp'] as bool;
+                  
+                  return Card(
+                    color: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.shade100),
+                    ),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => StockAnalysisScreen(
+                              symbol: stock['symbol'] as String,
+                              name: stock['name'] as String,
+                              price: stock['price'] as String,
+                              change: stock['change'] as String,
+                              isUp: isUp,
+                              history: history,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    stock['symbol'] as String,
+                                    style: TextStyle(
+                                      color: kDarkGreen,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    stock['name'] as String,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade500,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              width: 60,
+                              height: 30,
+                              child: CustomPaint(
+                                painter: MiniGraphPainter(
+                                  history,
+                                  isUp ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '₹${stock['price']}',
+                                  style: TextStyle(
+                                    color: kDarkGreen,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${stock['change']}%',
+                                  style: TextStyle(
+                                    color: isUp ? Colors.green.shade700 : Colors.red.shade700,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -815,9 +1362,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
         margin: const EdgeInsets.only(bottom: 4),
-        decoration: const BoxDecoration(
-          color: Colors.transparent,
-        ),
+        decoration: const BoxDecoration(color: Colors.transparent),
         child: Row(
           children: [
             Expanded(
@@ -879,14 +1424,18 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                     children: [
                       Icon(
                         isUp ? Icons.trending_up : Icons.trending_down,
-                        color: isUp ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                        color: isUp
+                            ? const Color(0xFF10B981)
+                            : const Color(0xFFEF4444),
                         size: 14,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '$change%',
                         style: TextStyle(
-                          color: isUp ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                          color: isUp
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFFEF4444),
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),
@@ -902,17 +1451,511 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     );
   }
 
+  void _showAllIPOsModal() {
+    final ipos = _liveIpos;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: const BoxDecoration(
+          color: Color(0xFFF2F0EB),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'All Live & Upcoming IPOs',
+                    style: TextStyle(
+                      color: kDarkGreen,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
+                ),
+                itemCount: ipos.length,
+                itemBuilder: (context, index) {
+                  final ipo = ipos[index];
+                  return Card(
+                    color: Colors.white,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(16),
+                      leading: CircleAvatar(
+                        backgroundColor: kLightGreenBg,
+                        child: Icon(Icons.business_outlined, color: kDarkGreen),
+                      ),
+                      title: Text(
+                        ipo['name'] as String,
+                        style: TextStyle(
+                          color: kDarkGreen,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 6),
+                          Text(
+                            ipo['dates'] as String,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Min. Amt: ${ipo['min']} \u2022 Lot: ${ipo['lot']} shares',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      trailing: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            ipo['price'] as String,
+                            style: TextStyle(
+                              color: kDarkGreen,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Apply',
+                            style: TextStyle(
+                              color: Colors.blue.shade600,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => IPOApplicationScreen(
+                              companyName: ipo['name'] as String,
+                              dates: ipo['dates'] as String,
+                              priceRange: ipo['price'] as String,
+                              lotSize: ipo['lot'] as int,
+                              minAmount: ipo['min'] as String,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAllTopFundsModal() {
+    final funds = _topFunds;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: const BoxDecoration(
+          color: Color(0xFFF2F0EB),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Top Performing Funds',
+                    style: TextStyle(
+                      color: kDarkGreen,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
+                ),
+                itemCount: funds.length,
+                itemBuilder: (context, index) {
+                  final fund = funds[index];
+                  return Card(
+                    color: Colors.white,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FundDetailScreen(
+                              fundName: fund['name'] as String,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    fund['name'] as String,
+                                    style: TextStyle(
+                                      color: kDarkGreen,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    fund['category'] as String,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      fund['return'] as String,
+                                      style: const TextStyle(
+                                        color: Color(0xFF63977B),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '3Y Return',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade500,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(width: 16),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    QuickCheckoutModal.show(
+                                      context,
+                                      fund['name'] as String,
+                                      fund['price'] as String,
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: kDarkGreen,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Text(
+                                      'Invest',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAllLiveNFOsModal() {
+    final nfos = _liveNfos;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: const BoxDecoration(
+          color: Color(0xFFF2F0EB),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'All Live & Upcoming NFOs',
+                    style: TextStyle(
+                      color: kDarkGreen,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
+                ),
+                itemCount: nfos.length,
+                itemBuilder: (context, index) {
+                  final nfo = nfos[index];
+                  return Card(
+                    color: Colors.white,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(16),
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.blue.shade50,
+                        child: Icon(
+                          Icons.trending_up,
+                          color: Colors.blue.shade600,
+                        ),
+                      ),
+                      title: Text(
+                        nfo['name'] as String,
+                        style: TextStyle(
+                          color: kDarkGreen,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 6),
+                          Text(
+                            nfo['date'] as String,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Min. Invest: \u20B9${(nfo['min'] as double).toInt()}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      trailing: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Apply Now',
+                            style: TextStyle(
+                              color: kDarkGreen,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DynamicNFOScreen(
+                              name: nfo['name'] as String,
+                              date: nfo['date'] as String,
+                              minInvestment: nfo['min'] as double,
+                              closesInDays: nfo['closesInDays'] as int,
+                              description: nfo['description'] as String,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildLiveIPOs() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Live IPOs',
-          style: TextStyle(
-            color: kDarkGreen,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Live IPOs',
+              style: TextStyle(
+                color: kDarkGreen,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            GestureDetector(
+              onTap: _showAllIPOsModal,
+              child: Row(
+                children: [
+                  Text(
+                    'View More',
+                    style: TextStyle(
+                      color: kDarkGreen.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: kDarkGreen.withValues(alpha: 0.7),
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         SingleChildScrollView(
@@ -920,31 +1963,32 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
           physics: const BouncingScrollPhysics(),
           clipBehavior: Clip.none,
           child: Row(
-            children: [
-              _buildIPOCard(
-                'Emiac Technologies Ltd',
-                '27 Mar - 8 Apr',
-                '₹93-₹98',
-                lotSize: 150,
-                minAmount: '₹14,700',
-              ),
-              const SizedBox(width: 16),
-              _buildIPOCard(
-                'Safety Controls & Instrumentation Ltd',
-                '6 Apr - 8 Apr',
-                '₹75-₹80',
-                lotSize: 180,
-                minAmount: '₹14,400',
-              ),
-            ],
+            children: List.generate(_liveIpos.length > 2 ? 2 : _liveIpos.length, (index) {
+              final ipo = _liveIpos[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: _buildIPOCard(
+                  ipo['name'] as String,
+                  ipo['dates'] as String,
+                  ipo['price'] as String,
+                  lotSize: ipo['lot'] as int,
+                  minAmount: ipo['min'] as String,
+                ),
+              );
+            }),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildIPOCard(String name, String date, String priceRange,
-      {required int lotSize, required String minAmount}) {
+  Widget _buildIPOCard(
+    String name,
+    String date,
+    String priceRange, {
+    required int lotSize,
+    required String minAmount,
+  }) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -1042,269 +2086,276 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   Widget _buildFnODistribution() {
     final chartData = _getFnOLineChartData();
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+    return CustomPaint(
+      painter: DottedBorderPainter(
+        color: Colors.grey.shade300,
+        strokeWidth: 1.2,
+        gap: 4,
+        borderRadius: 16,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'F&O Distribution',
-            style: TextStyle(
-              color: kDarkGreen,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              SizedBox(
-                width: 100,
-                height: 100,
-                child: TweenAnimationBuilder<double>(
-                  key: const ValueKey('fnO_donut_chart'),
-                  tween: Tween<double>(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 1000),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return CustomPaint(
-                      painter: DonutPainter(
-                        0.58,
-                        kDarkGreen,
-                        Colors.red.shade700,
-                        value,
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 32),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(backgroundColor: kDarkGreen, radius: 4),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Call OI',
-                        style: TextStyle(color: Colors.black54, fontSize: 12),
-                      ),
-                      const SizedBox(width: 48),
-                      const Text(
-                        '58%',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.red.shade700,
-                        radius: 4,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Put OI',
-                        style: TextStyle(color: Colors.black54, fontSize: 12),
-                      ),
-                      const SizedBox(width: 48),
-                      const Text(
-                        '42%',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Nifty 50 Futures',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '22,514.00',
-                    style: TextStyle(
-                      color: kDarkGreen,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    chartData.changeLabel,
-                    style: TextStyle(
-                      color: chartData.changeColor,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          SizedBox(
-            height: 180,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: true,
-                  drawHorizontalLine: true,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.shade200,
-                    strokeWidth: 1,
-                    dashArray: [4, 4],
-                  ),
-                  getDrawingVerticalLine: (value) => FlLine(
-                    color: Colors.grey.shade200,
-                    strokeWidth: 1,
-                    dashArray: [4, 4],
-                  ),
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 42,
-                      interval: chartData.intervalY,
-                      getTitlesWidget: (value, meta) {
-                        return SideTitleWidget(
-                          meta: meta,
-                          space: 8.0,
-                          child: Text(
-                            '${(value / 1000).toInt()}k',
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontSize: 10,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      interval: 2,
-                      getTitlesWidget: (value, meta) {
-                        String text = '';
-                        int idx = (value.toInt() ~/ 2);
-                        if (idx >= 0 && idx < chartData.xLabels.length) {
-                          text = chartData.xLabels[idx];
-                        }
-                        return SideTitleWidget(
-                          meta: meta,
-                          space: 8.0,
-                          child: Text(
-                            text,
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontSize: 10,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                minX: 0,
-                maxX: 10,
-                minY: chartData.minY,
-                maxY: chartData.maxY,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: chartData.spots,
-                    isCurved: true,
-                    curveSmoothness: 0.35,
-                    color: kDarkGreen,
-                    barWidth: 2,
-                    isStrokeCapRound: true,
-                    dotData: const FlDotData(show: false),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: kDarkGreen.withValues(alpha: 0.1),
-                    ),
-                  ),
-                ],
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'F&O Distribution',
+              style: TextStyle(
+                color: kDarkGreen,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            physics: const BouncingScrollPhysics(),
-            child: Row(
-              children: ['1m', '3m', '6m', '1y', '3y', '5y', 'max'].map((t) {
-                int index = [
-                  '1m',
-                  '3m',
-                  '6m',
-                  '1y',
-                  '3y',
-                  '5y',
-                  'max',
-                ].indexOf(t);
-                bool isSelected = _selectedFnOTimeframe == index;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedFnOTimeframe = index),
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                SizedBox(
+                  width: 100,
+                  height: 100,
+                  child: TweenAnimationBuilder<double>(
+                    key: const ValueKey('fnO_donut_chart'),
+                    tween: Tween<double>(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 1000),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) {
+                      return CustomPaint(
+                        painter: DonutPainter(
+                          0.58,
+                          kDarkGreen,
+                          Colors.red.shade700,
+                          value,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 32),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(backgroundColor: kDarkGreen, radius: 4),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Call OI',
+                          style: TextStyle(color: Colors.black54, fontSize: 12),
+                        ),
+                        const SizedBox(width: 48),
+                        const Text(
+                          '58%',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     ),
-                    decoration: BoxDecoration(
-                      color: isSelected ? kDarkGreen : Colors.transparent,
-                      borderRadius: BorderRadius.circular(16),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.red.shade700,
+                          radius: 4,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Put OI',
+                          style: TextStyle(color: Colors.black54, fontSize: 12),
+                        ),
+                        const SizedBox(width: 48),
+                        const Text(
+                          '42%',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      t,
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Nifty 50 Futures',
                       style: TextStyle(
-                        color: isSelected ? Colors.white : kDarkGreen,
-                        fontSize: 12,
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.w500,
+                        color: Colors.grey.shade600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '22,514.00',
+                      style: TextStyle(
+                        color: kDarkGreen,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      chartData.changeLabel,
+                      style: TextStyle(
+                        color: chartData.changeColor,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              height: 180,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: true,
+                    drawHorizontalLine: true,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: Colors.grey.shade200,
+                      strokeWidth: 1,
+                      dashArray: [4, 4],
+                    ),
+                    getDrawingVerticalLine: (value) => FlLine(
+                      color: Colors.grey.shade200,
+                      strokeWidth: 1,
+                      dashArray: [4, 4],
+                    ),
+                  ),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 42,
+                        interval: chartData.intervalY,
+                        getTitlesWidget: (value, meta) {
+                          return SideTitleWidget(
+                            meta: meta,
+                            space: 8.0,
+                            child: Text(
+                              '${(value / 1000).toInt()}k',
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 10,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 2,
+                        getTitlesWidget: (value, meta) {
+                          String text = '';
+                          int idx = (value.toInt() ~/ 2);
+                          if (idx >= 0 && idx < chartData.xLabels.length) {
+                            text = chartData.xLabels[idx];
+                          }
+                          return SideTitleWidget(
+                            meta: meta,
+                            space: 8.0,
+                            child: Text(
+                              text,
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 10,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
-                );
-              }).toList(),
+                  borderData: FlBorderData(show: false),
+                  minX: 0,
+                  maxX: 10,
+                  minY: chartData.minY,
+                  maxY: chartData.maxY,
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: chartData.spots,
+                      isCurved: true,
+                      curveSmoothness: 0.35,
+                      color: kDarkGreen,
+                      barWidth: 2,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: false),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: kDarkGreen.withValues(alpha: 0.1),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: ['1m', '3m', '6m', '1y', '3y', '5y', 'max'].map((t) {
+                  int index = [
+                    '1m',
+                    '3m',
+                    '6m',
+                    '1y',
+                    '3y',
+                    '5y',
+                    'max',
+                  ].indexOf(t);
+                  bool isSelected = _selectedFnOTimeframe == index;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedFnOTimeframe = index),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected ? kDarkGreen : Colors.transparent,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        t,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : kDarkGreen,
+                          fontSize: 12,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1434,772 +2485,386 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     }
   }
 
-  Widget _buildScreenersSection() {
-    bool isSplit = _activeScreenerIndex != null;
 
-    return Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+
+  void _showAllTradingIdeasModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.80,
+        decoration: const BoxDecoration(
+          color: Color(0xFFF2F0EB), // Light theme background
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
           children: [
-            // Left Panel (Fixed Width if Split)
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'All F&O Trading Ideas',
+                    style: TextStyle(
+                      color: kDarkGreen,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: kDarkGreen),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
             Expanded(
-              flex: isSplit ? 1 : 1,
-              child: Container(
-                padding: EdgeInsets.all(isSplit ? 8 : 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade200),
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Screeners',
-                            overflow: TextOverflow.ellipsis,
+                itemCount: _tradingIdeas.length,
+                itemBuilder: (context, index) {
+                  final idea = _tradingIdeas[index];
+                  return Card(
+                    color: Colors.white,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: Colors.grey.shade200,
+                      ),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(16),
+                      leading: CircleAvatar(
+                        backgroundColor: kLightGreenBg,
+                        child: Icon(
+                          Icons.swap_vert_rounded,
+                          color: kDarkGreen,
+                        ),
+                      ),
+                      title: Text(
+                        idea['contract'] as String,
+                        style: TextStyle(
+                          color: kDarkGreen,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 6),
+                          Text(
+                            'Buy: ${idea['buy']} \u2022 Target: ${idea['target']}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Powered by ${idea['provider']}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      trailing: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            idea['price'] as String,
                             style: TextStyle(
                               color: kDarkGreen,
                               fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                              fontSize: 14,
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 6),
+                          Text(
+                            idea['change'] as String,
+                            style: TextStyle(
+                              color: idea['isUp'] ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TradingIdeaDetailScreen(
+                              title: idea['contract'] as String,
+                              price: idea['price'] as String,
+                              percentageChange: idea['change'] as String,
+                              entryPrice: idea['buy'] as double,
+                              sl: idea['sl'] as double,
+                              target: idea['target'] as double,
+                              fundsRequired: idea['funds'] as double,
+                              provider: idea['provider'] as String,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                    const SizedBox(height: 16),
-                    GridView.count(
-                      crossAxisCount: isSplit ? 2 : 3,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      childAspectRatio: isSplit ? 0.8 : 0.85,
-                      children: [
-                        _buildEnhancedScreenerCard(
-                          0,
-                          'Highest OI CPR',
-                          Icons.bar_chart_rounded,
-                          'C/P',
-                          'Highest Open Interest Call-to-Put Ratio: Bullish indicator',
-                        ),
-                        _buildEnhancedScreenerCard(
-                          1,
-                          'Highest OI PCR',
-                          Icons.bar_chart_rounded,
-                          'P/C',
-                          'Highest Open Interest Put-to-Call Ratio: Bearish indicator',
-                        ),
-                        _buildEnhancedScreenerCard(
-                          2,
-                          'Highest Vol.\nCPR',
-                          Icons.bar_chart_rounded,
-                          'C/P',
-                          'Instruments with peak Call Volume over Put Volume',
-                        ),
-                        _buildEnhancedScreenerCard(
-                          3,
-                          'Highest Vol.\nPCR',
-                          Icons.bar_chart_rounded,
-                          'P/C',
-                          'Instruments with peak Put Volume over Call Volume',
-                        ),
-                        _buildEnhancedScreenerCard(
-                          4,
-                          'Unusual Call\nVolume',
-                          Icons.arrow_upward_rounded,
-                          null,
-                          'Unusual surge in Call Option contracts: Long buildup',
-                        ),
-                        _buildEnhancedScreenerCard(
-                          5,
-                          'Unusual Put\nVolume',
-                          Icons.arrow_downward_rounded,
-                          null,
-                          'Unusual surge in Put Option contracts: Short buildup',
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
-
-            // Right Panel (Simulated Redirect/Result Page)
-            if (isSplit) ...[
-              const SizedBox(width: 16),
-              Expanded(
-                flex: 2,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 650),
-                  child: _buildScreenerResultPanel(),
-                ),
-              ),
-            ],
           ],
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildEnhancedScreenerCard(
-    int index,
-    String title,
-    IconData icon,
-    String? badge,
-    String? tooltip, {
-    bool hasNotification = false,
-  }) {
-    bool isHovered = _hoveredScreenerIndex == index;
-    bool isActive = _activeScreenerIndex == index;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hoveredScreenerIndex = index),
-      onExit: (_) => setState(() => _hoveredScreenerIndex = null),
-      child: GestureDetector(
-        onTap: () => setState(
-          () => _activeScreenerIndex = (_activeScreenerIndex == index
-              ? null
-              : index),
-        ),
-        child: Stack(
-          clipBehavior: Clip.none,
+  Widget _buildScreenersSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Tooltip
-            if (isHovered && tooltip != null)
-              Positioned(
-                top: -30,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.8),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      tooltip,
-                      style: const TextStyle(color: Colors.white, fontSize: 10),
+            Text(
+              'Trading Ideas',
+              style: TextStyle(
+                color: kDarkGreen,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            GestureDetector(
+              onTap: _showAllTradingIdeasModal,
+              child: Row(
+                children: [
+                  Text(
+                    'View More',
+                    style: TextStyle(
+                      color: kDarkGreen.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
                     ),
                   ),
-                ),
-              ),
-
-            // Card body
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7F9F8),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isActive
-                      ? Colors.blue.shade400
-                      : (isHovered ? Colors.grey.shade300 : Colors.transparent),
-                  width: isActive ? 2 : 1,
-                ),
-                boxShadow: [
-                  if (isHovered || isActive)
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: kDarkGreen.withValues(alpha: 0.7),
+                    size: 18,
+                  ),
                 ],
               ),
-              child: Center(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(icon, color: kDarkGreen, size: 24),
-                            ),
-                            if (badge != null)
-                              Positioned(
-                                top: -4,
-                                right: -4,
-                                child: Text(
-                                  badge,
-                                  style: const TextStyle(
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                              ),
-                            // Notification bubble
-                            if (hasNotification)
-                              Positioned(
-                                top: -8,
-                                right: -8,
-                                child: ScaleTransition(
-                                  scale: _pulseAnimation,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.blue,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Text(
-                                      '4',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          title,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: kDarkGreen,
-                            fontSize: 10,
-                            fontWeight: isActive
-                                ? FontWeight.bold
-                                : FontWeight.w500,
-                            height: 1.1,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Selected Pill Options (Only Options pill remains)
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(
+                  0xFF1E88E5,
+                ), // Bright options pill color matching First Image
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: const Text(
+                'Options',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
                 ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  String _getScreenerTitle(int index) {
-    switch (index) {
-      case 0:
-        return 'Highest OI CPR';
-      case 1:
-        return 'Highest OI PCR';
-      case 2:
-        return 'Highest Vol. CPR';
-      case 3:
-        return 'Highest Vol. PCR';
-      case 4:
-        return 'Unusual Call Volume';
-      case 5:
-        return 'Unusual Put Volume';
-      default:
-        return 'Results';
-    }
-  }
-
-  Widget _buildScreenerResultPanel() {
-    int index = _activeScreenerIndex ?? 0;
-    String title = _getScreenerTitle(index);
-    bool isBullish = index % 2 == 0 || index == 4;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFBFBF9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  'Results: $title',
-                  style: TextStyle(
-                    color: Color(0xFF1F5D3A),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+        const SizedBox(height: 16),
+        // Horizontal card slider matching First Image
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          clipBehavior: Clip.none,
+          child: Row(
+            children: List.generate(2, (index) {
+              final idea = _tradingIdeas[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TradingIdeaDetailScreen(
+                        title: idea['contract'] as String,
+                        price: idea['price'] as String,
+                        percentageChange: idea['change'] as String,
+                        entryPrice: idea['buy'] as double,
+                        sl: idea['sl'] as double,
+                        target: idea['target'] as double,
+                        fundsRequired: idea['funds'] as double,
+                        provider: idea['provider'] as String,
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 230,
+                  margin: const EdgeInsets.only(right: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.grey.shade200,
+                    ),
                   ),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close, size: 20),
-                onPressed: () => setState(() => _activeScreenerIndex = null),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Dynamic Status Banner
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isBullish
-                  ? const Color(0xFFF0F9F5)
-                  : const Color(0xFFFFF5F5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  isBullish ? Icons.check_circle : Icons.warning_rounded,
-                  color: isBullish
-                      ? const Color(0xFF2E7D32)
-                      : Colors.red.shade700,
-                  size: 28,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: kLightGreenBg,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.swap_vert_rounded,
+                              color: kDarkGreen,
+                              size: 18,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
                       Text(
-                        isBullish
-                            ? 'Filter Status: Bullish Bias'
-                            : 'Filter Status: Bearish Bias',
-                        softWrap: true,
+                        idea['contract'] as String,
                         style: TextStyle(
                           color: kDarkGreen,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                      const SizedBox(height: 4),
                       Text(
-                        isBullish
-                            ? 'Showing instruments with strong accumulation'
-                            : 'Showing instruments with potential distribution',
-                        softWrap: true,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 11,
+                        '${idea['price']} ${idea['change']}',
+                        style: TextStyle(
+                          color: idea['isUp'] ? Colors.green : Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Buy',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${idea['buy']}',
+                                  style: TextStyle(
+                                    color: kDarkGreen,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Target',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${idea['target']}',
+                                  style: TextStyle(
+                                    color: kDarkGreen,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Divider(
+                        color: Colors.grey.shade100,
+                        height: 1,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Powered by ${idea['provider']}',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 9,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.grey.shade600,
+                            size: 10,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Filters Bar
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            child: Row(
-              children: [
-                _buildFilterBadge('Nifty 50 only'),
-                const SizedBox(width: 8),
-                _buildFilterBadge('Index Futures'),
-                const SizedBox(width: 8),
-                _buildFilterBadge('Exp: Current Month'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Data Table
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 16),
-              physics: const BouncingScrollPhysics(),
-              child: _buildScreenerDataTable(),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const BankTransferScreen(
-                      toAccount: "987654321012",
-                      toIfsc: "PSIB0001234",
-                      toNominee: "PSB Investment Portal",
-                      toBank: "Punjab National Bank",
-                      amount: "25000.00",
-                    ),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kDarkGreen,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Trade RELIANCE Options',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterBadge(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.grey.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 10, color: Colors.black87),
-      ),
-    );
-  }
-
-  Widget _buildScreenerDataTable() {
-    int index = _activeScreenerIndex ?? 0;
-    bool isBullish = index % 2 == 0 || index == 4;
-
-    return Column(
-      children: [
-        // Header
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4),
-          child: Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: Text(
-                  'Instrument',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  'PCR',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  'OI (Units)',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(
-                  'Trend',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  'Rating',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-            ],
+              );
+            }),
           ),
         ),
-        const Divider(height: 1),
-        if (isBullish) ...[
-          _buildScreenerDataRow(
-            'RELIANCE',
-            '1.72',
-            '3.1M',
-            [10, 15, 12, 18, 25, 23, 28],
-            'Strong Buy',
-            Colors.green,
-            Icons.trending_up,
-            0,
-          ),
-          _buildScreenerDataRow(
-            'INFY',
-            '1.65',
-            '2.8M',
-            [20, 18, 19, 21, 20, 22, 21],
-            'Buy',
-            Colors.green,
-            Icons.trending_up,
-            1,
-          ),
-          _buildScreenerDataRow(
-            'HDFC BANK',
-            '1.58',
-            '4.2M',
-            [15, 12, 10, 8, 12, 11, 13],
-            'Wait',
-            Colors.orange,
-            Icons.trending_flat,
-            2,
-          ),
-          _buildScreenerDataRow(
-            'ICICI BANK',
-            '1.45',
-            '3.5M',
-            [5, 8, 12, 10, 15, 14, 16],
-            'Neutral',
-            Colors.grey,
-            Icons.trending_flat,
-            3,
-          ),
-          _buildScreenerDataRow(
-            'TCS',
-            '1.30',
-            '2.1M',
-            [30, 25, 20, 15, 12, 10, 8],
-            'Hold',
-            Colors.orange,
-            Icons.trending_flat,
-            4,
-          ),
-        ] else ...[
-          _buildScreenerDataRow(
-            'ADANIENT',
-            '0.65',
-            '1.2M',
-            [30, 28, 25, 22, 18, 15, 10],
-            'Strong Sell',
-            Colors.red,
-            Icons.trending_down,
-            5,
-          ),
-          _buildScreenerDataRow(
-            'WIPRO',
-            '0.72',
-            '1.8M',
-            [20, 22, 21, 19, 18, 17, 16],
-            'Sell',
-            Colors.red,
-            Icons.trending_down,
-            6,
-          ),
-          _buildScreenerDataRow(
-            'TATAMOTORS',
-            '0.85',
-            '2.5M',
-            [10, 12, 11, 13, 14, 15, 14],
-            'Hold',
-            Colors.orange,
-            Icons.trending_flat,
-            7,
-          ),
-          _buildScreenerDataRow(
-            'BHARTIARTL',
-            '0.90',
-            '1.9M',
-            [5, 6, 8, 7, 9, 8, 10],
-            'Neutral',
-            Colors.grey,
-            Icons.trending_flat,
-            8,
-          ),
-          _buildScreenerDataRow(
-            'SBIN',
-            '0.95',
-            '3.8M',
-            [15, 14, 15, 16, 17, 16, 18],
-            'Wait',
-            Colors.orange,
-            Icons.trending_flat,
-            9,
-          ),
-        ],
       ],
-    );
-  }
-
-  Widget _buildScreenerDataRow(
-    String name,
-    String pcr,
-    String oi,
-    List<double> trend,
-    String rating,
-    Color ratingColor,
-    IconData trendIcon,
-    int rowIndex,
-  ) {
-    bool isHovered = _hoveredTableRowIndex == rowIndex;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hoveredTableRowIndex = rowIndex),
-      onExit: (_) => setState(() => _hoveredTableRowIndex = null),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-        decoration: BoxDecoration(
-          color: isHovered
-              ? Colors.blue.withValues(alpha: 0.03)
-              : Colors.transparent,
-          border: Border(
-            bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.05)),
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: Text(
-                name,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: kDarkGreen,
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Text(
-                pcr,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Text(
-                oi,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
-              ),
-            ),
-            Expanded(
-              flex: 3,
-              child: Center(child: _buildMiniSparkline(trend, ratingColor)),
-            ),
-            Expanded(
-              flex: 2,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                decoration: BoxDecoration(
-                  color: ratingColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(trendIcon, size: 10, color: ratingColor),
-                    const SizedBox(width: 2),
-                    Flexible(
-                      child: Text(
-                        rating,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: ratingColor,
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMiniSparkline(List<double> data, Color color) {
-    if (data.length < 2) {
-      return const SizedBox.shrink(); // fl_chart needs at least 2 points
-    }
-
-    return SizedBox(
-      height: 20,
-      width: 50,
-      child: LineChart(
-        LineChartData(
-          gridData: const FlGridData(show: false),
-          titlesData: const FlTitlesData(show: false),
-          borderData: FlBorderData(show: false),
-          lineBarsData: [
-            LineChartBarData(
-              spots: data
-                  .asMap()
-                  .entries
-                  .map((e) => FlSpot(e.key.toDouble(), e.value))
-                  .toList(),
-              isCurved: true,
-              color: color,
-              barWidth: 1.5,
-              dotData: const FlDotData(show: false),
-              belowBarData: BarAreaData(
-                show: true,
-                color: color.withValues(alpha: 0.05),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -2228,7 +2893,9 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                     ),
                   ),
                   Text(
-                    _selectedOptionChainIndex == 1 ? '11 Apr \u25BE' : '07 Apr \u25BE',
+                    _selectedOptionChainIndex == 1
+                        ? '11 Apr \u25BE'
+                        : '07 Apr \u25BE',
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                   ),
                 ],
@@ -2240,13 +2907,29 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildFnOTab('Nifty 50', _selectedOptionChainIndex == 0, () => setState(() => _selectedOptionChainIndex = 0)),
+                _buildFnOTab(
+                  'Nifty 50',
+                  _selectedOptionChainIndex == 0,
+                  () => setState(() => _selectedOptionChainIndex = 0),
+                ),
                 const SizedBox(width: 16),
-                _buildFnOTab('BSE Sensex', _selectedOptionChainIndex == 1, () => setState(() => _selectedOptionChainIndex = 1)),
+                _buildFnOTab(
+                  'BSE Sensex',
+                  _selectedOptionChainIndex == 1,
+                  () => setState(() => _selectedOptionChainIndex = 1),
+                ),
                 const SizedBox(width: 16),
-                _buildFnOTab('Nifty Bank', _selectedOptionChainIndex == 2, () => setState(() => _selectedOptionChainIndex = 2)),
+                _buildFnOTab(
+                  'Nifty Bank',
+                  _selectedOptionChainIndex == 2,
+                  () => setState(() => _selectedOptionChainIndex = 2),
+                ),
                 const SizedBox(width: 16),
-                _buildFnOTab('Nifty Financial', _selectedOptionChainIndex == 3, () => setState(() => _selectedOptionChainIndex = 3)),
+                _buildFnOTab(
+                  'Nifty Financial',
+                  _selectedOptionChainIndex == 3,
+                  () => setState(() => _selectedOptionChainIndex = 3),
+                ),
               ],
             ),
           ),
@@ -2286,14 +2969,38 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
       return Column(
         children: isAfterSpot
             ? [
-                _buildOptionChainRow('241.70', '-17.42%', '22750', '-10.39%', '284.60'),
+                _buildOptionChainRow(
+                  '241.70',
+                  '-17.42%',
+                  '22750',
+                  '-10.39%',
+                  '284.60',
+                ),
                 const SizedBox(height: 12),
-                _buildOptionChainRow('217.25', '-18.8%', '22800', '-9.63%', '309.55'),
+                _buildOptionChainRow(
+                  '217.25',
+                  '-18.8%',
+                  '22800',
+                  '-9.63%',
+                  '309.55',
+                ),
               ]
             : [
-                _buildOptionChainRow('298.90', '-13.6%', '22650', '-11.22%', '242.05'),
+                _buildOptionChainRow(
+                  '298.90',
+                  '-13.6%',
+                  '22650',
+                  '-11.22%',
+                  '242.05',
+                ),
                 const SizedBox(height: 12),
-                _buildOptionChainRow('269.15', '-15.45%', '22700', '-10.57%', '263.55'),
+                _buildOptionChainRow(
+                  '269.15',
+                  '-15.45%',
+                  '22700',
+                  '-10.57%',
+                  '263.55',
+                ),
               ],
       );
     } else if (_selectedOptionChainIndex == 1) {
@@ -2301,14 +3008,38 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
       return Column(
         children: isAfterSpot
             ? [
-                _buildOptionChainRow('845.20', '-8.12%', '74800', '-5.22%', '790.15'),
+                _buildOptionChainRow(
+                  '845.20',
+                  '-8.12%',
+                  '74800',
+                  '-5.22%',
+                  '790.15',
+                ),
                 const SizedBox(height: 12),
-                _buildOptionChainRow('782.45', '-9.45%', '74900', '-4.88%', '865.30'),
+                _buildOptionChainRow(
+                  '782.45',
+                  '-9.45%',
+                  '74900',
+                  '-4.88%',
+                  '865.30',
+                ),
               ]
             : [
-                _buildOptionChainRow('1012.30', '-6.45%', '74600', '-7.15%', '642.50'),
+                _buildOptionChainRow(
+                  '1012.30',
+                  '-6.45%',
+                  '74600',
+                  '-7.15%',
+                  '642.50',
+                ),
                 const SizedBox(height: 12),
-                _buildOptionChainRow('928.75', '-7.22%', '74700', '-6.80%', '712.95'),
+                _buildOptionChainRow(
+                  '928.75',
+                  '-7.22%',
+                  '74700',
+                  '-6.80%',
+                  '712.95',
+                ),
               ],
       );
     } else if (_selectedOptionChainIndex == 2) {
@@ -2316,14 +3047,38 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
       return Column(
         children: isAfterSpot
             ? [
-                _buildOptionChainRow('542.80', '+2.14%', '48600', '-8.45%', '612.35'),
+                _buildOptionChainRow(
+                  '542.80',
+                  '+2.14%',
+                  '48600',
+                  '-8.45%',
+                  '612.35',
+                ),
                 const SizedBox(height: 12),
-                _buildOptionChainRow('498.15', '+1.88%', '48700', '-7.90%', '678.90'),
+                _buildOptionChainRow(
+                  '498.15',
+                  '+1.88%',
+                  '48700',
+                  '-7.90%',
+                  '678.90',
+                ),
               ]
             : [
-                _buildOptionChainRow('654.20', '+3.45%', '48400', '-10.12%', '512.60'),
+                _buildOptionChainRow(
+                  '654.20',
+                  '+3.45%',
+                  '48400',
+                  '-10.12%',
+                  '512.60',
+                ),
                 const SizedBox(height: 12),
-                _buildOptionChainRow('598.75', '+2.90%', '48500', '-9.50%', '564.25'),
+                _buildOptionChainRow(
+                  '598.75',
+                  '+2.90%',
+                  '48500',
+                  '-9.50%',
+                  '564.25',
+                ),
               ],
       );
     } else {
@@ -2331,14 +3086,38 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
       return Column(
         children: isAfterSpot
             ? [
-                _buildOptionChainRow('212.45', '-1.22%', '21450', '+2.45%', '245.60'),
+                _buildOptionChainRow(
+                  '212.45',
+                  '-1.22%',
+                  '21450',
+                  '+2.45%',
+                  '245.60',
+                ),
                 const SizedBox(height: 12),
-                _buildOptionChainRow('195.80', '-1.45%', '21500', '+2.88%', '272.35'),
+                _buildOptionChainRow(
+                  '195.80',
+                  '-1.45%',
+                  '21500',
+                  '+2.88%',
+                  '272.35',
+                ),
               ]
             : [
-                _buildOptionChainRow('258.90', '-0.85%', '21350', '+1.12%', '198.45'),
+                _buildOptionChainRow(
+                  '258.90',
+                  '-0.85%',
+                  '21350',
+                  '+1.12%',
+                  '198.45',
+                ),
                 const SizedBox(height: 12),
-                _buildOptionChainRow('234.15', '-1.05%', '21400', '+1.25%', '220.80'),
+                _buildOptionChainRow(
+                  '234.15',
+                  '-1.05%',
+                  '21400',
+                  '+1.25%',
+                  '220.80',
+                ),
               ],
       );
     }
@@ -2418,6 +3197,14 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     String pp,
     String pl,
   ) {
+    String indexName = _selectedOptionChainIndex == 0
+        ? 'NIFTY'
+        : _selectedOptionChainIndex == 1
+        ? 'SENSEX'
+        : _selectedOptionChainIndex == 2
+        ? 'BANKNIFTY'
+        : 'FINNIFTY';
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -2425,18 +3212,49 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
         children: [
           Expanded(
             flex: 2,
-            child: Row(
-              children: [
-                Text(cl, style: TextStyle(color: kDarkGreen, fontSize: 13)),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    cp,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.red.shade700, fontSize: 11),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StockDetailViewScreen(
+                      title: '$indexName 30 JUN $sp CALL',
+                      price: cl,
+                      change: cp,
+                      isUp: !cp.startsWith('-'),
+                      expiryDate: _selectedOptionChainIndex == 1
+                          ? '11 Apr 2026'
+                          : '07 Apr 2026',
+                      underlyingIndexName: indexName == 'NIFTY'
+                          ? 'Nifty 50 Index'
+                          : indexName == 'SENSEX'
+                          ? 'BSE Sensex Index'
+                          : indexName == 'BANKNIFTY'
+                          ? 'Nifty Bank Index'
+                          : 'Nifty Financial Services',
+                    ),
                   ),
+                );
+              },
+              child: Container(
+                color: Colors.transparent,
+                child: Row(
+                  children: [
+                    Text(cl, style: TextStyle(color: kDarkGreen, fontSize: 13)),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        cp,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
           Expanded(
@@ -2457,197 +3275,50 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
           ),
           Expanded(
             flex: 2,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Flexible(
-                  child: Text(
-                    pp,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.red.shade700, fontSize: 11),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StockDetailViewScreen(
+                      title: '$indexName 30 JUN $sp PUT',
+                      price: pl,
+                      change: pp,
+                      isUp: !pp.startsWith('-'),
+                      expiryDate: _selectedOptionChainIndex == 1
+                          ? '11 Apr 2026'
+                          : '07 Apr 2026',
+                      underlyingIndexName: indexName == 'NIFTY'
+                          ? 'Nifty 50 Index'
+                          : indexName == 'SENSEX'
+                          ? 'BSE Sensex Index'
+                          : indexName == 'BANKNIFTY'
+                          ? 'Nifty Bank Index'
+                          : 'Nifty Financial Services',
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                Text(pl, style: TextStyle(color: kDarkGreen, fontSize: 13)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFIIDIISection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'FII/DII Activity',
-                style: TextStyle(
-                  color: kDarkGreen,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const FIIDIIInsightsScreen()),
-                  );
-                },
-                child: Text(
-                  'View Insights',
-                  style: TextStyle(
-                    color: Colors.blue.shade600,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF7F9F8),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+                );
+              },
+              child: Container(
+                color: Colors.transparent,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.blue.shade500,
-                      radius: 4,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Market Pulse: 02 Apr 2026',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const Spacer(),
-                    Icon(
-                      Icons.share_outlined,
-                      color: Colors.grey.shade600,
-                      size: 16,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          const TextSpan(
-                            text: 'FII: ',
-                            style: TextStyle(
-                              color: Colors.black87,
-                              fontSize: 14,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '- \u20B99,931.13 Cr',
-                            style: TextStyle(
-                              color: Colors.red.shade700,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    RichText(
-                      text: TextSpan(
-                        children: [
-                          const TextSpan(
-                            text: 'DII: ',
-                            style: TextStyle(
-                              color: Colors.black87,
-                              fontSize: 14,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '+ \u20B97,208.41 Cr',
-                            style: TextStyle(
-                              color: kDarkGreen,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Divider(color: Colors.grey.shade300, height: 1),
-                const SizedBox(height: 12),
-                RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'Nifty 50: ',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 12,
-                        ),
-                      ),
-                      TextSpan(
-                        text: '22,713.10 ',
-                        style: TextStyle(
-                          color: kDarkGreen,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const TextSpan(
-                        text: '(+0.15%)',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'FII Index Future: ',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 12,
-                        ),
-                      ),
-                      TextSpan(
-                        text: '- \u20B9465.16 Cr',
+                    Flexible(
+                      child: Text(
+                        pp,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: Colors.red.shade700,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(pl, style: TextStyle(color: kDarkGreen, fontSize: 13)),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],
@@ -2765,46 +3436,71 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   }
 
   Widget _buildMarketMoverRow(String contract, String ltp, String cltp) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              contract,
-              style: TextStyle(
-                color: kDarkGreen,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => StockDetailViewScreen(
+              title: contract,
+              price: ltp,
+              change: cltp,
+              isUp: cltp.startsWith('+'),
+              expiryDate: '07 Apr 2026',
+              underlyingIndexName: 'Nifty 50 Index',
             ),
-            const SizedBox(height: 4),
-            Text(
-              'NSE',
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+          ),
+        );
+      },
+      child: Container(
+        color: Colors.transparent, // Makes the entire row clickable
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  contract,
+                  style: TextStyle(
+                    color: kDarkGreen,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'NSE',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  ltp,
+                  style: TextStyle(
+                    color: kDarkGreen,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  cltp,
+                  style: TextStyle(
+                    color: cltp.startsWith('+')
+                        ? Colors.green
+                        : Colors.red.shade700,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              ltp,
-              style: TextStyle(
-                color: kDarkGreen,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              cltp,
-              style: TextStyle(color: Colors.red.shade700, fontSize: 11),
-            ),
-          ],
-        ),
-      ],
+      ),
     );
   }
 
@@ -2830,32 +3526,44 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                   fontSize: 16,
                 ),
               ),
-          ],
+              GestureDetector(
+                onTap: _showAllTopFundsModal,
+                child: Row(
+                  children: [
+                    Text(
+                      'View More',
+                      style: TextStyle(
+                        color: kDarkGreen.withValues(alpha: 0.7),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: kDarkGreen.withValues(alpha: 0.7),
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
-          _buildFundRow(
-            'Quant Small Cap Fund',
-            'Equity \u2022 Small Cap',
-            '45.2%',
-          ),
-          Divider(color: Colors.grey.shade100, thickness: 1, height: 32),
-          _buildFundRow(
-            'Parag Parikh Flexi Cap',
-            'Equity \u2022 Flexi Cap',
-            '28.5%',
-          ),
-          Divider(color: Colors.grey.shade100, thickness: 1, height: 32),
-          _buildFundRow(
-            'Nippon India Small Cap',
-            'Equity \u2022 Small Cap',
-            '41.8%',
-          ),
-          Divider(color: Colors.grey.shade100, thickness: 1, height: 32),
-          _buildFundRow(
-            'HDFC Mid-Cap Opportunities',
-            'Equity \u2022 Mid Cap',
-            '34.2%',
-          ),
+          ...List.generate(_topFunds.length > 4 ? 4 : _topFunds.length, (index) {
+            final fund = _topFunds[index];
+            return Column(
+              children: [
+                _buildFundRow(
+                  fund['name'] as String,
+                  fund['category'] as String,
+                  fund['return'] as String,
+                ),
+                if (index < (_topFunds.length > 4 ? 3 : _topFunds.length - 1))
+                  Divider(color: Colors.grey.shade100, thickness: 1, height: 32),
+              ],
+            );
+          }),
         ],
       ),
     );
@@ -2944,152 +3652,168 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   }
 
   Widget _buildMFSummary() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+    return CustomPaint(
+      painter: DottedBorderPainter(
+        color: Colors.grey.shade300,
+        strokeWidth: 1.2,
+        gap: 4,
+        borderRadius: 16,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Mutual Fund Portfolio',
-            style: TextStyle(
-              color: kDarkGreen,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              SizedBox(
-                width: 110,
-                height: 110,
-                child: TweenAnimationBuilder<double>(
-                  key: const ValueKey('mf_pie_chart'),
-                  tween: Tween<double>(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 1000),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return CustomPaint(
-                      painter: PiePainter(
-                        0.60,
-                        0.25,
-                        0.15,
-                        kDarkGreen,
-                        kOrange,
-                        const Color(0xFF3282B8),
-                        value,
-                      ),
-                    );
-                  },
-                ),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Mutual Fund Portfolio',
+              style: TextStyle(
+                color: kDarkGreen,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
               ),
-              const SizedBox(width: 28),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Current Value',
-                      style: TextStyle(
-                        color: kDarkGreen,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '₹1,25,000',
-                      style: TextStyle(
-                        color: kDarkGreen,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Total Returns',
-                      style: TextStyle(
-                        color: kDarkGreen,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '₹25,000',
-                          style: TextStyle(
-                            color: kDarkGreen,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                          ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                SizedBox(
+                  width: 110,
+                  height: 110,
+                  child: TweenAnimationBuilder<double>(
+                    key: const ValueKey('mf_pie_chart'),
+                    tween: Tween<double>(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 1000),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) {
+                      return CustomPaint(
+                        painter: PiePainter(
+                          0.60,
+                          0.25,
+                          0.15,
+                          kDarkGreen,
+                          kOrange,
+                          const Color(0xFF3282B8),
+                          value,
                         ),
-                        const SizedBox(width: 8),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 2),
-                          child: Text(
-                            '+25%',
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 28),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Current Value',
+                        style: TextStyle(
+                          color: kDarkGreen,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '₹1,25,000',
+                        style: TextStyle(
+                          color: kDarkGreen,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Total Returns',
+                        style: TextStyle(
+                          color: kDarkGreen,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '₹25,000',
                             style: TextStyle(
                               color: kDarkGreen,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 8),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 2),
+                            child: Text(
+                              '+25%',
+                              style: TextStyle(
+                                color: kDarkGreen,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 28),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(backgroundColor: kDarkGreen, radius: 5),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Equity (60%)',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 28),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(backgroundColor: kDarkGreen, radius: 5),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Equity (60%)',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  CircleAvatar(backgroundColor: kOrange, radius: 5),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Debt (25%)',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: const Color(0xFF3282B8),
-                    radius: 5,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Hybrid (15%)',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
+                Row(
+                  children: [
+                    CircleAvatar(backgroundColor: kOrange, radius: 5),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Debt (25%)',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: const Color(0xFF3282B8),
+                      radius: 5,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Hybrid (15%)',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -3097,185 +3821,192 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   Widget _buildMFChart() {
     final chartData = _getMFChartData();
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+    return CustomPaint(
+      painter: DottedBorderPainter(
+        color: Colors.grey.shade300,
+        strokeWidth: 1.2,
+        gap: 4,
+        borderRadius: 16,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Portfolio Trend',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '₹1,25,000',
-            style: TextStyle(
-              color: kDarkGreen,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            chartData.changeLabel,
-            style: TextStyle(
-              color: chartData.changeColor,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 32),
-          SizedBox(
-            height: 180,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: true,
-                  drawHorizontalLine: true,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.shade200,
-                    strokeWidth: 1,
-                    dashArray: [4, 4],
-                  ),
-                  getDrawingVerticalLine: (value) => FlLine(
-                    color: Colors.grey.shade200,
-                    strokeWidth: 1,
-                    dashArray: [4, 4],
-                  ),
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 42,
-                      interval: chartData.intervalY,
-                      getTitlesWidget: (value, meta) {
-                        return SideTitleWidget(
-                          meta: meta,
-                          space: 8.0,
-                          child: Text(
-                            '${(value / 1000).toInt()}k',
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontSize: 10,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      interval: 2,
-                      getTitlesWidget: (value, meta) {
-                        String text = '';
-                        int idx = (value.toInt() ~/ 2);
-                        if (idx >= 0 && idx < chartData.xLabels.length) {
-                          text = chartData.xLabels[idx];
-                        }
-                        return SideTitleWidget(
-                          meta: meta,
-                          space: 8.0,
-                          child: Text(
-                            text,
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontSize: 10,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                minX: 0,
-                maxX: 10,
-                minY: chartData.minY,
-                maxY: chartData.maxY,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: chartData.spots,
-                    isCurved: true,
-                    curveSmoothness: 0.35,
-                    color: kDarkGreen,
-                    barWidth: 2,
-                    isStrokeCapRound: true,
-                    dotData: const FlDotData(show: false),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: kDarkGreen.withValues(alpha: 0.1),
-                    ),
-                  ),
-                ],
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Portfolio Trend',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            physics: const BouncingScrollPhysics(),
-            child: Row(
-              children: ['1m', '3m', '6m', '1y', '3y', '5y', 'max'].map((t) {
-                int index = [
-                  '1m',
-                  '3m',
-                  '6m',
-                  '1y',
-                  '3y',
-                  '5y',
-                  'max',
-                ].indexOf(t);
-                bool isSelected = _selectedMFTimeframe == index;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedMFTimeframe = index),
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+            const SizedBox(height: 4),
+            Text(
+              '₹1,25,000',
+              style: TextStyle(
+                color: kDarkGreen,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              chartData.changeLabel,
+              style: TextStyle(
+                color: chartData.changeColor,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              height: 180,
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: true,
+                    drawHorizontalLine: true,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: Colors.grey.shade200,
+                      strokeWidth: 1,
+                      dashArray: [4, 4],
                     ),
-                    decoration: BoxDecoration(
-                      color: isSelected ? kDarkGreen : Colors.transparent,
-                      borderRadius: BorderRadius.circular(16),
+                    getDrawingVerticalLine: (value) => FlLine(
+                      color: Colors.grey.shade200,
+                      strokeWidth: 1,
+                      dashArray: [4, 4],
                     ),
-                    child: Text(
-                      t,
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : kDarkGreen,
-                        fontSize: 12,
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.w500,
+                  ),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 42,
+                        interval: chartData.intervalY,
+                        getTitlesWidget: (value, meta) {
+                          return SideTitleWidget(
+                            meta: meta,
+                            space: 8.0,
+                            child: Text(
+                              '${(value / 1000).toInt()}k',
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 10,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 2,
+                        getTitlesWidget: (value, meta) {
+                          String text = '';
+                          int idx = (value.toInt() ~/ 2);
+                          if (idx >= 0 && idx < chartData.xLabels.length) {
+                            text = chartData.xLabels[idx];
+                          }
+                          return SideTitleWidget(
+                            meta: meta,
+                            space: 8.0,
+                            child: Text(
+                              text,
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 10,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
-                );
-              }).toList(),
+                  borderData: FlBorderData(show: false),
+                  minX: 0,
+                  maxX: 10,
+                  minY: chartData.minY,
+                  maxY: chartData.maxY,
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: chartData.spots,
+                      isCurved: true,
+                      curveSmoothness: 0.35,
+                      color: kDarkGreen,
+                      barWidth: 2,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: false),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: kDarkGreen.withValues(alpha: 0.1),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: ['1m', '3m', '6m', '1y', '3y', '5y', 'max'].map((t) {
+                  int index = [
+                    '1m',
+                    '3m',
+                    '6m',
+                    '1y',
+                    '3y',
+                    '5y',
+                    'max',
+                  ].indexOf(t);
+                  bool isSelected = _selectedMFTimeframe == index;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedMFTimeframe = index),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected ? kDarkGreen : Colors.transparent,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        t,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : kDarkGreen,
+                          fontSize: 12,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -3295,6 +4026,27 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                 fontSize: 18,
               ),
             ),
+            GestureDetector(
+              onTap: _showAllLiveNFOsModal,
+              child: Row(
+                children: [
+                  Text(
+                    'View More',
+                    style: TextStyle(
+                      color: kDarkGreen.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: kDarkGreen.withValues(alpha: 0.7),
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -3303,17 +4055,17 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
           physics: const BouncingScrollPhysics(),
           clipBehavior: Clip.none,
           child: Row(
-            children: [
-              _buildNFOCard('HDFC Nifty Next 50', 'Closes 19 Apr', '₹500'),
-              const SizedBox(width: 16),
-              _buildNFOCard('SBI Innovation Opp.', 'Closes 22 Apr', '₹5,000'),
-              const SizedBox(width: 16),
-              _buildNFOCard(
-                'ICICI Pru Business Cycle',
-                'Closes 24 Apr',
-                '₹1,000',
-              ),
-            ],
+            children: List.generate(_liveNfos.length > 3 ? 3 : _liveNfos.length, (index) {
+              final nfo = _liveNfos[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: _buildNFOCard(
+                  nfo['name'] as String,
+                  nfo['date'] as String,
+                  '₹${nfo['min'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+                ),
+              );
+            }),
           ),
         ),
       ],
@@ -3676,8 +4428,8 @@ class MiniGraphPainter extends CustomPainter {
     if (range == 0) range = 1;
 
     for (int i = 0; i < data.length; i++) {
-      double x = data.length > 1 
-          ? (i / (data.length - 1)) * size.width 
+      double x = data.length > 1
+          ? (i / (data.length - 1)) * size.width
           : size.width / 2;
       double y = size.height - ((data[i] - min) / range * size.height);
       if (i == 0) {
@@ -3692,4 +4444,98 @@ class MiniGraphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class DottedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double gap;
+  final double borderRadius;
+
+  DottedBorderPainter({
+    required this.color,
+    required this.strokeWidth,
+    required this.gap,
+    required this.borderRadius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final RRect rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(borderRadius),
+    );
+
+    final Path path = Path()..addRRect(rrect);
+    final dashPath = Path();
+    double dashWidth = gap;
+    double dashSpace = gap;
+
+    for (final pathMetric in path.computeMetrics()) {
+      double distance = 0.0;
+      while (distance < pathMetric.length) {
+        dashPath.addPath(
+          pathMetric.extractPath(distance, distance + dashWidth),
+          Offset.zero,
+        );
+        distance += dashWidth + dashSpace;
+      }
+    }
+
+    canvas.drawPath(dashPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant DottedBorderPainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.gap != gap ||
+        oldDelegate.borderRadius != borderRadius;
+  }
+}
+
+class DottedBorderContainer extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final double borderRadius;
+  final Color color;
+  final Color borderColor;
+  final double strokeWidth;
+  final double gap;
+
+  const DottedBorderContainer({
+    super.key,
+    required this.child,
+    this.padding,
+    this.borderRadius = 16,
+    this.color = Colors.white,
+    this.borderColor = const Color(0xFFCCCCCC),
+    this.strokeWidth = 1.2,
+    this.gap = 4.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: DottedBorderPainter(
+        color: borderColor,
+        strokeWidth: strokeWidth,
+        gap: gap,
+        borderRadius: borderRadius,
+      ),
+      child: Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+        child: child,
+      ),
+    );
+  }
 }

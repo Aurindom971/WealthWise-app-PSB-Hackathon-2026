@@ -3,46 +3,40 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
 import '../../send/screens/send_transfer_screen.dart';
 
-class HDFCIndexNFOScreen extends StatefulWidget {
-  const HDFCIndexNFOScreen({super.key});
+class DynamicNFOScreen extends StatefulWidget {
+  final String name;
+  final String date;
+  final double minInvestment;
+  final int closesInDays;
+  final String description;
+
+  const DynamicNFOScreen({
+    super.key,
+    required this.name,
+    required this.date,
+    required this.minInvestment,
+    required this.closesInDays,
+    required this.description,
+  });
 
   @override
-  State<HDFCIndexNFOScreen> createState() => _HDFCIndexNFOScreenState();
+  State<DynamicNFOScreen> createState() => _DynamicNFOScreenState();
 }
 
-class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
-  final double _minInvestment = 500;
-  late DateTime _expiryDate;
-  late Duration _remainingTime;
+class _DynamicNFOScreenState extends State<DynamicNFOScreen> {
+  final Color kForest = const Color(0xFF1F5D3A);
+  final Color kSub = const Color(0xFF757575);
+  final Color kCream = const Color(0xFFF2F0EB);
+  final Color kLightGreenBg = const Color(0xFFEAF1ED);
 
   int _selectedPaymentIndex = 0;
   String? _selectedAccount;
 
   final List<Map<String, dynamic>> _paymentMethods = [
-    {
-      'title': 'Bank Account',
-      'icon': Icons.account_balance_outlined,
-    },
-    {
-      'title': 'UPI',
-      'icon': Icons.phone_android_outlined,
-    },
-    {
-      'title': 'Net Banking',
-      'icon': Icons.language_outlined,
-    },
+    {'title': 'Bank Account', 'icon': Icons.account_balance_outlined},
+    {'title': 'UPI', 'icon': Icons.phone_android_outlined},
+    {'title': 'Net Banking', 'icon': Icons.language_outlined},
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _expiryDate = DateTime(2026, 4, 19, 15, 0, 0); // April 19, 3 PM
-    _calculateRemainingTime();
-  }
-
-  void _calculateRemainingTime() {
-    _remainingTime = _expiryDate.difference(DateTime.now());
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,8 +49,11 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               child: TopBar(
                 searchText: 'Search in NFOs',
-                onHomeTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+                onHomeTap: () =>
+                    Navigator.of(context).popUntil((route) => route.isFirst),
+                onLogoutTap: () => Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/login', (route) => false),
                 onNotificationTap: () {},
               ),
             ),
@@ -68,14 +65,21 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
                     onPressed: () => Navigator.pop(context),
                     icon: Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(color: Color(0xFFF7F9F8), shape: BoxShape.circle),
-                      child: const Icon(Icons.arrow_back, color: kForest, size: 18),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF7F9F8),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.arrow_back, color: kForest, size: 18),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'NFO Application',
-                    style: TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 18),
+                    style: TextStyle(
+                      color: kForest,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
                 ],
               ),
@@ -125,15 +129,18 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'HDFC Nifty Next 50\nIndex Fund',
-              style: TextStyle(
-                color: kForest,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                height: 1.2,
+            Expanded(
+              child: Text(
+                widget.name,
+                style: TextStyle(
+                  color: kForest,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                ),
               ),
             ),
+            const SizedBox(width: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
@@ -152,10 +159,7 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        const Text(
-          'Passive exposure to Indias next 50 heavyweights. Low expense ratio, high growth potential.',
-          style: TextStyle(color: kSub, fontSize: 14),
-        ),
+        Text(widget.description, style: TextStyle(color: kSub, fontSize: 14)),
       ],
     );
   }
@@ -167,11 +171,16 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
         _buildStatItem('NAV PRICE', '₹ 10.00', 'Launch Value', Colors.green),
         _buildStatItem(
           'CLOSES IN',
-          '${_remainingTime.inDays} Days',
-          'Apr 19 Deadline',
+          '${widget.closesInDays} Days',
+          widget.date,
           Colors.orange,
         ),
-        _buildStatItem('MIN. INVEST', '₹ 500', 'Entry Barrier', kForest),
+        _buildStatItem(
+          'MIN. INVEST',
+          '₹ ${widget.minInvestment.toInt()}',
+          'Entry Barrier',
+          kForest,
+        ),
       ],
     );
   }
@@ -182,7 +191,7 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: kSub,
             fontSize: 10,
             fontWeight: FontWeight.bold,
@@ -197,7 +206,7 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        Text(sub, style: const TextStyle(color: kSub, fontSize: 10)),
+        Text(sub, style: TextStyle(color: kSub, fontSize: 10)),
       ],
     );
   }
@@ -206,7 +215,7 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Sectoral Distribution',
           style: TextStyle(
             color: kForest,
@@ -227,7 +236,7 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
                   sections: [
                     PieChartSectionData(
                       color: kForest,
-                      value: 35,
+                      value: 40,
                       title: '',
                       radius: 15,
                     ),
@@ -245,7 +254,7 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
                     ),
                     PieChartSectionData(
                       color: kCream,
-                      value: 20,
+                      value: 15,
                       title: '',
                       radius: 15,
                     ),
@@ -257,10 +266,10 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
             Expanded(
               child: Column(
                 children: [
-                  _buildLegendItem('Financial Services', '35%'),
-                  _buildLegendItem('Consumer Goods', '25%'),
-                  _buildLegendItem('Healthcare', '20%'),
-                  _buildLegendItem('Others', '20%'),
+                  _buildLegendItem('Sector Heavyweights', '40%'),
+                  _buildLegendItem('Mid Cap Boosters', '25%'),
+                  _buildLegendItem('Tech & Services', '20%'),
+                  _buildLegendItem('Liquidity/Cash', '15%'),
                 ],
               ),
             ),
@@ -276,10 +285,10 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: kSub, fontSize: 12)),
+          Text(label, style: TextStyle(color: kSub, fontSize: 12)),
           Text(
             p,
-            style: const TextStyle(
+            style: TextStyle(
               color: kForest,
               fontWeight: FontWeight.bold,
               fontSize: 12,
@@ -302,9 +311,9 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.calculate_outlined, color: kForest, size: 20),
+              Icon(Icons.calculate_outlined, color: kForest, size: 20),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Tax Efficiency Calculator',
                 style: TextStyle(
                   color: kForest,
@@ -318,8 +327,8 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
           _buildCalcRow('Long Term Capital Gains (>1Y)', '10% Tax'),
           _buildCalcRow('Indexation Benefit', 'Available'),
           const Divider(height: 24),
-          const Text(
-            'Passive funds typically have lower turnover, leading to fewer taxable events compared to active funds.',
+          Text(
+            'Dynamic thematic funds offer index-like tracking efficiency with enhanced tactical flexibility.',
             style: TextStyle(color: kSub, fontSize: 11, height: 1.4),
           ),
         ],
@@ -333,10 +342,10 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: kSub, fontSize: 12)),
+          Text(label, style: TextStyle(color: kSub, fontSize: 12)),
           Text(
             val,
-            style: const TextStyle(
+            style: TextStyle(
               color: kForest,
               fontWeight: FontWeight.bold,
               fontSize: 12,
@@ -366,13 +375,13 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Application Amount',
                 style: TextStyle(color: kSub, fontSize: 12),
               ),
               Text(
-                '₹ ${_minInvestment.toStringAsFixed(0)}',
-                style: const TextStyle(
+                '₹ ${widget.minInvestment.toStringAsFixed(0)}',
+                style: TextStyle(
                   color: kForest,
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -393,15 +402,32 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
                     margin: EdgeInsets.only(right: idx == 2 ? 0 : 8),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: isSelected ? kForest.withValues(alpha: 0.05) : Colors.white,
+                      color: isSelected
+                          ? kForest.withValues(alpha: 0.05)
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: isSelected ? kForest : Colors.grey.shade200),
+                      border: Border.all(
+                        color: isSelected ? kForest : Colors.grey.shade200,
+                      ),
                     ),
                     child: Column(
                       children: [
-                        Icon(method['icon'], color: isSelected ? kForest : kSub, size: 20),
+                        Icon(
+                          method['icon'],
+                          color: isSelected ? kForest : kSub,
+                          size: 20,
+                        ),
                         const SizedBox(height: 4),
-                        Text(method['title'], style: TextStyle(color: isSelected ? kForest : kSub, fontSize: 10, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                        Text(
+                          method['title'],
+                          style: TextStyle(
+                            color: isSelected ? kForest : kSub,
+                            fontSize: 10,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -414,24 +440,50 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: userAccounts.where((a) => a.contains('Savings')).map((acc) {
+                children: userAccounts.where((a) => a.contains('Savings')).map((
+                  acc,
+                ) {
                   bool isAccSelected = _selectedAccount == acc;
                   return Padding(
                     padding: const EdgeInsets.only(right: 12),
                     child: GestureDetector(
                       onTap: () => setState(() => _selectedAccount = acc),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
-                          color: isAccSelected ? kForest.withValues(alpha: 0.05) : Colors.white,
+                          color: isAccSelected
+                              ? kForest.withValues(alpha: 0.05)
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: isAccSelected ? kForest : Colors.grey.shade100),
+                          border: Border.all(
+                            color: isAccSelected
+                                ? kForest
+                                : Colors.grey.shade100,
+                          ),
                         ),
                         child: Row(
                           children: [
-                            Icon(isAccSelected ? Icons.radio_button_checked : Icons.radio_button_off, color: isAccSelected ? kForest : kSub, size: 14),
+                            Icon(
+                              isAccSelected
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_off,
+                              color: isAccSelected ? kForest : kSub,
+                              size: 14,
+                            ),
                             const SizedBox(width: 8),
-                            Text(acc, style: TextStyle(color: kForest, fontSize: 11, fontWeight: isAccSelected ? FontWeight.bold : FontWeight.normal)),
+                            Text(
+                              acc,
+                              style: TextStyle(
+                                color: kForest,
+                                fontSize: 11,
+                                fontWeight: isAccSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -454,11 +506,13 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
                       builder: (context) => BankTransferScreen(
                         toAccount: "987654321012",
                         toIfsc: "PSIB0001234",
-                        toNominee: "PSB Investment Portal",
+                        toNominee: widget.name,
                         toBank: "Punjab National Bank",
-                        amount: _minInvestment.toStringAsFixed(2),
-                        purpose: "Investment",
-                        fromAccount: _selectedPaymentIndex == 0 ? _selectedAccount : null,
+                        amount: widget.minInvestment.toStringAsFixed(2),
+                        purpose: "NFO Subscription",
+                        fromAccount: _selectedPaymentIndex == 0
+                            ? _selectedAccount
+                            : null,
                       ),
                     ),
                   );
@@ -468,7 +522,9 @@ class _HDFCIndexNFOScreenState extends State<HDFCIndexNFOScreen> {
                     MaterialPageRoute(
                       builder: (context) => UpiScreen(
                         prefilledUpiId: "psb.invest@upi",
-                        prefilledAmount: _minInvestment.toStringAsFixed(2),
+                        prefilledAmount: widget.minInvestment.toStringAsFixed(
+                          2,
+                        ),
                       ),
                     ),
                   );

@@ -1,0 +1,120 @@
+Analyzing PSB-Hackathon-Secure-wealth-app...                    
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\all_upcoming_bills_screen.dart:68:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\all_upcoming_bills_screen.dart:121:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\all_upcoming_bills_screen.dart:134:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\bill_and_recharge_screen.dart:142:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\bill_and_recharge_screen.dart:307:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\bill_and_recharge_screen.dart:349:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\bill_and_recharge_screen.dart:360:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\bill_and_recharge_screen.dart:439:30 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\payment_gateway_screen.dart:80:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\payment_gateway_screen.dart:120:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\payment_gateway_screen.dart:187:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\utility_payment_screen.dart:83:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\utility_payment_screen.dart:142:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\utility_payment_screen.dart:163:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\utility_payment_screen.dart:175:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\utility_payment_screen.dart:202:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\utility_payment_screen.dart:204:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\bill_and_recharge\screens\utility_payment_screen.dart:256:51 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\home\screens\home_screen.dart:309:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\home\screens\home_screen.dart:313:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\home\screens\home_screen.dart:457:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\home\screens\home_screen.dart:459:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\home\screens\home_screen.dart:464:7 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\screens\smart_lock_screen.dart:191:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\screens\smart_lock_screen.dart:203:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\screens\smart_lock_screen.dart:253:81 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\screens\smart_lock_screen.dart:354:74 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor or activeTrackColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\home\screens\smart_lock_screen.dart:390:23 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\screens\smart_lock_screen.dart:391:65 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\screens\smart_lock_screen.dart:412:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\screens\smart_lock_screen.dart:601:41 - deprecated_member_use
+warning - The value of the field 'bgColor' isn't used - lib\features\home\screens\transaction_screen.dart:36:22 - unused_field
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\screens\transaction_screen.dart:383:55 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\screens\transaction_screen.dart:460:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\screens\transaction_screen.dart:546:69 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\all_plans_screen.dart:94:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_category_screen.dart:101:33 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\insurance\screens\insurance_screen.dart:69:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\insurance\screens\insurance_screen.dart:71:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\insurance\screens\insurance_screen.dart:73:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\insurance\screens\insurance_screen.dart:75:7 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:129:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:147:55 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:378:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:404:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:411:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:536:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:562:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:623:26 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:658:25 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:682:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:687:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:742:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:768:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:906:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:941:27 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\insurance_screen.dart:952:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insurance\screens\track_claims_screen.dart:87:33 - deprecated_member_use
+  error - Unexpected text 'return' - lib\features\loans\screens\active_loans_screen.dart:95:5 - unexpected_token
+  error - Too many positional arguments: 0 expected, but 1 found - lib\features\loans\screens\active_loans_screen.dart:95:12 - extra_positional_arguments_could_be_named
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\screens\active_loans_screen.dart:114:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\screens\active_loans_screen.dart:116:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\screens\active_loans_screen.dart:125:58 - deprecated_member_use
+  error - Expected to find ')' - lib\features\loans\screens\active_loans_screen.dart:193:6 - expected_token
+  error - Expected to find ']' - lib\features\loans\screens\active_loans_screen.dart:193:6 - expected_token
+warning - The declaration '_buildHeader' isn't referenced - lib\features\loans\screens\application_status_screen.dart:54:10 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\screens\application_status_screen.dart:275:27 - deprecated_member_use
+  error - Expected to find ';' - lib\features\loans\screens\apply_loan_screen.dart:133:7 - expected_token
+  error - Expected to find ']' - lib\features\loans\screens\apply_loan_screen.dart:133:7 - expected_token
+warning - Dead code - lib\features\loans\screens\apply_loan_screen.dart:133:8 - dead_code
+  error - Expected an identifier - lib\features\loans\screens\apply_loan_screen.dart:133:8 - missing_identifier
+  error - Unexpected text ';' - lib\features\loans\screens\apply_loan_screen.dart:133:8 - unexpected_token
+warning - The label 'child' isn't used - lib\features\loans\screens\apply_loan_screen.dart:134:7 - unused_label
+  error - Too many positional arguments: 0 expected, but 1 found - lib\features\loans\screens\apply_loan_screen.dart:153:9 - extra_positional_arguments_could_be_named
+  error - Expected to find ')' - lib\features\loans\screens\apply_loan_screen.dart:186:7 - expected_token
+  error - Expected to find ';' - lib\features\loans\screens\compare_loans_screen.dart:42:7 - expected_token
+  error - Expected to find ']' - lib\features\loans\screens\compare_loans_screen.dart:42:7 - expected_token
+warning - Dead code - lib\features\loans\screens\compare_loans_screen.dart:42:8 - dead_code
+  error - Expected an identifier - lib\features\loans\screens\compare_loans_screen.dart:42:8 - missing_identifier
+  error - Unexpected text ';' - lib\features\loans\screens\compare_loans_screen.dart:42:8 - unexpected_token
+warning - The label 'child' isn't used - lib\features\loans\screens\compare_loans_screen.dart:43:7 - unused_label
+  error - Too many positional arguments: 0 expected, but 1 found - lib\features\loans\screens\compare_loans_screen.dart:91:9 - extra_positional_arguments_could_be_named
+  error - Expected to find ')' - lib\features\loans\screens\compare_loans_screen.dart:117:7 - expected_token
+  error - Too many positional arguments: 0 expected, but 1 found - lib\features\loans\screens\loan_eligibility_screen.dart:117:11 - extra_positional_arguments_could_be_named
+  error - Undefined name 'child' - lib\features\loans\screens\loan_eligibility_screen.dart:151:13 - undefined_identifier
+  error - Expected to find ')' - lib\features\loans\screens\loan_eligibility_screen.dart:151:18 - expected_token
+  error - Expected to find ']' - lib\features\loans\screens\loan_eligibility_screen.dart:151:18 - expected_token
+  error - Expected to find ')' - lib\features\loans\screens\loan_eligibility_screen.dart:160:7 - expected_token
+warning - The declaration '_buildStepIndicator' isn't referenced - lib\features\loans\screens\loan_eligibility_screen.dart:165:10 - unused_element
+warning - The declaration '_buildStepContent' isn't referenced - lib\features\loans\screens\loan_eligibility_screen.dart:233:10 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\screens\loan_statement_screen.dart:63:45 - deprecated_member_use
+  error - Expected to find ')' - lib\features\loans\screens\loan_statement_screen.dart:69:17 - expected_token
+  error - Too many positional arguments: 0 expected, but 1 found - lib\features\loans\screens\loan_statement_screen.dart:73:13 - extra_positional_arguments_could_be_named
+  error - The named parameter 'child' isn't defined - lib\features\loans\screens\loan_statement_screen.dart:98:19 - undefined_named_parameter
+  error - Expected to find ']' - lib\features\loans\screens\loan_statement_screen.dart:115:21 - expected_token
+  error - Too many positional arguments: 0 expected, but 3 found - lib\features\loans\screens\loan_statement_screen.dart:117:21 - extra_positional_arguments_could_be_named
+  error - Too many positional arguments: 0 expected, but 4 found - lib\features\loans\screens\loan_statement_screen.dart:133:23 - extra_positional_arguments_could_be_named
+  error - Expected to find ')' - lib\features\loans\screens\loan_statement_screen.dart:151:21 - expected_token
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\screens\loan_statement_screen.dart:166:45 - deprecated_member_use
+  error - Expected an identifier - lib\features\loans\screens\loan_statement_screen.dart:212:15 - missing_identifier
+  error - Expected to find ')' - lib\features\loans\screens\loan_statement_screen.dart:212:15 - expected_token
+  error - Expected an identifier - lib\features\loans\screens\loan_statement_screen.dart:215:9 - missing_identifier
+  error - Expected to find ']' - lib\features\loans\screens\loan_statement_screen.dart:215:9 - expected_token
+  error - The named parameter 'child' is required, but there's no corresponding argument - lib\features\loans\screens\loans_screen.dart:159:13 - missing_required_argument
+  error - Unexpected text 'return' - lib\features\loans\screens\loans_screen.dart:160:5 - unexpected_token
+  error - Too many positional arguments: 0 expected, but 1 found - lib\features\loans\screens\loans_screen.dart:160:12 - extra_positional_arguments_could_be_named
+  error - Expected to find ')' - lib\features\loans\screens\loans_screen.dart:197:6 - expected_token
+  error - Expected to find ']' - lib\features\loans\screens\loans_screen.dart:197:6 - expected_token
+  error - The argument for the named parameter 'borderRadius' was already specified - lib\features\loans\screens\loans_screen.dart:813:9 - duplicate_named_argument
+  error - The argument for the named parameter 'border' was already specified - lib\features\loans\screens\loans_screen.dart:814:9 - duplicate_named_argument
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\screens\loans_screen.dart:814:40 - deprecated_member_use
+  error - Undefined name 'onTrackStatus' - lib\features\loans\widgets\active_loan_card.dart:202:19 - undefined_identifier
+  error - Undefined name 'onTrackStatus' - lib\features\loans\widgets\active_loan_card.dart:206:32 - undefined_identifier
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\widgets\loan_header.dart:25:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\widgets\loan_header.dart:28:28 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\widgets\loan_header.dart:47:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\widgets\loan_header.dart:93:40 - deprecated_member_use
+
