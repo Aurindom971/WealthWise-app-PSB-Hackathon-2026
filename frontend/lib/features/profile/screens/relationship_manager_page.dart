@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../home/screens/notifications_screen.dart';
+import 'rm_chat_page.dart';
 
 class RelationshipManagerPage extends StatelessWidget {
   const RelationshipManagerPage({super.key});
@@ -160,7 +161,14 @@ class RelationshipManagerPage extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: GestureDetector(
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const RmChatPage(),
+                                  ),
+                                );
+                              },
                               child: Container(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 14),

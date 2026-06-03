@@ -3,6 +3,17 @@ const cors = require('cors');
 require('dotenv').config();
 const axios = require('axios');
 
+/**
+ * 🌐 API GATEWAY & SECURITY MIDDLEWARE ROADMAP
+ * ============================================
+ * TODO: Harden entrypoints, authentication mechanisms, and rate limits.
+ * Future improvements:
+ *   - Implement rate limiting (e.g. rate-limit / express-rate-limit) to block automated brute-force velocity probes.
+ *   - Enforce rigorous JSON schema validation (e.g., using Joi or Zod) to filter malicious payloads before database interaction.
+ *   - Secure endpoints using standard JWT (JSON Web Token) bearer authentication linked to active sessions.
+ *   - Integrate automated API metrics reporting (Prometheus/Grafana) for dashboard visibility of fraud alert occurrences.
+ */
+
 const { detectFraud } = require('./fraudDetection');
 const {
   saveTransaction,
@@ -66,8 +77,8 @@ app.post('/fraud-check', async (req, res) => {
     const transaction_id = await saveTransaction(cus_id, txn);
     console.log('Transaction saved:', transaction_id);
 
-    // 2. Build profile
-    const profile = await buildUserProfile(cus_id);
+    // 2. Build profile (pass txn timestamp for dynamic rolling window query)
+    const profile = await buildUserProfile(cus_id, txn.timestamp || new Date());
 
     // 3. Fraud detection
     const result = detectFraud(txn, profile);
