@@ -414,14 +414,15 @@ class _FindAtmScreenState extends State<FindAtmScreen> {
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: _primary,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: () => _openDirections(a),
-              icon: const Icon(Icons.navigation, size: 16),
+              icon: const Icon(Icons.navigation, color: Colors.white, size: 16),
               label: const Text('Get Directions',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
             ),
           ),
         ],
