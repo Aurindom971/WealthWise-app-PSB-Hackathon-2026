@@ -10,6 +10,7 @@ import '../../../core/services/security_service.dart';
 import '../../../core/utils/security_validator.dart';
 import '../screens/helpdesk_screen.dart';
 import '../screens/safety_screen.dart';
+import '../screens/findatm_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -536,10 +537,17 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
   _BottomAction(
-    icon: Icons.map_outlined,
-    label: "Find ATM",
-    onTap: () {},
-  ),
+  icon: Icons.map_outlined,
+  label: "Find ATM",
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const FindAtmScreen(),
+      ),
+    );
+  },
+),
 
   _BottomAction(
     icon: Icons.headset_mic_outlined,
@@ -579,7 +587,6 @@ class _BottomAction extends StatelessWidget {
   final VoidCallback onTap;
 
   const _BottomAction({
-    super.key,
     required this.icon,
     required this.label,
     required this.onTap,
