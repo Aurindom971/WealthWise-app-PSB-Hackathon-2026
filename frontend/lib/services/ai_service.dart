@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 class AIService {
   // Use http://10.0.2.2:3000 for Android Emulator
   // Use http://localhost:3000 for iOS Simulator, Web, or Desktop
-  static const String baseUrl = "http://10.0.2.2:3000";
+  static const String baseUrl = "http://172.31.234.76:3000";
 
   /// Calls the general AI chat endpoint (New Implementation)
   static Future<String> getChatReply({

@@ -1,6 +1,18 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+/**
+ * 🗄️ DATABASE INFRASTRUCTURE & SCALABILITY ROADMAP
+ * =================================================
+ * TODO: Harden database access layer for production security and query throughput.
+ * Future improvements:
+ *   - Implement Redis-based distributed caching layer for recent transactions to prevent database pressure during bursts.
+ *   - Optimize pg connections using transaction pooler (PgBouncer) instead of direct Supabase session pooling.
+ *   - Audit and harden Row Level Security (RLS) policies for users, accounts, and cards.
+ *   - Establish sliding partition tables for the `transactions` table to archive data older than 90 days.
+ *   - Refine composite index strategy on (cus_id, created_at DESC) for sub-millisecond query evaluation.
+ */
+
 // ✅ Supabase connection (session pooler)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -70,7 +82,7 @@ async function saveFraudResult(transaction_id, result, cus_id) {
 /**
  * 🔥 Build user profile (behavioral model)
  */
-async function buildUserProfile(cus_id) {
+async function buildUserProfile(cus_id, txnTimestamp = new Date()) {
   // 1. Transaction stats
   const txnStatsQuery = `
     SELECT 
@@ -120,6 +132,24 @@ async function buildUserProfile(cus_id) {
     console.warn('Location history table not available or mismatched');
   }
 
+  // 5. Recent transactions (within 5-minute rolling window relative to txnTimestamp)
+  let recentTransactions = [];
+  try {
+    const recentTxnsQuery = `
+      SELECT created_at AS timestamp, amount, location, category
+      FROM transactions
+      WHERE cus_id = $1
+      AND created_at >= $2::timestamp - INTERVAL '5 minutes'
+      AND created_at <= $2::timestamp
+      ORDER BY created_at DESC;
+    `;
+    const parsedTime = new Date(txnTimestamp).toISOString();
+    const recentTxnsRes = await pool.query(recentTxnsQuery, [cus_id, parsedTime]);
+    recentTransactions = recentTxnsRes.rows;
+  } catch (e) {
+    console.warn('Recent transactions query failed:', e.message);
+  }
+
   return {
     avgTransactionAmount: safeAvg,
     stdDevAmount: safeStd,
@@ -135,7 +165,9 @@ async function buildUserProfile(cus_id) {
       .filter(Boolean),
 
     avgDailyTransactions: parseFloat(stats.avg_daily_txns) || 1,
-    dailyTransactionCount: parseInt(stats.today_count) || 0
+    dailyTransactionCount: parseInt(stats.today_count) || 0,
+    recentTransactions,
+    cus_id
   };
 }
 

@@ -8,6 +8,8 @@ import '../../../core/utils/location_helper.dart';
 import '../../../core/utils/security_util.dart';
 import '../../../core/services/security_service.dart';
 import '../../../core/utils/security_validator.dart';
+import '../screens/helpdesk_screen.dart';
+import '../screens/safety_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -419,16 +421,26 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Center(
-                      child: Text(
-                        "Forgot details? Contact Bank",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.black54,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
+                    Center(
+  child: GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => HelpDeskScreen(),
+        ),
+      );
+    },
+    child: const Text(
+      "Forgot details? Contact Bank",
+      style: TextStyle(
+        fontSize: 12,
+        color: Colors.black54,
+        fontWeight: FontWeight.w500,
+      ),
+    ),
+  ),
+),
                     const SizedBox(height: 24),
                     Row(
                       children: [
@@ -522,11 +534,39 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: const [
-            _BottomAction(icon: Icons.map_outlined, label: "Find ATM"),
-            _BottomAction(icon: Icons.headset_mic_outlined, label: "Help Desk"),
-            _BottomAction(icon: Icons.security_outlined, label: "Safety"),
-          ],
+          children: [
+  _BottomAction(
+    icon: Icons.map_outlined,
+    label: "Find ATM",
+    onTap: () {},
+  ),
+
+  _BottomAction(
+    icon: Icons.headset_mic_outlined,
+    label: "Help Desk",
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => HelpDeskScreen(),
+        ),
+      );
+    },
+  ),
+
+  _BottomAction(
+    icon: Icons.security_outlined,
+    label: "Safety",
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>SafetyScreen(),
+        ),
+      );
+    },
+  ),
+],
         ),
       ),
     );
@@ -536,28 +576,45 @@ class _LoginScreenState extends State<LoginScreen> {
 class _BottomAction extends StatelessWidget {
   final IconData icon;
   final String label;
-  const _BottomAction({required this.icon, required this.label});
+  final VoidCallback onTap;
+
+  const _BottomAction({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          size: 22,
-          color: const Color(0xFF1F5D3A).withValues(alpha: 0.7),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 8,
         ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: Colors.black54,
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 22,
+              color: const Color(0xFF1F5D3A).withValues(alpha: 0.7),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Colors.black54,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
