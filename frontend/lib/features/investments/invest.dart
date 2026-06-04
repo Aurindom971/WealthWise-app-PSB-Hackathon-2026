@@ -48,7 +48,48 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
-  int _selectedTab = 0; // 0: Stocks, 1: F&O, 2: Mutual Funds
+  int _selectedTab = 0; // 0: Stocks, 1: F&O, 2: Mutual Funds, 3: Goals
+  int _goalsSubView = 0; // 0: None, 1: Add Goal, 2: Track Goals, 3: Goal Details
+  int _selectedGoalIndex = 0;
+  double _goalsSummaryTarget = 250000;
+  double _goalsSummarySaved = 157500;
+
+  late final List<GoalItem> _goalsList = [
+    GoalItem(
+      name: 'Retirement Fund',
+      targetText: '₹10L',
+      currentText: '₹4.5L',
+      progress: 0.45,
+      status: 'On Track',
+      icon: Icons.beach_access_rounded,
+      iconBgColor: const Color(0xFFEAF1ED),
+      targetValue: 1000000,
+      currentValue: 450000,
+    ),
+    GoalItem(
+      name: 'New Home',
+      targetText: '₹5L',
+      currentText: '₹1.25L',
+      progress: 0.25,
+      status: 'Delayed',
+      icon: Icons.home_rounded,
+      iconBgColor: const Color(0xFFEAF1ED),
+      targetValue: 500000,
+      currentValue: 125000,
+    ),
+    GoalItem(
+      name: 'Vacation',
+      targetText: '₹50K',
+      currentText: '₹35K',
+      progress: 0.70,
+      status: 'Delayed',
+      icon: Icons.flight_takeoff_rounded,
+      iconBgColor: const Color(0xFFEAF1ED),
+      targetValue: 50000,
+      currentValue: 35000,
+    ),
+  ];
+
   int _selectedTimeframe =
       4; // 0: 1m, 1: 3m, 2: 6m, 3: 1y, 4: 3y, 5: 5y, 6: max
   int _selectedFnOTimeframe = 0; // Starts at 1m for F&O
@@ -314,6 +355,9 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     );
 
     _loadApiData();
+
+    _goalsSummaryTarget = _goalsList.fold(0.0, (sum, item) => sum + item.targetValue);
+    _goalsSummarySaved = _goalsList.fold(0.0, (sum, item) => sum + item.currentValue);
   }
 
   Future<void> _loadApiData() async {
@@ -352,6 +396,14 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_goalsSubView == 1) {
+      return _buildAddGoalScreen();
+    } else if (_goalsSubView == 2) {
+      return _buildTrackGoalsScreen();
+    } else if (_goalsSubView == 3) {
+      return _buildGoalDetailsScreen(_selectedGoalIndex);
+    }
+
     return Container(
       color: const Color(0xFFF2F0EB), // kCream background
       child: SingleChildScrollView(
@@ -406,6 +458,13 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
               const SizedBox(height: 24),
               _buildLiveNFOs(),
               const SizedBox(height: 32),
+            ] else if (_selectedTab == 3) ...[
+              _buildGoalsSummary(),
+              const SizedBox(height: 16),
+              ..._buildGoalsList(),
+              const SizedBox(height: 20),
+              _buildGoalsActions(),
+              const SizedBox(height: 32),
             ],
           ],
         ),
@@ -417,10 +476,12 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     return Row(
       children: [
         Expanded(child: _buildTabWidget('Stocks', 0)),
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
         Expanded(child: _buildTabWidget('F&O', 1)),
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
         Expanded(child: _buildTabWidget('Mutual Funds', 2)),
+        const SizedBox(width: 6),
+        Expanded(child: _buildTabWidget('Goals', 3)),
       ],
     );
   }
@@ -428,9 +489,12 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   Widget _buildTabWidget(String text, int index) {
     bool isSelected = _selectedTab == index;
     return GestureDetector(
-      onTap: () => setState(() => _selectedTab = index),
+      onTap: () => setState(() {
+        _selectedTab = index;
+        _goalsSubView = 0; // Reset sub-navigation when switching tabs
+      }),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        height: 45,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected ? kDarkGreen : Colors.white,
@@ -439,12 +503,18 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
               ? Border.all(color: kDarkGreen)
               : Border.all(color: Colors.grey.shade300),
         ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isSelected ? Colors.white : kDarkGreen,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: Text(
+              text,
+              style: TextStyle(
+                color: isSelected ? Colors.white : kDarkGreen,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
           ),
         ),
       ),
@@ -4290,6 +4360,2431 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
         );
     }
   }
+
+  // --- GOALS TAB BUILDERS & HELPERS ---
+
+  Widget _buildGoalsSummary() {
+    double progressPercent = _goalsSummaryTarget > 0 
+        ? (_goalsSummarySaved / _goalsSummaryTarget).clamp(0.0, 1.0) 
+        : 0.0;
+    int percentage = (progressPercent * 100).toInt();
+
+    return CustomPaint(
+      painter: DottedBorderPainter(
+        color: Colors.grey.shade300,
+        strokeWidth: 1.2,
+        gap: 4,
+        borderRadius: 16,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.015),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Goals Summary',
+              style: TextStyle(
+                color: kDarkGreen,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 110,
+                      height: 110,
+                      child: TweenAnimationBuilder<double>(
+                        key: ValueKey('goals_donut_chart_${_goalsSummarySaved}'),
+                        tween: Tween<double>(begin: 0.0, end: 1.0),
+                        duration: const Duration(milliseconds: 1000),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, value, child) {
+                          return CustomPaint(
+                            painter: DonutPainter(
+                              progressPercent,
+                              kDarkGreen,
+                              const Color(0xFFECC1B0), // Peach/orange remaining progress color
+                              value,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Text(
+                      '$percentage%',
+                      style: TextStyle(
+                        color: kDarkGreen,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 28),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Total Goal Target:',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '₹${_formatCurrency(_goalsSummaryTarget)}',
+                        style: TextStyle(
+                          color: kDarkGreen,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Total Saved:',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '₹${_formatCurrency(_goalsSummarySaved)}',
+                        style: TextStyle(
+                          color: kDarkGreen,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Projected Completion:',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '2028',
+                        style: TextStyle(
+                          color: kDarkGreen,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Text(
+                  'Progress Across ${_goalsList.length} Goals',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildGoalsList() {
+    return List.generate(_goalsList.length, (index) {
+      final goal = _goalsList[index];
+      return GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedGoalIndex = index;
+            _goalsSubView = 3; // Goal details
+          });
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.01),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Icon Avatar
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEAF1ED),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      goal.icon,
+                      color: kDarkGreen,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  // Text details
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          goal.name,
+                          style: TextStyle(
+                            color: kDarkGreen,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Text(
+                              'Target: ',
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              goal.targetText,
+                              style: TextStyle(
+                                color: kDarkGreen,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Current: ',
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              goal.currentText,
+                              style: TextStyle(
+                                color: kDarkGreen,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Status Badge
+                  _buildStatusBadge(goal.status),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Progress Bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: goal.progress,
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: AlwaysStoppedAnimation<Color>(kDarkGreen),
+                  minHeight: 6,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildStatusBadge(String status) {
+    bool isOnTrack = status == 'On Track';
+    Color color = isOnTrack ? const Color(0xFF1F5D3A) : const Color(0xFFDD754E);
+    Color bg = isOnTrack ? const Color(0xFFEAF1ED) : const Color(0xFFFBEFEA);
+    IconData icon = isOnTrack ? Icons.check_circle_rounded : Icons.info_rounded;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: 14,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            status,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoalsActions() {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () {
+              setState(() {
+                _goalsSubView = 1; // Add Goal Screen
+              });
+            },
+            icon: Icon(Icons.add_rounded, color: kDarkGreen, size: 18),
+            label: Text(
+              'Add Goal',
+              style: TextStyle(
+                color: kDarkGreen,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white,
+              side: BorderSide(color: Colors.grey.shade300),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () {
+              setState(() {
+                _goalsSubView = 2; // Track Goals Screen
+              });
+            },
+            icon: Icon(Icons.bar_chart_rounded, color: kDarkGreen, size: 18),
+            label: Text(
+              'Track Goals',
+              style: TextStyle(
+                color: kDarkGreen,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white,
+              side: BorderSide(color: Colors.grey.shade300),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAddGoalScreen() {
+    final nameController = TextEditingController();
+    final targetController = TextEditingController(text: '500000');
+    final yearController = TextEditingController(text: '5');
+
+    String selectedIconLabel = 'Other';
+    IconData selectedIcon = Icons.track_changes_outlined;
+
+    final List<Map<String, dynamic>> iconsGrid = [
+      {'label': 'Home', 'icon': Icons.home_outlined},
+      {'label': 'Education', 'icon': Icons.school_outlined},
+      {'label': 'Travel', 'icon': Icons.flight_takeoff_outlined},
+      {'label': 'Car', 'icon': Icons.directions_car_outlined},
+      {'label': 'Retire', 'icon': Icons.favorite_outline_rounded},
+      {'label': 'Business', 'icon': Icons.business_center_outlined},
+      {'label': 'Gift', 'icon': Icons.card_giftcard_outlined},
+      {'label': 'Other', 'icon': Icons.track_changes_outlined},
+    ];
+
+    return Container(
+      color: Colors.white, // Match white background of mockup
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 12),
+          // Header with Title and Circle Close Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Create New Goal',
+                style: TextStyle(
+                  color: Color(0xFF1E293B),
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => setState(() => _goalsSubView = 0),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close_rounded, color: Color(0xFF1E293B), size: 20),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: StatefulBuilder(
+                builder: (context, setFormState) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Goal Name
+                      const Text(
+                        'Goal Name',
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: nameController,
+                        style: const TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.w600),
+                        decoration: InputDecoration(
+                          hintText: 'e.g. Down payment',
+                          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: kDarkGreen, width: 1.5),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Pick an Icon
+                      const Text(
+                        'Pick an icon',
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Icon Selection Grid (2 rows, 4 columns)
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 1.1,
+                        ),
+                        itemCount: iconsGrid.length,
+                        itemBuilder: (context, index) {
+                          final item = iconsGrid[index];
+                          final label = item['label'] as String;
+                          final icon = item['icon'] as IconData;
+                          final isSelected = selectedIconLabel == label;
+
+                          return GestureDetector(
+                            onTap: () {
+                              setFormState(() {
+                                selectedIconLabel = label;
+                                selectedIcon = icon;
+                                if (nameController.text.isEmpty ||
+                                    iconsGrid.any((e) => e['label'] == nameController.text || nameController.text == 'New ' + e['label'])) {
+                                  nameController.text = label == 'Other' ? 'Custom Goal' : label;
+                                }
+                              });
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isSelected ? const Color(0xFFEAF1ED) : Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSelected ? kDarkGreen : Colors.grey.shade200,
+                                  width: isSelected ? 2.0 : 1.0,
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    icon,
+                                    color: isSelected ? kDarkGreen : const Color(0xFF1F5D3A),
+                                    size: 24,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    label,
+                                    style: TextStyle(
+                                      color: isSelected ? kDarkGreen : Colors.grey.shade600,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      // Side-by-side inputs (Target & Years)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Target (₹)',
+                                  style: TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                TextField(
+                                  controller: targetController,
+                                  keyboardType: TextInputType.number,
+                                  style: const TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.w600),
+                                  decoration: InputDecoration(
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Colors.grey.shade300),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: kDarkGreen, width: 1.5),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Years',
+                                  style: TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                TextField(
+                                  controller: yearController,
+                                  keyboardType: TextInputType.number,
+                                  style: const TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.w600),
+                                  decoration: InputDecoration(
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Colors.grey.shade300),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: kDarkGreen, width: 1.5),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      ElevatedButton(
+                        onPressed: () {
+                          final name = nameController.text.trim().isEmpty ? selectedIconLabel : nameController.text.trim();
+                          final targetVal = double.tryParse(targetController.text.trim()) ?? 0;
+                          
+                          if (targetVal <= 0) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please enter a valid target amount.')),
+                            );
+                            return;
+                          }
+
+                          setState(() {
+                            _goalsList.add(
+                              GoalItem(
+                                name: name,
+                                targetText: formatAmount(targetVal),
+                                currentText: '₹0L',
+                                progress: 0.0,
+                                status: 'On Track',
+                                icon: selectedIcon,
+                                iconBgColor: const Color(0xFFEAF1ED),
+                                targetValue: targetVal,
+                                currentValue: 0.0,
+                              ),
+                            );
+
+                            _goalsSummaryTarget = _goalsList.fold(0.0, (sum, item) => sum + item.targetValue);
+                            _goalsSummarySaved = _goalsList.fold(0.0, (sum, item) => sum + item.currentValue);
+                            _goalsSubView = 0; 
+                          });
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Goal "$name" created successfully!'),
+                              backgroundColor: kDarkGreen,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF9ABCA7), // Sage green matching image
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Create Goal',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? kDarkGreen : const Color(0xFFEAF1ED),
+          borderRadius: BorderRadius.circular(100),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : kDarkGreen,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: kDarkGreen,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          style: TextStyle(color: kDarkGreen, fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+            prefixIcon: Icon(icon, color: kDarkGreen, size: 18),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: kDarkGreen, width: 1.5),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTrackGoalsScreen() {
+    return Container(
+      color: const Color(0xFFF2F0EB), // kCream background
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.arrow_back_ios_new_rounded, color: kDarkGreen),
+                onPressed: () {
+                  setState(() {
+                    _goalsSubView = 0;
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Track Financial Goals',
+                style: TextStyle(
+                  color: kDarkGreen,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: ListView.builder(
+              physics: const BouncingScrollPhysics(),
+              itemCount: _goalsList.length,
+              itemBuilder: (context, index) {
+                final goal = _goalsList[index];
+                double remaining = goal.targetValue - goal.currentValue;
+                if (remaining < 0) remaining = 0;
+                
+                final savingsController = TextEditingController();
+
+                return Card(
+                  color: Colors.white,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: const Color(0xFFEAF1ED),
+                              radius: 20,
+                              child: Icon(goal.icon, color: kDarkGreen, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    goal.name,
+                                    style: TextStyle(
+                                      color: kDarkGreen,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Remaining: ₹${_formatCurrency(remaining)}',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade500,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            _buildStatusBadge(goal.status),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Progress: ${(goal.progress * 100).toInt()}%',
+                              style: TextStyle(
+                                color: kDarkGreen,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                            Text(
+                              '${goal.currentText} / ${goal.targetText}',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: goal.progress,
+                            backgroundColor: Colors.grey.shade100,
+                            valueColor: AlwaysStoppedAnimation<Color>(kDarkGreen),
+                            minHeight: 8,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Divider(color: Colors.grey.shade100, height: 1),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 38,
+                                child: TextField(
+                                  controller: savingsController,
+                                  keyboardType: TextInputType.number,
+                                  style: TextStyle(color: kDarkGreen, fontSize: 13, fontWeight: FontWeight.w600),
+                                  decoration: InputDecoration(
+                                    hintText: 'Add savings (e.g. 5000)',
+                                    hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                                    filled: true,
+                                    fillColor: Colors.grey.shade50,
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(color: Colors.grey.shade200),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(color: kDarkGreen),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                double addAmount = double.tryParse(savingsController.text.trim()) ?? 0.0;
+                                if (addAmount <= 0) return;
+                                _showAddMoneyBottomSheet(context, addAmount, goal);
+                                savingsController.clear();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kDarkGreen,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                'Add More',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoalDetailsScreen(int index) {
+    if (index < 0 || index >= _goalsList.length) {
+      return const SizedBox.shrink();
+    }
+    
+    final goal = _goalsList[index];
+    double remaining = goal.targetValue - goal.currentValue;
+    if (remaining < 0) remaining = 0;
+
+    final addFundsController = TextEditingController();
+    final updateTargetController = TextEditingController(text: goal.targetValue.toInt().toString());
+
+    String description = 'Plan and save for your custom financial milestones and dreams.';
+    if (goal.name.toLowerCase().contains('retirement')) {
+      description = 'Secure your golden years with a robust corpus to cover post-retirement living expenses, medical care, and travel.';
+    } else if (goal.name.toLowerCase().contains('home') || goal.name.toLowerCase().contains('house')) {
+      description = 'Build or buy your dream house. Save up for down payments, registration costs, and interior designs.';
+    } else if (goal.name.toLowerCase().contains('vacation') || goal.name.toLowerCase().contains('travel')) {
+      description = 'Travel the world, explore new cultures, and make lasting memories with your loved ones.';
+    } else if (goal.name.toLowerCase().contains('car') || goal.name.toLowerCase().contains('vehicle')) {
+      description = 'Save for a down payment or full purchase of a new automobile. Ensure you cover insurance and registration costs too.';
+    } else if (goal.name.toLowerCase().contains('education') || goal.name.toLowerCase().contains('school')) {
+      description = 'Invest in higher education or professional development. Cover tuition, lodging, and academic materials.';
+    } else if (goal.name.toLowerCase().contains('business')) {
+      description = 'Fund your startup or expand your existing business venture. Secure capital for equipment, marketing, and operations.';
+    }
+
+    return Container(
+      color: const Color(0xFFF2F0EB), // kCream background
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.arrow_back_ios_new_rounded, color: kDarkGreen),
+                onPressed: () {
+                  setState(() {
+                    _goalsSubView = 0;
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  goal.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: kDarkGreen,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Card(
+                    color: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: const Color(0xFFEAF1ED),
+                                radius: 22,
+                                child: Icon(goal.icon, color: kDarkGreen, size: 24),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Goal Description',
+                                style: TextStyle(
+                                  color: kDarkGreen,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            description,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 13,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Card(
+                    color: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Progress: ${(goal.progress * 100).toInt()}%',
+                                style: TextStyle(
+                                  color: kDarkGreen,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              _buildStatusBadge(goal.status),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: goal.progress,
+                              backgroundColor: Colors.grey.shade100,
+                              valueColor: AlwaysStoppedAnimation<Color>(kDarkGreen),
+                              minHeight: 8,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildMetricTile('Saved Amount', goal.currentText),
+                              _buildMetricTile('Target Amount', goal.targetText),
+                              _buildMetricTile('Remaining', '₹${_formatCurrency(remaining)}'),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Card(
+                    color: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Add Funds to Goal',
+                            style: TextStyle(
+                              color: kDarkGreen,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: SizedBox(
+                                  height: 44,
+                                  child: TextField(
+                                    controller: addFundsController,
+                                    keyboardType: TextInputType.number,
+                                    style: TextStyle(color: kDarkGreen, fontSize: 14, fontWeight: FontWeight.w600),
+                                    decoration: InputDecoration(
+                                      hintText: 'Enter amount (e.g. 10000)',
+                                      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                                      filled: true,
+                                      fillColor: Colors.grey.shade50,
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide(color: Colors.grey.shade200),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide(color: kDarkGreen),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              ElevatedButton(
+                                onPressed: () {
+                                  double amount = double.tryParse(addFundsController.text.trim()) ?? 0.0;
+                                  if (amount <= 0) return;
+                                  _showAddMoneyBottomSheet(context, amount, goal);
+                                  addFundsController.clear();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: kDarkGreen,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Add More',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Card(
+                    color: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Modify Goal Target (Increase Size)',
+                            style: TextStyle(
+                              color: kDarkGreen,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: SizedBox(
+                                  height: 44,
+                                  child: TextField(
+                                    controller: updateTargetController,
+                                    keyboardType: TextInputType.number,
+                                    style: TextStyle(color: kDarkGreen, fontSize: 14, fontWeight: FontWeight.w600),
+                                    decoration: InputDecoration(
+                                      hintText: 'New Target (e.g. 1200000)',
+                                      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                                      filled: true,
+                                      fillColor: Colors.grey.shade50,
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide(color: Colors.grey.shade200),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide(color: kDarkGreen),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              ElevatedButton(
+                                onPressed: () {
+                                  double newTarget = double.tryParse(updateTargetController.text.trim()) ?? 0.0;
+                                  if (newTarget <= goal.targetValue) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('New target must be greater than current target.'),
+                                        backgroundColor: Colors.orange,
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  setState(() {
+                                    goal.targetValue = newTarget;
+                                    goal.targetText = formatAmount(newTarget);
+                                    goal.progress = (goal.currentValue / goal.targetValue).clamp(0.0, 1.0);
+
+                                    _goalsSummaryTarget = _goalsList.fold(0.0, (sum, item) => sum + item.targetValue);
+                                    _goalsSummarySaved = _goalsList.fold(0.0, (sum, item) => sum + item.currentValue);
+                                  });
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Goal target size updated to ${goal.targetText}!'),
+                                      backgroundColor: kDarkGreen,
+                                    ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFDD754E), 
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Update Target',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Card(
+                    color: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Emergency Withdrawal',
+                            style: TextStyle(
+                              color: kDarkGreen,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Need immediate access to these funds? You can withdraw your accumulated savings back to your bank account instantly.',
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: goal.currentValue <= 0 ? null : () {
+                                _showWithdrawalBottomSheet(context, goal);
+                              },
+                              icon: Icon(
+                                Icons.account_balance_wallet_rounded,
+                                color: goal.currentValue <= 0 ? Colors.grey : const Color(0xFFC2410C),
+                                size: 18,
+                              ),
+                              label: Text(
+                                'Withdraw to Bank Account',
+                                style: TextStyle(
+                                  color: goal.currentValue <= 0 ? Colors.grey : const Color(0xFFC2410C),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                  color: goal.currentValue <= 0 ? Colors.grey.shade300 : const Color(0xFFC2410C),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          backgroundColor: const Color(0xFFF2F0EB),
+                          title: Text(
+                            'Remove Goal',
+                            style: TextStyle(color: kDarkGreen, fontWeight: FontWeight.bold),
+                          ),
+                          content: Text(
+                            'Are you sure you want to remove your "${goal.name}" goal? This action cannot be undone.',
+                            style: TextStyle(color: Colors.grey.shade700),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                setState(() {
+                                  _goalsList.removeAt(index);
+                                  _goalsSummaryTarget = _goalsList.fold(0.0, (sum, item) => sum + item.targetValue);
+                                  _goalsSummarySaved = _goalsList.fold(0.0, (sum, item) => sum + item.currentValue);
+                                  _goalsSubView = 0;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Goal "${goal.name}" has been removed.'),
+                                    backgroundColor: Colors.red.shade800,
+                                  ),
+                                );
+                              },
+                              child: const Text('Remove', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.delete_forever_rounded, color: Colors.white, size: 20),
+                    label: const Text(
+                      'Remove Goal',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFC2410C),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricTile(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey.shade500,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            color: kDarkGreen,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showAddMoneyBottomSheet(BuildContext context, double amount, GoalItem goal) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          decoration: const BoxDecoration(
+            color: Color(0xFFF2F0EB), // kCream background
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: StatefulBuilder(
+            builder: (context, innerSetState) {
+              // Local state inside the builder
+              innerSetState((){});
+              return Navigator(
+                onGenerateRoute: (_) => MaterialPageRoute(
+                  builder: (context) => _PaymentFlowWidget(
+                    amount: amount,
+                    goal: goal,
+                    kDarkGreen: kDarkGreen,
+                    onComplete: (addAmount) {
+                      setState(() {
+                        goal.currentValue += addAmount;
+                        if (goal.currentValue > goal.targetValue) {
+                          goal.currentValue = goal.targetValue;
+                        }
+                        goal.currentText = formatAmount(goal.currentValue);
+                        goal.progress = (goal.currentValue / goal.targetValue).clamp(0.0, 1.0);
+                        
+                        _goalsSummaryTarget = _goalsList.fold(0.0, (sum, item) => sum + item.targetValue);
+                        _goalsSummarySaved = _goalsList.fold(0.0, (sum, item) => sum + item.currentValue);
+                      });
+                    },
+                    formatCurrency: _formatCurrency,
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  void _showWithdrawalBottomSheet(BuildContext context, GoalItem goal) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          decoration: const BoxDecoration(
+            color: Color(0xFFF2F0EB), // kCream background
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute(
+              builder: (context) => _WithdrawalFlowWidget(
+                amount: goal.currentValue,
+                goal: goal,
+                kDarkGreen: kDarkGreen,
+                onComplete: () {
+                  setState(() {
+                    goal.currentValue = 0.0;
+                    goal.currentText = formatAmount(0.0);
+                    goal.progress = 0.0;
+
+                    _goalsSummaryTarget = _goalsList.fold(0.0, (sum, item) => sum + item.targetValue);
+                    _goalsSummarySaved = _goalsList.fold(0.0, (sum, item) => sum + item.currentValue);
+                  });
+                },
+                formatCurrency: _formatCurrency,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  String _formatCurrency(double val) {
+    String str = val.toInt().toString();
+    if (str.length > 3) {
+      String lastThree = str.substring(str.length - 3);
+      String remaining = str.substring(0, str.length - 3);
+      String formatted = '';
+      while (remaining.length > 2) {
+        formatted = ',${remaining.substring(remaining.length - 2)}$formatted';
+        remaining = remaining.substring(0, remaining.length - 2);
+      }
+      return '$remaining$formatted,$lastThree';
+    }
+    return str;
+  }
+
+  String formatAmount(double amount) {
+    if (amount >= 100000) {
+      double lakhs = amount / 100000;
+      if (lakhs == lakhs.toInt()) {
+        return '₹${lakhs.toInt()}L';
+      } else {
+        return '₹${lakhs.toStringAsFixed(1)}L';
+      }
+    } else if (amount >= 1000) {
+      double k = amount / 1000;
+      if (k == k.toInt()) {
+        return '₹${k.toInt()}K';
+      } else {
+        return '₹${k.toStringAsFixed(1)}K';
+      }
+    } else {
+      return '₹${amount.toInt()}';
+    }
+  }
+}
+
+// Payment Flow Widget helper to hold local step state inside modal bottom sheet cleanly
+class _PaymentFlowWidget extends StatefulWidget {
+  final double amount;
+  final GoalItem goal;
+  final Color kDarkGreen;
+  final void Function(double) onComplete;
+  final String Function(double) formatCurrency;
+
+  const _PaymentFlowWidget({
+    required this.amount,
+    required this.goal,
+    required this.kDarkGreen,
+    required this.onComplete,
+    required this.formatCurrency,
+  });
+
+  @override
+  State<_PaymentFlowWidget> createState() => _PaymentFlowWidgetState();
+}
+
+class _PaymentFlowWidgetState extends State<_PaymentFlowWidget> {
+  int paymentStep = 0; // 0 = Choose Payment, 1 = Enter PIN, 2 = Loading, 3 = Success
+  String pin = '';
+
+  @override
+  Widget build(BuildContext context) {
+    if (paymentStep == 0) {
+      return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Payment Methods',
+                  style: TextStyle(
+                    color: widget.kDarkGreen,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Amount to Add',
+                        style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '₹${widget.formatCurrency(widget.amount)}',
+                        style: TextStyle(
+                          color: widget.kDarkGreen,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEAF1ED),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      widget.goal.name,
+                      style: TextStyle(color: widget.kDarkGreen, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Select Account / Method',
+              style: TextStyle(
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView(
+                children: [
+                  _buildOption(
+                    title: 'Punjab & Sind Bank Savings',
+                    subtitle: 'A/c No: ******7890 (Bal: ₹2,48,500)',
+                    icon: Icons.account_balance_rounded,
+                    onTap: () => setState(() => paymentStep = 1),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildOption(
+                    title: 'Google Pay UPI',
+                    subtitle: 'Pay via linked UPI application',
+                    icon: Icons.payments_rounded,
+                    onTap: () => setState(() => paymentStep = 1),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildOption(
+                    title: 'Net Banking',
+                    subtitle: 'Punjab & Sind Bank Net Banking portal',
+                    icon: Icons.laptop_mac_rounded,
+                    onTap: () => setState(() => paymentStep = 1),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (paymentStep == 1) {
+      return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  onPressed: () => setState(() {
+                    paymentStep = 0;
+                    pin = '';
+                  }),
+                ),
+                const Spacer(),
+                Text(
+                  'Security Verification',
+                  style: TextStyle(
+                    color: widget.kDarkGreen,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                const SizedBox(width: 48),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Center(
+              child: Text(
+                'ENTER 4-DIGIT SECURE UPI PIN',
+                style: TextStyle(
+                  color: Color(0xFF64748B),
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(4, (idx) {
+                bool active = idx < pin.length;
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 12),
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: active ? widget.kDarkGreen : Colors.grey.shade300,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: active ? widget.kDarkGreen : Colors.grey.shade400,
+                      width: 1.5,
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 32),
+            Expanded(
+              child: GridView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 1.6,
+                ),
+                itemCount: 12,
+                itemBuilder: (context, index) {
+                  String key = '';
+                  Widget child;
+                  if (index < 9) {
+                    key = (index + 1).toString();
+                    child = Text(
+                      key,
+                      style: TextStyle(
+                        color: widget.kDarkGreen,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  } else if (index == 9) {
+                    child = Icon(Icons.backspace_outlined, color: widget.kDarkGreen);
+                  } else if (index == 10) {
+                    key = '0';
+                    child = Text(
+                      key,
+                      style: TextStyle(
+                        color: widget.kDarkGreen,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  } else {
+                    child = Icon(Icons.check_circle_outline_rounded, color: Colors.green.shade700, size: 28);
+                  }
+
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (index < 9 || index == 10) {
+                          if (pin.length < 4) {
+                            pin += key;
+                          }
+                          if (pin.length == 4) {
+                            _processPayment();
+                          }
+                        } else if (index == 9) {
+                          if (pin.isNotEmpty) {
+                            pin = pin.substring(0, pin.length - 1);
+                          }
+                        } else {
+                          if (pin.length == 4) {
+                            _processPayment();
+                          }
+                        }
+                      });
+                    },
+                    child: Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: child,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (paymentStep == 2) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: widget.kDarkGreen,
+              strokeWidth: 4,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Processing Secure UPI Payment...',
+              style: TextStyle(
+                color: widget.kDarkGreen,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.check_circle_rounded,
+                color: Colors.green.shade700,
+                size: 72,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Payment Successful!',
+              style: TextStyle(
+                color: Color(0xFF1E293B),
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '₹${widget.formatCurrency(widget.amount)} added to ${widget.goal.name}',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: [
+                  _buildReceiptRow('Source Account', 'Punjab & Sind Bank (****7890)'),
+                  const Divider(),
+                  _buildReceiptRow('Transaction ID', 'TXN-9827361849'),
+                  const Divider(),
+                  _buildReceiptRow('Status', 'COMPLETED'),
+                ],
+              ),
+            ),
+            const Spacer(),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: widget.kDarkGreen,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Done',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _buildOption({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: const Color(0xFFEAF1ED),
+              child: Icon(icon, color: widget.kDarkGreen),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: widget.kDarkGreen,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReceiptRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+          Text(value, style: TextStyle(color: widget.kDarkGreen, fontSize: 12, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  void _processPayment() {
+    setState(() {
+      paymentStep = 2; // Loading spinner
+    });
+
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        widget.onComplete(widget.amount);
+        setState(() {
+          paymentStep = 3; // Success
+        });
+      }
+    });
+  }
+}
+
+// Payment Flow Widget helper to hold local step state inside modal bottom sheet cleanly for withdrawals
+class _WithdrawalFlowWidget extends StatefulWidget {
+  final double amount;
+  final GoalItem goal;
+  final Color kDarkGreen;
+  final VoidCallback onComplete;
+  final String Function(double) formatCurrency;
+
+  const _WithdrawalFlowWidget({
+    required this.amount,
+    required this.goal,
+    required this.kDarkGreen,
+    required this.onComplete,
+    required this.formatCurrency,
+  });
+
+  @override
+  State<_WithdrawalFlowWidget> createState() => _WithdrawalFlowWidgetState();
+}
+
+class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
+  int step = 0; // 0 = Confirm, 1 = Verification PIN, 2 = Loading, 3 = Success
+  String pin = '';
+
+  @override
+  Widget build(BuildContext context) {
+    if (step == 0) {
+      return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Confirm Withdrawal',
+                  style: TextStyle(
+                    color: widget.kDarkGreen,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Amount to Withdraw',
+                            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '₹${widget.formatCurrency(widget.amount)}',
+                            style: TextStyle(
+                              color: widget.kDarkGreen,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEAF1ED),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          widget.goal.name,
+                          style: TextStyle(color: widget.kDarkGreen, fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.account_balance_wallet_rounded, color: widget.kDarkGreen, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Destination Bank Account',
+                              style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Punjab & Sind Bank Savings (****7890)',
+                              style: TextStyle(
+                                color: widget.kDarkGreen,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFBEFEA),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFF0DCD3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: Color(0xFFDD754E), size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Emergency withdrawals will instantly stop this goal\'s growth and move all saved balance to your bank account.',
+                      style: TextStyle(
+                        color: Colors.red.shade900,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            ElevatedButton(
+              onPressed: () => setState(() => step = 1),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: widget.kDarkGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Verify & Withdraw',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      );
+    } else if (step == 1) {
+      return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  onPressed: () => setState(() {
+                    step = 0;
+                    pin = '';
+                  }),
+                ),
+                const Spacer(),
+                Text(
+                  'Security Verification',
+                  style: TextStyle(
+                    color: widget.kDarkGreen,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                const SizedBox(width: 48),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Center(
+              child: Text(
+                'ENTER 4-DIGIT SECURE UPI PIN',
+                style: TextStyle(
+                  color: Color(0xFF64748B),
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(4, (idx) {
+                bool active = idx < pin.length;
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 12),
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: active ? widget.kDarkGreen : Colors.grey.shade300,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: active ? widget.kDarkGreen : Colors.grey.shade400,
+                      width: 1.5,
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 32),
+            Expanded(
+              child: GridView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 1.6,
+                ),
+                itemCount: 12,
+                itemBuilder: (context, index) {
+                  String key = '';
+                  Widget child;
+                  if (index < 9) {
+                    key = (index + 1).toString();
+                    child = Text(
+                      key,
+                      style: TextStyle(
+                        color: widget.kDarkGreen,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  } else if (index == 9) {
+                    child = Icon(Icons.backspace_outlined, color: widget.kDarkGreen);
+                  } else if (index == 10) {
+                    key = '0';
+                    child = Text(
+                      key,
+                      style: TextStyle(
+                        color: widget.kDarkGreen,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  } else {
+                    child = Icon(Icons.check_circle_outline_rounded, color: Colors.green.shade700, size: 28);
+                  }
+
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (index < 9 || index == 10) {
+                          if (pin.length < 4) {
+                            pin += key;
+                          }
+                          if (pin.length == 4) {
+                            _processWithdrawal();
+                          }
+                        } else if (index == 9) {
+                          if (pin.isNotEmpty) {
+                            pin = pin.substring(0, pin.length - 1);
+                          }
+                        } else {
+                          if (pin.length == 4) {
+                            _processWithdrawal();
+                          }
+                        }
+                      });
+                    },
+                    child: Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: child,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (step == 2) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: widget.kDarkGreen,
+              strokeWidth: 4,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Initiating secure instant withdrawal...',
+              style: TextStyle(
+                color: widget.kDarkGreen,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.check_circle_rounded,
+                color: Colors.green.shade700,
+                size: 72,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Withdrawal Successful!',
+              style: TextStyle(
+                color: Color(0xFF1E293B),
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '₹${widget.formatCurrency(widget.amount)} credited to your bank account',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: [
+                  _buildReceiptRow('Source', 'Goal: ${widget.goal.name}'),
+                  const Divider(),
+                  _buildReceiptRow('Destination Account', 'Punjab & Sind Bank (****7890)'),
+                  const Divider(),
+                  _buildReceiptRow('Transaction ID', 'TXN-9847161823'),
+                  const Divider(),
+                  _buildReceiptRow('Status', 'SUCCESS'),
+                ],
+              ),
+            ),
+            const Spacer(),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: widget.kDarkGreen,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Done',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _buildReceiptRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+          Text(value, style: TextStyle(color: widget.kDarkGreen, fontSize: 12, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  void _processWithdrawal() {
+    setState(() {
+      step = 2; // Loading spinner
+    });
+
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        widget.onComplete();
+        setState(() {
+          step = 3; // Success
+        });
+      }
+    });
+  }
 }
 
 class PiePainter extends CustomPainter {
@@ -4538,4 +7033,28 @@ class DottedBorderContainer extends StatelessWidget {
       ),
     );
   }
+}
+
+class GoalItem {
+  final String name;
+  String targetText;
+  String currentText;
+  double progress;
+  final String status;
+  final IconData icon;
+  final Color iconBgColor;
+  double targetValue;
+  double currentValue;
+
+  GoalItem({
+    required this.name,
+    required this.targetText,
+    required this.currentText,
+    required this.progress,
+    required this.status,
+    required this.icon,
+    required this.iconBgColor,
+    required this.targetValue,
+    required this.currentValue,
+  });
 }
