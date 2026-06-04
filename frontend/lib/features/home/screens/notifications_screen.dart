@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/home_navigation_widgets.dart';
+import '../../send/screens/send_transfer_screen.dart';
 
 void showNotifications(BuildContext context) {
   showModalBottomSheet(
@@ -10,8 +11,32 @@ void showNotifications(BuildContext context) {
   );
 }
 
-class NotificationsSheet extends StatelessWidget {
+class NotificationsSheet extends StatefulWidget {
   const NotificationsSheet({super.key});
+
+  @override
+  State<NotificationsSheet> createState() => _NotificationsSheetState();
+}
+
+class _NotificationsSheetState extends State<NotificationsSheet> {
+  final List<Map<String, String>> _paymentRequests = [
+    {
+      'id': 'REQ_1',
+      'name': 'Rahul Kumar',
+      'upiId': 'rahul@oksbi',
+      'amount': '₹ 1,500',
+      'message': 'Dinner split',
+      'time': '10 Mins ago',
+    },
+    {
+      'id': 'REQ_2',
+      'name': 'Amazon India',
+      'upiId': 'amazon@apl',
+      'amount': '₹ 899',
+      'message': 'Order #482910 payment',
+      'time': '2 Hours ago',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -54,20 +79,25 @@ class NotificationsSheet extends StatelessWidget {
               children: [
                 _buildSectionHeader('Payment Requests'),
                 const SizedBox(height: 10),
-                _buildRequestCard(
-                  name: 'Rahul Kumar',
-                  upiId: 'rahul@oksbi',
-                  amount: '₹ 1,500',
-                  message: 'Dinner split',
-                  time: '10 Mins ago',
-                ),
-                _buildRequestCard(
-                  name: 'Amazon India',
-                  upiId: 'amazon@apl',
-                  amount: '₹ 899',
-                  message: 'Order #482910 payment',
-                  time: '2 Hours ago',
-                ),
+                if (_paymentRequests.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: Center(
+                      child: Text(
+                        'No new payment requests',
+                        style: TextStyle(color: Colors.grey.shade600, fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                  )
+                else
+                  ..._paymentRequests.map((req) => _buildRequestCard(
+                        id: req['id']!,
+                        name: req['name']!,
+                        upiId: req['upiId']!,
+                        amount: req['amount']!,
+                        message: req['message']!,
+                        time: req['time']!,
+                      )),
                 const SizedBox(height: 24),
                 _buildSectionHeader('Autopay & Subscriptions'),
                 const SizedBox(height: 10),
@@ -114,6 +144,7 @@ class NotificationsSheet extends StatelessWidget {
   }
 
   Widget _buildRequestCard({
+    required String id,
     required String name,
     required String upiId,
     required String amount,
@@ -224,7 +255,11 @@ class NotificationsSheet extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    setState(() {
+                      _paymentRequests.removeWhere((req) => req['id'] == id);
+                    });
+                  },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red,
                     side: const BorderSide(color: Colors.red),
@@ -238,7 +273,20 @@ class NotificationsSheet extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    final numericAmount = double.tryParse(amount.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PinScreen(
+                          recipientName: name.toUpperCase(),
+                          upiId: upiId,
+                          amount: numericAmount.toStringAsFixed(2),
+                          isUpi: true,
+                        ),
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: kForest,
                     foregroundColor: Colors.white,
