@@ -22,6 +22,7 @@ const {
   pool
 } = require('./db');
 const ragService = require('./src/services/ragService');
+const llmService = require('./src/services/llmService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -129,18 +130,11 @@ Risk Score: ${fraud.risk_score}/100
 Reasons: ${fraud.reasons.join(', ')}
 `;
 
-    const ollamaRes = await axios.post(
-      'http://localhost:11434/api/generate',
-      {
-        model: 'llama3',
-        prompt,
-        stream: false
-      }
-    );
+    const explanation = await llmService.generateResponse(prompt);
 
     return res.json({
       success: true,
-      explanation: ollamaRes.data.response.trim()
+      explanation
     });
 
   } catch (err) {
@@ -187,12 +181,8 @@ Rules:
 User message: "${message}"`;
 
   try {
-    const res = await axios.post('http://localhost:11434/api/generate', {
-      model: 'llama3',
-      prompt,
-      stream: false
-    });
-    const detected = res.data.response.trim().toUpperCase();
+    const responseText = await llmService.generateResponse(prompt);
+    const detected = responseText.toUpperCase();
     const valid = ['BALANCE', 'SPENDING', 'FRAUD', 'SECURITY', 'GENERAL_BANKING'];
     for (const v of valid) {
       if (detected.includes(v)) return v;
@@ -396,22 +386,15 @@ Rules:
       console.log(`  [${idx + 1}] Source: ${doc.source} | Score: ${doc.score.toFixed(4)}`);
     });
     console.log('=========================================');
-    console.log('\n--- EXACT PROMPT SENT TO OLLAMA ---');
+    console.log('\n--- EXACT PROMPT SENT TO LLM ---');
     console.log(prompt);
     console.log('------------------------------------\n');
 
-    const ollamaRes = await axios.post(
-      'http://localhost:11434/api/generate',
-      {
-        model: 'llama3',
-        prompt,
-        stream: false
-      }
-    );
+    const reply = await llmService.generateResponse(prompt);
 
     return res.json({
       success: true,
-      reply: ollamaRes.data.response.trim()
+      reply
     });
 
   } catch (err) {
@@ -515,6 +498,13 @@ app.get('/api/investments/ipos', async (req, res) => {
   }
 });
 
+
+// ======================================================
+// 🏥 HEALTH CHECK
+// ======================================================
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
 
 // ======================================================
 // 🚀 START SERVER
