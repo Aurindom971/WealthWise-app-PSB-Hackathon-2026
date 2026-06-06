@@ -21,6 +21,7 @@ const {
   buildUserProfile,
   pool
 } = require('./db');
+const ragService = require('./src/services/ragService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -153,6 +154,57 @@ Reasons: ${fraud.reasons.join(', ')}
 
 
 // ======================================================
+// Helper: Detect Intent using Hybrid Rules + Ollama llama3
+// ======================================================
+async function detectIntent(message) {
+  const lower = message.toLowerCase();
+  
+  // Keyword overrides to guarantee correct intent detection
+  if (lower.includes('balance') || lower.includes('savings') || lower.includes('how much money') || lower.includes('current balance') || lower.includes('my balance') || lower.includes('my savings')) {
+    return 'BALANCE';
+  }
+  if (lower.includes('spend') || lower.includes('expense') || lower.includes('transactions') || lower.includes('transaction history') || lower.includes('expenditure') || lower.includes('spent')) {
+    return 'SPENDING';
+  }
+  if (lower.includes('fraud') || lower.includes('flagged') || lower.includes('risk score') || lower.includes('severity') || lower.includes('unauthorized') || lower.includes('suspicious')) {
+    return 'FRAUD';
+  }
+  if (lower.includes('security') || lower.includes('mfa') || lower.includes('velocity attack') || lower.includes('cyber') || lower.includes('overlay')) {
+    return 'SECURITY';
+  }
+
+  const prompt = `Classify the user message into one of the following intents:
+- BALANCE: For inquiries about account balance, checking how much money is in an account, or account limits/status.
+- SPENDING: For inquiries about expenses, past transactions, where money was spent, or recent transaction history.
+- FRAUD: For inquiries about fraud, flagged transactions, unrecognized charges, risk score, blocked accounts/cards, or transaction alerts.
+- SECURITY: For security guidelines, password changes, dynamic limits, multi-factor authentication, or safety protocols.
+- GENERAL_BANKING: For general questions about customer support, banking hours, finding ATMs, card services, or general inquiries.
+
+Rules:
+1. Choose exactly one intent from: BALANCE, SPENDING, FRAUD, SECURITY, GENERAL_BANKING.
+2. Respond with ONLY the uppercase word of the detected intent. No explanations, no greeting, no extra text.
+
+User message: "${message}"`;
+
+  try {
+    const res = await axios.post('http://localhost:11434/api/generate', {
+      model: 'llama3',
+      prompt,
+      stream: false
+    });
+    const detected = res.data.response.trim().toUpperCase();
+    const valid = ['BALANCE', 'SPENDING', 'FRAUD', 'SECURITY', 'GENERAL_BANKING'];
+    for (const v of valid) {
+      if (detected.includes(v)) return v;
+    }
+    return 'GENERAL_BANKING';
+  } catch (err) {
+    console.error('Intent detection error:', err.message);
+    return 'GENERAL_BANKING';
+  }
+}
+
+// ======================================================
 // 🧠 AI CHAT (INTEGRATED INTENTS)
 // ======================================================
 app.post('/ai-chat', async (req, res) => {
@@ -168,7 +220,6 @@ app.post('/ai-chat', async (req, res) => {
 
     console.log('AI Query:', message);
 
-    let context = '';
     const lower = message.toLowerCase();
 
     // 🛡️ 1. SECURITY FILTER: Detect Action Requests
@@ -183,46 +234,22 @@ app.post('/ai-chat', async (req, res) => {
       });
     }
 
-    // 🔍 2. Detect Informational Intents
-    const isFraudQuery = lower.includes('risk') || lower.includes('fraud') || lower.includes('suspicious');
-    const isBalanceQuery = lower.includes('balance') || lower.includes('saving') || lower.includes('account');
-    const isSpendingQuery = lower.includes('spend') || lower.includes('spent');
+    // 🤖 2. Detect Intent
+    const detectedIntent = await detectIntent(message);
+    console.log(`Detected Intent: ${detectedIntent}`);
 
-    // 💰 3. Fetch Data: BALANCE / SAVINGS
-    if (isBalanceQuery && cus_id) {
-      try {
-        const balanceRes = await pool.query(
-          `SELECT SUM(amount) as balance 
-           FROM transactions 
-           WHERE cus_id = $1 AND status = 'successful'`,
-          [cus_id]
-        );
-        const balance = balanceRes.rows[0]?.balance || 0;
-        context += `User balance: ₹${balance}\n`;
-      } catch (err) {
-        console.warn('Balance fetch failed:', err.message);
-      }
-    }
+    // 📚 3. Always Retrieve Relevant Knowledge Chunks (RAG)
+    const startRetTime = Date.now();
+    const retrievedDocs = await ragService.search(message);
+    const retrievalLatency = Date.now() - startRetTime;
 
-    // 📊 4. Fetch Data: SPENDING (LAST 7 DAYS)
-    if (isSpendingQuery && cus_id) {
-      try {
-        const spendingRes = await pool.query(
-          `SELECT SUM(amount) as spent 
-           FROM transactions 
-           WHERE cus_id = $1 
-           AND created_at >= CURRENT_DATE - INTERVAL '7 days'`,
-          [cus_id]
-        );
-        const spent = spendingRes.rows[0]?.spent || 0;
-        context += `User spent this week: ₹${spent}\n`;
-      } catch (err) {
-        console.warn('Spending fetch failed:', err.message);
-      }
-    }
+    const retrievedKnowledge = retrievedDocs.length > 0
+      ? retrievedDocs.map(c => `[Source: ${c.source}] ${c.text}`).join('\n\n')
+      : 'No relevant banking knowledge found.';
 
-    // 🔍 5. Fetch Data: FRAUD / LAST TRANSACTION
-    if (isFraudQuery && cus_id) {
+    // 🔍 4. Conditional Context: Fraud Context (Only for FRAUD intent)
+    let fraudData = 'No fraud data requested for this intent.';
+    if (detectedIntent === 'FRAUD' && cus_id) {
       try {
         const txnRes = await pool.query(
           `SELECT * FROM transactions 
@@ -243,38 +270,135 @@ app.post('/ai-chat', async (req, res) => {
           };
 
           const fraud = detectFraud(txnData, profile);
-          context += `
-Last Transaction Risk Data:
-Amount: ₹${txn.amount}
-Time: ${txn.created_at}
-Risk Score: ${fraud.risk_score}/100
-Reasons: ${fraud.reasons.join(', ')}
-          `;
+          let severity = 'LOW';
+          if (fraud.risk_score >= 70) severity = 'HIGH';
+          else if (fraud.risk_score >= 30) severity = 'MEDIUM';
+
+          fraudData = `Last Transaction Risk Score: ${fraud.risk_score}/100\nSeverity: ${severity}\nReasons: ${fraud.reasons.join(', ')}\nAmount: ₹${txn.amount}\nTime: ${txn.created_at}\nLocation: ${txn.location}`;
+        } else {
+          fraudData = 'No transactions found for this user.';
         }
       } catch (err) {
-        console.warn('Fraud context fetch failed:', err.message);
+        console.warn('[RAG Integration] Fraud context fetch failed:', err.message);
+        fraudData = 'Failed to fetch fraud context.';
       }
     }
 
-    // 🧠 6. Final AI Prompt (Hardened Security)
-    const prompt = `
-You are SAGE, a smart banking assistant for Secure Wealth.
+    // 💰 5. Conditional Context: Account Context (Only for BALANCE / SPENDING intents)
+    let accountData = 'No account data requested for this intent.';
+    let accountContext = null; // structured object for prompt
+    if ((detectedIntent === 'BALANCE' || detectedIntent === 'SPENDING') && cus_id) {
+      try {
+        // Fetch authenticated user info for debugging logs
+        const userRes = await pool.query(
+          `SELECT email, auth_user_id FROM users WHERE cus_id = $1`,
+          [cus_id]
+        );
+        const authUser = userRes.rows[0] || { email: 'unknown', auth_user_id: 'unknown' };
 
-IMPORTANT RULES:
-- You CANNOT perform any actions like sending money, investing, or transactions.
-- You DO NOT execute requests for financial transfers.
-- You ONLY explain, guide, and provide insights.
-- If user asks for an action, politely refuse and guide them to the app menu.
+        const queryText = `SELECT account_id, account_type, balance 
+           FROM accounts 
+           WHERE cus_id = $1`;
+        const accountsRes = await pool.query(queryText, [cus_id]);
 
-User question:
-"${message}"
+        // Sum all accounts — matches dashboard logic (home_screen.dart _buildCard)
+        let totalBalance = 0;
+        const balanceSummationCode = `
+          let totalBalance = 0;
+          const accountDetails = accountsRes.rows.map(row => {
+            const bal = parseFloat(row.balance) || 0;
+            totalBalance += bal;
+            return { account_id: row.account_id, balance: bal };
+          });
+        `;
 
-${context ? `Data:\n${context}` : ''}
+        const accountDetails = accountsRes.rows.map(row => {
+          const bal = parseFloat(row.balance) || 0;
+          totalBalance += bal;
+          return {
+            account_id: row.account_id,
+            account_type: row.account_type,
+            balance: bal
+          };
+        });
 
-Behavior:
-- If user asks about data -> answer using provided data accurately.
-- Keep response short (2-3 sentences).
-`;
+        console.log('\n[SAGE DEBUG]');
+        console.log(`email=${authUser.email}`);
+        console.log(`authenticated_user_id=${authUser.auth_user_id}`);
+        console.log(`customerId=${cus_id}`);
+        console.log(`queryExecuted=${queryText}`);
+        console.log(`rawSupabaseResponse=`, JSON.stringify(accountsRes.rows));
+        console.log(`accounts=`, JSON.stringify(accountDetails.map(a => ({ account_id: a.account_id, balance: a.balance }))));
+        console.log(`balanceSummationCode=${balanceSummationCode.trim()}`);
+        console.log(`totalBalance=${totalBalance}`);
+        console.log('============================\n');
+
+        if (accountsRes.rows.length > 0) {
+          accountContext = {
+            cus_id,
+            total_balance: totalBalance,
+            accounts: accountDetails
+          };
+
+          // Build human-readable context for the prompt
+          const lines = accountDetails.map(a => {
+            const typeLabel = a.account_type.charAt(0).toUpperCase() + a.account_type.slice(1);
+            return `${typeLabel} Account (ID: ${a.account_id}): ₹${a.balance.toLocaleString('en-IN')}`;
+          });
+          lines.push(`Total Balance: ₹${totalBalance.toLocaleString('en-IN')}`);
+          accountData = lines.join('\n');
+        } else {
+          accountData = 'No accounts found for this user.';
+        }
+      } catch (err) {
+        console.warn('[RAG Integration] Account context fetch failed:', err.message);
+        accountData = 'Failed to fetch account context.';
+      }
+    }
+
+    // 🧠 6. Final SAGE Prompt Construction
+    const prompt = `You are SAGE, an AI banking assistant.
+
+User Question:
+${message}
+
+Account Information:
+${accountContext ? JSON.stringify(accountContext) : accountData}
+
+Fraud Context:
+${fraudData}
+
+Relevant Banking Knowledge:
+${retrievedKnowledge}
+
+Rules:
+* If the user asks about their balance, savings, or account money, you MUST answer using ONLY the exact values from Account Information above.
+* Report the Total Balance as the primary answer (e.g. "Your total account balance is ₹900,000.").
+* If multiple accounts exist, also list individual account balances.
+* NEVER invent, estimate, or round balances. Use the exact numbers from Account Information.
+* NEVER say you cannot access account information.
+* NEVER return generic banking explanations when account data is available.
+* Never perform transactions.
+* Never transfer money.
+* Never invest on behalf of users.
+* Only provide explanations and guidance.`;
+
+    const promptSize = prompt.length;
+
+    // 📊 7. Logging Metrics
+    console.log('\n=========================================');
+    console.log('🧠 SAGE Context Orchestration Metrics');
+    console.log(`Detected Intent:       ${detectedIntent}`);
+    console.log(`Retrieval Latency:     ${retrievalLatency}ms`);
+    console.log(`Prompt Size (chars):   ${promptSize}`);
+    console.log('Retrieved Chunks:');
+    retrievedDocs.forEach((doc, idx) => {
+      console.log(`  [${idx + 1}] Source: ${doc.source} | Score: ${doc.score.toFixed(4)}`);
+    });
+    console.log('=========================================');
+    console.log('\n--- EXACT PROMPT SENT TO OLLAMA ---');
+    console.log(prompt);
+    console.log('------------------------------------\n');
 
     const ollamaRes = await axios.post(
       'http://localhost:11434/api/generate',
@@ -296,6 +420,98 @@ Behavior:
       success: false,
       error: 'AI chat failed'
     });
+  }
+});
+
+// ======================================================
+// 🔍 STANDALONE RETRIEVAL API (RAG-SEARCH)
+// ======================================================
+app.post('/rag-search', async (req, res) => {
+  const { query } = req.body;
+  if (!query) {
+    return res.status(400).json({
+      success: false,
+      error: 'query is required'
+    });
+  }
+
+  const startTime = Date.now();
+  console.log(`[RAG Search API] Received query: "${query}"`);
+
+  try {
+    const results = await ragService.search(query);
+    const latency = Date.now() - startTime;
+    console.log(`[RAG Search API] Success: Returned ${results.length} chunks. Latency: ${latency}ms`);
+
+    return res.json({
+      success: true,
+      results: results.map(r => ({
+        score: r.score,
+        source: r.source,
+        chunk_index: r.chunk_index,
+        text: r.text
+      }))
+    });
+  } catch (err) {
+    const latency = Date.now() - startTime;
+    console.error(`[RAG Search API] Failed search for query: "${query}" after ${latency}ms. Error:`, err.message || err);
+    return res.status(500).json({
+      success: false,
+      error: 'RAG search failed'
+    });
+  }
+});
+
+
+// ======================================================
+// 📈 INVESTMENT MARKET DATA (FREE APIs)
+// ======================================================
+const { getStocks } = require('./services/stockService');
+const { getMutualFunds } = require('./services/mutualFundService');
+const { getOptionChains } = require('./services/optionChainService');
+const { getIPOs } = require('./services/ipoService');
+
+// GET /api/investments/stocks
+app.get('/api/investments/stocks', async (req, res) => {
+  try {
+    const stocks = await getStocks();
+    return res.json(stocks);
+  } catch (err) {
+    console.error('Stocks API error:', err);
+    return res.status(500).json({ error: 'Failed to fetch stock data' });
+  }
+});
+
+// GET /api/investments/funds
+app.get('/api/investments/funds', async (req, res) => {
+  try {
+    const funds = await getMutualFunds();
+    return res.json(funds);
+  } catch (err) {
+    console.error('Funds API error:', err);
+    return res.status(500).json({ error: 'Failed to fetch mutual fund data' });
+  }
+});
+
+// GET /api/investments/options
+app.get('/api/investments/options', async (req, res) => {
+  try {
+    const options = await getOptionChains();
+    return res.json(options);
+  } catch (err) {
+    console.error('Options API error:', err);
+    return res.status(500).json({ error: 'Failed to fetch option chain data' });
+  }
+});
+
+// GET /api/investments/ipos
+app.get('/api/investments/ipos', async (req, res) => {
+  try {
+    const ipos = await getIPOs();
+    return res.json(ipos);
+  } catch (err) {
+    console.error('IPOs API error:', err);
+    return res.status(500).json({ error: 'Failed to fetch IPO data' });
   }
 });
 
