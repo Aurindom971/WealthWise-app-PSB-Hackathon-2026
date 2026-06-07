@@ -3,17 +3,11 @@ const cors = require('cors');
 require('dotenv').config();
 const axios = require('axios');
 
-/**
- * 🌐 API GATEWAY & SECURITY MIDDLEWARE ROADMAP
- * ============================================
- * TODO: Harden entrypoints, authentication mechanisms, and rate limits.
- * Future improvements:
- *   - Implement rate limiting (e.g. rate-limit / express-rate-limit) to block automated brute-force velocity probes.
- *   - Enforce rigorous JSON schema validation (e.g., using Joi or Zod) to filter malicious payloads before database interaction.
- *   - Secure endpoints using standard JWT (JSON Web Token) bearer authentication linked to active sessions.
- *   - Integrate automated API metrics reporting (Prometheus/Grafana) for dashboard visibility of fraud alert occurrences.
- */
+const app = express();
+app.use(express.json());
+app.use(cors());
 
+const PORT = process.env.PORT || 3000;
 const { detectFraud } = require('./fraudDetection');
 const {
   saveTransaction,
@@ -23,15 +17,10 @@ const {
 } = require('./db');
 const ragService = require('./src/services/ragService');
 const llmService = require('./src/services/llmService');
+const financialInsightsService = require('./src/services/financialInsightsService');
+const financialHealthService = require('./src/services/financialHealthService');
+const suspiciousTransactionService = require('./src/services/suspiciousTransactionService');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Request Logger
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
@@ -147,35 +136,64 @@ Reasons: ${fraud.reasons.join(', ')}
 });
 
 
-// ======================================================
-// Helper: Detect Intent using Hybrid Rules + Ollama llama3
+// ================================================// Helper: Detect Intent using Hybrid Rules + LLM
 // ======================================================
 async function detectIntent(message) {
   const lower = message.toLowerCase();
   
   // Keyword overrides to guarantee correct intent detection
+  if (lower.includes('savings advice') || lower.includes('save money') || lower.includes('saving advice') || lower.includes('savings recommendations') || lower.includes('overspending advice') || lower.includes('how can i save')) {
+    return 'SAVINGS_ADVICE';
+  }
+  if (lower.includes('financial health') || lower.includes('healthy are my finances') || lower.includes('financial score') || lower.includes('health score') || lower.includes('finances healthy') || lower.includes('financial health score')) {
+    return 'FINANCIAL_HEALTH';
+  }
+  if (lower.includes('suspicious transactions') || lower.includes('show suspicious') || lower.includes('suspicious charges') || lower.includes('suspicious transaction')) {
+    return 'SUSPICIOUS_TRANSACTIONS';
+  }
+  if (lower.includes('why was my transaction flagged') || lower.includes('why was my payment flagged') || lower.includes('explain risk score') || lower.includes('fraud factors') || lower.includes('why flagged') || lower.includes('flagged as fraudulent') || lower.includes('explain fraud alert')) {
+    return 'FRAUD_EXPLAINABILITY';
+  }
+  if (lower.includes('highest expenses') || lower.includes('top expenses') || lower.includes('largest expenses') || lower.includes('largest transactions') || lower.includes('highest spending') || lower.includes('highest transaction')) {
+    return 'TOP_EXPENSES';
+  }
+  if (lower.includes('expense breakdown') || lower.includes('breakdown by category') || lower.includes('spending by category') || lower.includes('spending category') || lower.includes('expenses categories') || lower.includes('expense categories')) {
+    return 'EXPENSE_BREAKDOWN';
+  }
+  if (lower.includes('spend this week') || lower.includes('spending this week') || lower.includes('spend this month') || lower.includes('spending this month') || lower.includes('how much did i spend') || lower.includes('spending trend') || lower.includes('spending analysis')) {
+    return 'SPENDING_ANALYSIS';
+  }
+  if (lower.includes('investment summary') || lower.includes('what are my investments') || lower.includes('list my assets') || lower.includes('my investment portfolio') || lower.includes('show investments') || lower.includes('my asset details') || lower.includes('investment information')) {
+    return 'INVESTMENT_SUMMARY';
+  }
   if (lower.includes('balance') || lower.includes('savings') || lower.includes('how much money') || lower.includes('current balance') || lower.includes('my balance') || lower.includes('my savings')) {
     return 'BALANCE';
   }
   if (lower.includes('spend') || lower.includes('expense') || lower.includes('transactions') || lower.includes('transaction history') || lower.includes('expenditure') || lower.includes('spent')) {
-    return 'SPENDING';
+    return 'SPENDING_ANALYSIS';
   }
   if (lower.includes('fraud') || lower.includes('flagged') || lower.includes('risk score') || lower.includes('severity') || lower.includes('unauthorized') || lower.includes('suspicious')) {
-    return 'FRAUD';
+    return 'FRAUD_EXPLAINABILITY';
   }
   if (lower.includes('security') || lower.includes('mfa') || lower.includes('velocity attack') || lower.includes('cyber') || lower.includes('overlay')) {
     return 'SECURITY';
   }
 
   const prompt = `Classify the user message into one of the following intents:
-- BALANCE: For inquiries about account balance, checking how much money is in an account, or account limits/status.
-- SPENDING: For inquiries about expenses, past transactions, where money was spent, or recent transaction history.
-- FRAUD: For inquiries about fraud, flagged transactions, unrecognized charges, risk score, blocked accounts/cards, or transaction alerts.
-- SECURITY: For security guidelines, password changes, dynamic limits, multi-factor authentication, or safety protocols.
-- GENERAL_BANKING: For general questions about customer support, banking hours, finding ATMs, card services, or general inquiries.
+- BALANCE: For inquiries about account balance, checking how much money is in an account.
+- SPENDING_ANALYSIS: For overall spending over time, weekly/monthly spending trends.
+- EXPENSE_BREAKDOWN: For category breakdown of expenses.
+- TOP_EXPENSES: For highest debit transactions.
+- SAVINGS_ADVICE: For recommendations on how to save, overspending detection, subscription tracking.
+- SUSPICIOUS_TRANSACTIONS: For identifying high-risk or unusual transactions.
+- FRAUD_EXPLAINABILITY: For detailing why a transaction was flagged as fraudulent.
+- INVESTMENT_SUMMARY: For investment holdings and asset totals.
+- FINANCIAL_HEALTH: For overall health score assessment.
+- SECURITY: For security guidelines, multi-factor authentication, or safety protocols.
+- GENERAL_BANKING: For general questions.
 
 Rules:
-1. Choose exactly one intent from: BALANCE, SPENDING, FRAUD, SECURITY, GENERAL_BANKING.
+1. Choose exactly one intent from the list above.
 2. Respond with ONLY the uppercase word of the detected intent. No explanations, no greeting, no extra text.
 
 User message: "${message}"`;
@@ -183,7 +201,11 @@ User message: "${message}"`;
   try {
     const responseText = await llmService.generateResponse(prompt);
     const detected = responseText.toUpperCase();
-    const valid = ['BALANCE', 'SPENDING', 'FRAUD', 'SECURITY', 'GENERAL_BANKING'];
+    const valid = [
+      'BALANCE', 'SPENDING_ANALYSIS', 'EXPENSE_BREAKDOWN', 'TOP_EXPENSES',
+      'SAVINGS_ADVICE', 'SUSPICIOUS_TRANSACTIONS', 'FRAUD_EXPLAINABILITY',
+      'INVESTMENT_SUMMARY', 'FINANCIAL_HEALTH', 'SECURITY', 'GENERAL_BANKING'
+    ];
     for (const v of valid) {
       if (detected.includes(v)) return v;
     }
@@ -237,71 +259,26 @@ app.post('/ai-chat', async (req, res) => {
       ? retrievedDocs.map(c => `[Source: ${c.source}] ${c.text}`).join('\n\n')
       : 'No relevant banking knowledge found.';
 
-    // 🔍 4. Conditional Context: Fraud Context (Only for FRAUD intent)
-    let fraudData = 'No fraud data requested for this intent.';
-    if (detectedIntent === 'FRAUD' && cus_id) {
+    // 🔍 Context Variables
+    let accountData = 'No account details fetched.';
+    let accountContextObj = null;
+    let spendingAnalysisContext = 'No spending analysis requested.';
+    let expenseBreakdownContext = 'No expense category breakdown requested.';
+    let topExpensesContext = 'No top expenses list requested.';
+    let savingsAdviceContext = 'No savings advice requested.';
+    let suspiciousTransactionsContext = 'No suspicious transactions list requested.';
+    let fraudExplainabilityContext = 'No fraud explainability context requested.';
+    let investmentSummaryContext = 'No investment summary requested.';
+    let financialHealthContext = 'No financial health score requested.';
+
+    // 💰 Query accounts if cus_id is available (used for BALANCE, SAVINGS_ADVICE, FINANCIAL_HEALTH, etc.)
+    if (cus_id) {
       try {
-        const txnRes = await pool.query(
-          `SELECT * FROM transactions 
-           WHERE cus_id = $1 
-           ORDER BY created_at DESC 
-           LIMIT 1`,
+        const accountsRes = await pool.query(
+          `SELECT account_id, account_type, balance FROM accounts WHERE cus_id = $1`,
           [cus_id]
         );
-
-        const txn = txnRes.rows[0];
-        if (txn) {
-          const profile = await buildUserProfile(cus_id);
-          const txnData = {
-            amount: txn.amount,
-            timestamp: txn.created_at,
-            location: txn.location,
-            dailyTransactionCount: profile.dailyTransactionCount + 1
-          };
-
-          const fraud = detectFraud(txnData, profile);
-          let severity = 'LOW';
-          if (fraud.risk_score >= 70) severity = 'HIGH';
-          else if (fraud.risk_score >= 30) severity = 'MEDIUM';
-
-          fraudData = `Last Transaction Risk Score: ${fraud.risk_score}/100\nSeverity: ${severity}\nReasons: ${fraud.reasons.join(', ')}\nAmount: ₹${txn.amount}\nTime: ${txn.created_at}\nLocation: ${txn.location}`;
-        } else {
-          fraudData = 'No transactions found for this user.';
-        }
-      } catch (err) {
-        console.warn('[RAG Integration] Fraud context fetch failed:', err.message);
-        fraudData = 'Failed to fetch fraud context.';
-      }
-    }
-
-    // 💰 5. Conditional Context: Account Context (Only for BALANCE / SPENDING intents)
-    let accountData = 'No account data requested for this intent.';
-    let accountContext = null; // structured object for prompt
-    if ((detectedIntent === 'BALANCE' || detectedIntent === 'SPENDING') && cus_id) {
-      try {
-        // Fetch authenticated user info for debugging logs
-        const userRes = await pool.query(
-          `SELECT email, auth_user_id FROM users WHERE cus_id = $1`,
-          [cus_id]
-        );
-        const authUser = userRes.rows[0] || { email: 'unknown', auth_user_id: 'unknown' };
-
-        const queryText = `SELECT account_id, account_type, balance 
-           FROM accounts 
-           WHERE cus_id = $1`;
-        const accountsRes = await pool.query(queryText, [cus_id]);
-
-        // Sum all accounts — matches dashboard logic (home_screen.dart _buildCard)
         let totalBalance = 0;
-        const balanceSummationCode = `
-          let totalBalance = 0;
-          const accountDetails = accountsRes.rows.map(row => {
-            const bal = parseFloat(row.balance) || 0;
-            totalBalance += bal;
-            return { account_id: row.account_id, balance: bal };
-          });
-        `;
-
         const accountDetails = accountsRes.rows.map(row => {
           const bal = parseFloat(row.balance) || 0;
           totalBalance += bal;
@@ -311,26 +288,12 @@ app.post('/ai-chat', async (req, res) => {
             balance: bal
           };
         });
-
-        console.log('\n[SAGE DEBUG]');
-        console.log(`email=${authUser.email}`);
-        console.log(`authenticated_user_id=${authUser.auth_user_id}`);
-        console.log(`customerId=${cus_id}`);
-        console.log(`queryExecuted=${queryText}`);
-        console.log(`rawSupabaseResponse=`, JSON.stringify(accountsRes.rows));
-        console.log(`accounts=`, JSON.stringify(accountDetails.map(a => ({ account_id: a.account_id, balance: a.balance }))));
-        console.log(`balanceSummationCode=${balanceSummationCode.trim()}`);
-        console.log(`totalBalance=${totalBalance}`);
-        console.log('============================\n');
-
         if (accountsRes.rows.length > 0) {
-          accountContext = {
+          accountContextObj = {
             cus_id,
             total_balance: totalBalance,
             accounts: accountDetails
           };
-
-          // Build human-readable context for the prompt
           const lines = accountDetails.map(a => {
             const typeLabel = a.account_type.charAt(0).toUpperCase() + a.account_type.slice(1);
             return `${typeLabel} Account (ID: ${a.account_id}): ₹${a.balance.toLocaleString('en-IN')}`;
@@ -340,38 +303,284 @@ app.post('/ai-chat', async (req, res) => {
         } else {
           accountData = 'No accounts found for this user.';
         }
+
+        // --- DYNAMIC INTENT CONTEXT AGGREGATION ---
+        
+        // 1. SPENDING_ANALYSIS
+        if (detectedIntent === 'SPENDING_ANALYSIS') {
+          const weekly = await financialInsightsService.getWeeklySpending(cus_id);
+          const monthly = await financialInsightsService.getMonthlySpending(cus_id);
+          const avgDaily = await financialInsightsService.getAverageDailySpend(cus_id);
+          spendingAnalysisContext = `
+Weekly Spending:
+- Current Week: ₹${weekly.totalSpent.toLocaleString('en-IN')}
+- Previous Week: ₹${weekly.previousSpent.toLocaleString('en-IN')}
+- Trend: ${weekly.differencePercent}% ${weekly.trend} than previous week
+
+Monthly Spending:
+- Current Month: ₹${monthly.totalSpent.toLocaleString('en-IN')}
+- Previous Month: ₹${monthly.previousSpent.toLocaleString('en-IN')}
+- Trend: ${monthly.differencePercent}% ${monthly.trend} than previous month
+
+Average Daily Spend:
+- ₹${avgDaily.toLocaleString('en-IN')}/day (calculated over the last 30 days)
+`.trim();
+        }
+
+        // 2. EXPENSE_BREAKDOWN
+        if (detectedIntent === 'EXPENSE_BREAKDOWN') {
+          const breakdown = await financialInsightsService.getCategoryBreakdown(cus_id);
+          expenseBreakdownContext = breakdown.length > 0
+            ? breakdown.map(b => `${b.category}: ₹${b.amount.toLocaleString('en-IN')}`).join('\n')
+            : 'No expense category records found for the last 30 days.';
+        }
+
+        // 3. TOP_EXPENSES
+        if (detectedIntent === 'TOP_EXPENSES') {
+          const top = await financialInsightsService.getTopExpenses(cus_id);
+          topExpensesContext = top.length > 0
+            ? top.map((t, i) => `${i + 1}. ${t.merchant}: ₹${t.amount.toLocaleString('en-IN')} [${t.category}] (${new Date(t.date).toLocaleDateString()})`).join('\n')
+            : 'No expense records found.';
+        }
+
+        // 4. SAVINGS_ADVICE
+        if (detectedIntent === 'SAVINGS_ADVICE') {
+          const bal = accountContextObj ? accountContextObj.total_balance : 0;
+          const savings = await financialInsightsService.getSavingsInsights(cus_id, bal);
+          
+          let overspendStr = 'No category overspending trends detected.';
+          if (savings.overspending.length > 0) {
+            overspendStr = savings.overspending.map(o => `- ${o.category} spending increased by ${o.increasePercent}% (+₹${o.amountIncrease.toLocaleString('en-IN')})`).join('\n');
+          }
+
+          let subStr = 'No recurring subscriptions detected.';
+          if (savings.subscriptions.length > 0) {
+            subStr = savings.subscriptions.map(s => `- ${s.name}: ₹${s.amount.toLocaleString('en-IN')}/month`).join('\n');
+          }
+
+          savingsAdviceContext = `
+Overspending Trends (MoM):
+${overspendStr}
+
+Detected Monthly Subscriptions:
+${subStr}
+- Total Subscription Spending: ₹${savings.totalRecurringSpend.toLocaleString('en-IN')}/month
+
+Savings Opportunity:
+- Reducing discretionary categories by 15% could save ₹${savings.discretionarySavingsOpportunity.toLocaleString('en-IN')}/month.
+
+Emergency Fund Runway:
+- Runway: ${savings.emergencyRunwayMonths} months of spending covered.
+- Liquid Cash Balance: ₹${bal.toLocaleString('en-IN')}
+- Average Monthly Outflow: ₹${savings.averageMonthlySpend.toLocaleString('en-IN')}
+`.trim();
+        }
+
+        // 5. SUSPICIOUS_TRANSACTIONS
+        if (detectedIntent === 'SUSPICIOUS_TRANSACTIONS') {
+          const suspicious = await suspiciousTransactionService.detectSuspiciousTransactions(cus_id);
+          suspiciousTransactionsContext = suspicious.length > 0
+            ? suspicious.map(s => `
+Transaction ID: ${s.transaction_id}
+- Merchant: ${s.merchant}
+- Amount: ₹${s.amount.toLocaleString('en-IN')}
+- Risk Score: ${s.riskScore}/100
+- Reasons: ${s.reasons.join(', ')}
+- Location: ${s.location}
+- Date: ${new Date(s.date).toLocaleDateString()}
+`.trim()).join('\n\n')
+            : 'No suspicious transactions detected.';
+        }
+
+        // 6. FRAUD_EXPLAINABILITY
+        if (detectedIntent === 'FRAUD_EXPLAINABILITY') {
+          const profile = await buildUserProfile(cus_id);
+          const txnRes = await pool.query(
+            `SELECT * FROM transactions WHERE cus_id = $1 ORDER BY created_at DESC LIMIT 1`,
+            [cus_id]
+          );
+          const txn = txnRes.rows[0];
+          if (txn) {
+            const amount = Math.abs(parseFloat(txn.amount)) || 0;
+            const txnData = {
+              amount,
+              timestamp: txn.created_at,
+              location: txn.location,
+              dailyTransactionCount: profile.dailyTransactionCount + 1
+            };
+            const fraud = detectFraud(txnData, profile);
+            
+            // Reconstruct scoring rules
+            const contributionList = [];
+            let simulatedScore = 0;
+
+            // Geo-velocity mismatch
+            if (txn.location && txn.location.toLowerCase() !== 'unknown') {
+              const locationsQuery = `SELECT DISTINCT LOWER(city) FROM location_history WHERE cus_id = $1`;
+              const locs = await pool.query(locationsQuery, [cus_id]);
+              const cities = locs.rows.map(r => r.lower);
+              if (cities.length > 0 && !cities.includes(txn.location.toLowerCase())) {
+                simulatedScore += 25;
+                contributionList.push(`✓ Unusual Location Mismatch (+25)`);
+              }
+            }
+
+            // High Amount Outlier
+            if (amount > profile.avgTransactionAmount + 3 * profile.stdDevAmount) {
+              simulatedScore += 40;
+              contributionList.push(`✓ Critical Transaction Amount Outlier (+40)`);
+            } else if (amount > profile.avgTransactionAmount + 2 * profile.stdDevAmount) {
+              simulatedScore += 20;
+              contributionList.push(`✓ Elevated Transaction Amount (+20)`);
+            }
+
+            // Rapid velocity bursts
+            if (profile.recentTransactions && profile.recentTransactions.length >= 2) {
+              simulatedScore += 25;
+              contributionList.push(`✓ Velocity burst detected (+25)`);
+            }
+
+            // Match active system alert flag
+            const alertRes = await pool.query(`SELECT 1 FROM fraud_alerts WHERE transaction_id = $1`, [txn.transaction_id]);
+            if (alertRes.rows.length > 0) {
+              simulatedScore = Math.max(simulatedScore, 75);
+              contributionList.push(`✓ Behavioral engine auto-flag alert matched (+50)`);
+            }
+
+            const finalRisk = Math.min(100, fraud.risk_score || simulatedScore);
+            let severity = 'LOW';
+            if (finalRisk >= 70) severity = 'HIGH';
+            else if (finalRisk >= 30) severity = 'MEDIUM';
+
+            fraudExplainabilityContext = `
+Flagged Transaction Details:
+- Transaction ID: ${txn.transaction_id}
+- Merchant/Counterparty: ${txn.counterparty_name || 'Unknown'}
+- Amount: ₹${amount.toLocaleString('en-IN')}
+- Date: ${new Date(txn.created_at).toLocaleString()}
+- Location: ${txn.location || 'Unknown'}
+
+Fraud Score & Rules Breakdown:
+- Risk Score: ${finalRisk}/100
+- Severity Level: ${severity}
+- Contributing Rule Matches:
+${contributionList.length > 0 ? contributionList.join('\n') : '- No rule contributions computed (Low Risk)'}
+- Heuristics: Average standard amount was ₹${Math.round(profile.avgTransactionAmount).toLocaleString('en-IN')} (StdDev: ₹${Math.round(profile.stdDevAmount).toLocaleString('en-IN')})
+`.trim();
+          } else {
+            fraudExplainabilityContext = 'No transactions found to explain.';
+          }
+        }
+
+        // 7. INVESTMENT_SUMMARY
+        if (detectedIntent === 'INVESTMENT_SUMMARY') {
+          const invRes = await pool.query(
+            `SELECT investment_type, asset_name, amount FROM investments WHERE cus_id = $1`,
+            [cus_id]
+          );
+          if (invRes.rows.length > 0) {
+            let totalInv = 0;
+            const lines = invRes.rows.map(r => {
+              const amt = parseFloat(r.amount) || 0;
+              totalInv += amt;
+              return `- ${r.asset_name} (${r.investment_type}): ₹${amt.toLocaleString('en-IN')}`;
+            });
+            lines.unshift(`Total Portfolio Assets: ₹${totalInv.toLocaleString('en-IN')}`);
+            investmentSummaryContext = lines.join('\n');
+          } else {
+            investmentSummaryContext = 'No investment assets found for this portfolio.';
+          }
+        }
+
+        // 8. FINANCIAL_HEALTH
+        if (detectedIntent === 'FINANCIAL_HEALTH') {
+          const health = await financialHealthService.calculateFinancialHealth(cus_id);
+          financialHealthContext = `
+Financial Health Score: ${health.score}/100
+
+Key Financial Strengths:
+${health.strengths.length > 0 ? health.strengths.map(s => `✓ ${s}`).join('\n') : '- None identified'}
+
+Areas for Improvement (Weaknesses):
+${health.weaknesses.length > 0 ? health.weaknesses.map(w => `⚠ ${w}`).join('\n') : '- None identified'}
+
+Metrics:
+- Monthly Outflows: ₹${health.metrics.monthlySpend.toLocaleString('en-IN')}
+- Monthly Inflows: ₹${health.metrics.monthlyInflow.toLocaleString('en-IN')}
+- Outstanding Debts: ₹${health.metrics.totalDebt.toLocaleString('en-IN')}
+- Active Investments: ₹${health.metrics.totalInvestments.toLocaleString('en-IN')}
+- Liquidity Cushion: Covers ${health.metrics.emergencyRunwayMonths} months
+`.trim();
+        }
+
       } catch (err) {
-        console.warn('[RAG Integration] Account context fetch failed:', err.message);
-        accountData = 'Failed to fetch account context.';
+        console.warn('[Copilot Context Integration] Aggregation failed:', err.message);
       }
     }
 
-    // 🧠 6. Final SAGE Prompt Construction
-    const prompt = `You are SAGE, an AI banking assistant.
+    const intent = detectedIntent;
+    const insights = {
+      spendingAnalysis: spendingAnalysisContext,
+      expenseBreakdown: expenseBreakdownContext,
+      topExpenses: topExpensesContext,
+      savingsAdvice: savingsAdviceContext,
+      financialHealth: financialHealthContext
+    };
+    const fraudData = {
+      suspiciousTransactions: suspiciousTransactionsContext,
+      fraudExplainability: fraudExplainabilityContext
+    };
+
+    console.log("Detected Intent:", intent);
+    console.log("Financial Insights:", insights);
+    console.log("Fraud Context:", fraudData);
+    console.log("Account Context:", accountData);
+
+    // 🧠 6. Upgraded SAGE Prompt Construction
+    const prompt = `You are SAGE, an AI Financial Copilot.
 
 User Question:
 ${message}
 
+=== CONTEXT ===
+
 Account Information:
-${accountContext ? JSON.stringify(accountContext) : accountData}
+${accountContextObj ? JSON.stringify(accountContextObj) : accountData}
 
-Fraud Context:
-${fraudData}
+Weekly/Monthly Spending Analysis:
+${spendingAnalysisContext}
 
-Relevant Banking Knowledge:
+Expense Categories Breakdown:
+${expenseBreakdownContext}
+
+Top 10 Largest Expenses:
+${topExpensesContext}
+
+Savings Advisor Insights:
+${savingsAdviceContext}
+
+Suspicious Transaction Detection:
+${suspiciousTransactionsContext}
+
+Fraud Explainability Details:
+${fraudExplainabilityContext}
+
+Investment Holdings Summary:
+${investmentSummaryContext}
+
+Financial Health Score & Assessment:
+${financialHealthContext}
+
+Relevant Banking & Security Knowledge (RAG Docs):
 ${retrievedKnowledge}
 
-Rules:
-* If the user asks about their balance, savings, or account money, you MUST answer using ONLY the exact values from Account Information above.
-* Report the Total Balance as the primary answer (e.g. "Your total account balance is ₹900,000.").
-* If multiple accounts exist, also list individual account balances.
-* NEVER invent, estimate, or round balances. Use the exact numbers from Account Information.
-* NEVER say you cannot access account information.
-* NEVER return generic banking explanations when account data is available.
-* Never perform transactions.
-* Never transfer money.
-* Never invest on behalf of users.
-* Only provide explanations and guidance.`;
+=== RULES ===
+* You MUST answer user questions using the actual, live data provided in the CONTEXT sections above.
+* Report the overall total account balance primarily if queried about balance (e.g. "Your total account balance is ₹900,000.").
+* Never invent, estimate, or round balances, transaction records, risk scores, or spending figures. Always use exact numbers.
+* Never say you cannot access account or transaction data if it is populated in the context above.
+* Never return generic answers when live financial analysis data is present.
+* Strictly enforce safety limits: SAGE cannot perform transactions, transfer money, or invest on behalf of users. Only provide explanations, analysis, and recommendations.`;
 
     const promptSize = prompt.length;
 
@@ -445,6 +654,96 @@ app.post('/rag-search', async (req, res) => {
   }
 });
 
+
+// ======================================================
+// 📊 FINANCIAL COPILOT ENDPOINTS (PHASE H)
+// ======================================================
+
+// 1. POST /financial-insights
+app.post('/financial-insights', async (req, res) => {
+  const { cus_id } = req.body;
+  if (!cus_id) {
+    return res.status(400).json({ success: false, error: 'cus_id is required' });
+  }
+  try {
+    const weekly = await financialInsightsService.getWeeklySpending(cus_id);
+    const monthly = await financialInsightsService.getMonthlySpending(cus_id);
+    const avgDaily = await financialInsightsService.getAverageDailySpend(cus_id);
+    return res.json({
+      success: true,
+      data: { weekly, monthly, averageDailySpend: avgDaily }
+    });
+  } catch (err) {
+    console.error('Error fetching financial insights:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 2. POST /financial-health
+app.post('/financial-health', async (req, res) => {
+  const { cus_id } = req.body;
+  if (!cus_id) {
+    return res.status(400).json({ success: false, error: 'cus_id is required' });
+  }
+  try {
+    const health = await financialHealthService.calculateFinancialHealth(cus_id);
+    return res.json({ success: true, data: health });
+  } catch (err) {
+    console.error('Error calculating financial health:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 3. POST /suspicious-transactions
+app.post('/suspicious-transactions', async (req, res) => {
+  const { cus_id } = req.body;
+  if (!cus_id) {
+    return res.status(400).json({ success: false, error: 'cus_id is required' });
+  }
+  try {
+    const suspicious = await suspiciousTransactionService.detectSuspiciousTransactions(cus_id);
+    return res.json({ success: true, data: suspicious });
+  } catch (err) {
+    console.error('Error fetching suspicious transactions:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 4. POST /expense-analysis
+app.post('/expense-analysis', async (req, res) => {
+  const { cus_id } = req.body;
+  if (!cus_id) {
+    return res.status(400).json({ success: false, error: 'cus_id is required' });
+  }
+  try {
+    const categories = await financialInsightsService.getCategoryBreakdown(cus_id);
+    const topExpenses = await financialInsightsService.getTopExpenses(cus_id);
+    return res.json({ success: true, data: { categories, topExpenses } });
+  } catch (err) {
+    console.error('Error fetching expense analysis:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 5. POST /savings-advice
+app.post('/savings-advice', async (req, res) => {
+  const { cus_id } = req.body;
+  if (!cus_id) {
+    return res.status(400).json({ success: false, error: 'cus_id is required' });
+  }
+  try {
+    const accountsRes = await pool.query(
+      `SELECT COALESCE(SUM(balance), 0) as balance FROM accounts WHERE cus_id = $1`,
+      [cus_id]
+    );
+    const totalBalance = parseFloat(accountsRes.rows[0].balance) || 0;
+    const savings = await financialInsightsService.getSavingsInsights(cus_id, totalBalance);
+    return res.json({ success: true, data: savings });
+  } catch (err) {
+    console.error('Error fetching savings advice:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // ======================================================
 // 📈 INVESTMENT MARKET DATA (FREE APIs)

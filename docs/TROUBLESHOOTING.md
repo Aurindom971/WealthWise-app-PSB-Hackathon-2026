@@ -89,6 +89,13 @@ This document lists common issues developers encounter when setting up or runnin
 
 ---
 
+### 6. SAGE Weekly Spending Returns ₹0
+*   **Symptom**: Asking SAGE "How much did I spend this week?" returns ₹0, even though transactions exist in the dashboard.
+*   **Root Cause**: The database records are historical (from 2024-2026). If the weekly spending logic evaluates the calendar week containing *today's current date*, it will find no records and return ₹0.
+*   **Resolution**: SAGE uses an active transaction date anchoring mechanism. It finds `MAX(created_at)` for the customer's transactions and aligns the calendar week start and end relative to that reference date rather than `NOW()`. If it still returns ₹0, verify that the transaction records actually have a `debit` type or a negative amount in the `amount` column.
+
+---
+
 ## 💻 Developer Quick Commands Reference
 
 ### Backend Terminal
@@ -96,6 +103,7 @@ This document lists common issues developers encounter when setting up or runnin
 *   Start production node engine: `npm start`
 *   Start developer reload instance: `npm run dev`
 *   Run manual document embedding ingestion: `node scripts/ingest.js`
+*   Run SAGE Copilot verification tests: `node scripts/test-copilot.js`
 
 ### Frontend Terminal
 *   Fetch packages: `flutter pub get`
@@ -113,3 +121,10 @@ This document lists common issues developers encounter when setting up or runnin
       -H "Content-Type: application/json" \
       -d '{"message": "What is my balance?", "cus_id": "CUST1"}'
     ```
+*   **Query Financial Insights**:
+    ```bash
+    curl -X POST http://localhost:3000/financial-insights \
+      -H "Content-Type: application/json" \
+      -d '{"cus_id": "CUST1"}'
+    ```
+

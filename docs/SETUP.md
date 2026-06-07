@@ -179,3 +179,38 @@ curl -X POST http://localhost:3000/rag-search \
   ]
 }
 ```
+
+### 4. Financial Copilot REST Endpoints Verification
+Query the newly exposed analysis and advice endpoints to verify data integrations:
+
+*   **Financial Insights (Wow/MoM trends)**:
+    ```bash
+    curl -X POST http://localhost:3000/financial-insights \
+      -H "Content-Type: application/json" \
+      -d '{"cus_id": "CUST1"}'
+    ```
+*   **Financial Health Score (0-100)**:
+    ```bash
+    curl -X POST http://localhost:3000/financial-health \
+      -H "Content-Type: application/json" \
+      -d '{"cus_id": "CUST1"}'
+    ```
+*   **Suspicious Transaction Detector**:
+    ```bash
+    curl -X POST http://localhost:3000/suspicious-transactions \
+      -H "Content-Type: application/json" \
+      -d '{"cus_id": "CUST1"}'
+    ```
+*   **Expense Analysis (Top Spends & Categories)**:
+    ```bash
+    curl -X POST http://localhost:3000/expense-analysis \
+      -H "Content-Type: application/json" \
+      -d '{"cus_id": "CUST1"}'
+    ```
+*   **Savings Advice (Runway & Subscriptions)**:
+    ```bash
+    curl -X POST http://localhost:3000/savings-advice \
+      -H "Content-Type: application/json" \
+      -d '{"cus_id": "CUST1"}'
+    ```
+

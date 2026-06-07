@@ -1,6 +1,6 @@
 # System Architecture Manual
 
-This document details the high-level architecture, dynamic pipelines, and request lifecycles of the Secure Wealth application.
+This document details the high-level architecture, dynamic pipelines, and request lifecycles of the Secure Wealth application with its upgraded AI Financial Copilot engine.
 
 ---
 
@@ -16,6 +16,10 @@ graph TD
     B <-->|nomic-embed-text / REST| E[(Qdrant Cloud Vector DB)]
     B <-->|Chat API / groq-sdk| F[Groq Cloud LLM]
     
+    B -->|Insights Aggregator| G[Financial Insights Service]
+    B -->|Rule Scoring Engine| H[Financial Health Service]
+    B -->|Context Risk Scan| I[Suspicious Transaction Service]
+    
     style A fill:#47A7F5,stroke:#1E88E5,stroke-width:2px,color:#fff
     style B fill:#80C080,stroke:#2E7D32,stroke-width:2px,color:#fff
     style C fill:#ECA24F,stroke:#EF6C00,stroke-width:2px,color:#fff
@@ -28,38 +32,48 @@ graph TD
 
 ## ⚙️ Core Architectural Components
 
-### 1. Intent Detection System
+### 1. Intent Detection System (Upgraded)
 Before processing queries through SAGE, the backend routes them to an Intent Classifier. 
-*   **Keyword Matches (Immediate)**: High-speed override rules match queries matching phrases like *balance, savings, spend, transaction history, fraud, flagged, security, mfa* to prevent LLM latency or model misclassification.
-*   **LLM Classifier (Fallback)**: When no keywords trigger, a strict zero-temperature classification prompt runs against Groq to assign one of the 5 intents: `BALANCE`, `SPENDING`, `FRAUD`, `SECURITY`, or `GENERAL_BANKING`.
+*   **Keyword Matches (Immediate)**: High-speed overrides check for specific triggers (e.g. *savings advice, financial health, highest expenses, suspicious transactions, why flagged*) to map the query immediately to one of the 11 intents, guaranteeing accuracy and eliminating LLM classification latency.
+*   **LLM Classifier (Fallback)**: When no keywords trigger, a strict zero-temperature classification prompt runs against Groq to assign one of the 11 intents: `BALANCE`, `SPENDING_ANALYSIS`, `EXPENSE_BREAKDOWN`, `TOP_EXPENSES`, `SAVINGS_ADVICE`, `SUSPICIOUS_TRANSACTIONS`, `FRAUD_EXPLAINABILITY`, `INVESTMENT_SUMMARY`, `FINANCIAL_HEALTH`, `SECURITY`, or `GENERAL_BANKING`.
 
-### 2. Rule-Based Fraud Detection Engine
-An analytical service that assesses transaction risks before writing record data to the SQL DB.
-*   **Behavioral Rules**: Tracks geo-velocity parameters (e.g. traveling from Kolkata to Delhi too fast), transaction timestamps, transaction frequency bursts (velocity attacks), and proxy/VPN networks.
+### 2. Transaction Analytics Engine
+*   **Weekly & Monthly Trends**: Compares aggregate debits (`ABS(amount)`) in the current calendar period vs. the previous period to calculate trend metrics.
+*   **Category breakdown**: Groups debits by categories (Food, Travel, Bills, Shopping, Entertainment, etc.) over the last 30 days.
+*   **Top Expenses**: Identifies the top 10 largest debit transactions by merchant name and amount.
+
+### 3. Rule-Based Fraud Detection Engine
+An analytical service that assesses transaction risks before writing records.
+*   **Behavioral Rules**: Tracks geo-velocity parameters (e.g. Kolkata to Delhi traveling speed anomalies), transaction timestamps, transaction frequency bursts (velocity attacks), and proxy/VPN networks.
 *   **Risk Scores**: Outputs a risk rating `0-100` and flags transactions as `LOW`, `MEDIUM`, or `HIGH` severity.
-*   **Security Lockouts**: High-severity events lock transactions and set a `reauth_required` flag on the account, requiring immediate user biometric verification (face scan/passcode verification) to release the funds.
 
-### 3. RAG Pipeline (Retrieval-Augmented Generation)
-SAGE draws context from local knowledge files (` rbi_guidelines.md`, `banking_faq.md`, `app_help.md`) stored semantically.
+### 4. RAG Pipeline (Retrieval-Augmented Generation)
+SAGE draws context from local knowledge files (`rbi_guidelines.md`, `banking_faq.md`, `app_help.md`) stored semantically.
 *   **Search**: Converts the user's message into an embedding vector via local Ollama `nomic-embed-text` and queries **Qdrant Cloud** vector search.
-*   **Dedup & Reranking**: Deduplicates matches from the same source file and reranks them using a composite semantic scoring algorithm before assembling the top 5 chunks into the prompt context.
+*   **Dedup & Reranking**: Deduplicates matches from the same source file and reranks them using a composite semantic scoring algorithm.
 
-### 4. Live Account Context Aggregation
-For queries with a `BALANCE` or `SPENDING` intent:
-*   Queries the Supabase `accounts` table for all accounts owned by the authenticated `cus_id`.
-*   Iteratively sums up account balances (Savings, Checking) to calculate a single total balance matching the user's dashboard interface.
-*   Formats the balances into structured context injected directly into the SAGE prompt template.
+---
 
-### 5. Security Guardrails
-SAGE enforces absolute runtime safety policies before submitting inputs to the LLM:
-*   **Action Filters**: Intercepts requests containing transaction keywords like *send, transfer, pay, withdraw, purchase, buy*.
-*   **Denial Handlers**: Blocks transaction requests with a clean notice directing the user to complete payments through safe in-app menus. SAGE is strictly restricted from performing mutations.
+## 🚦 Exposed REST API Endpoints
+
+The backend exposes these core endpoints for mobile integration:
+
+| Method | Endpoint | Description | Payload Schema |
+|---|---|---|---|
+| `POST` | `/ai-chat` | Core copilot conversation gateway | `{ "message": string, "cus_id": string }` |
+| `POST` | `/financial-insights` | Retrieves WoW, MoM, and daily spending averages | `{ "cus_id": string }` |
+| `POST` | `/financial-health` | Computes score (0-100) and details metrics | `{ "cus_id": string }` |
+| `POST` | `/suspicious-transactions` | Scans history for anomalous debits and alerts | `{ "cus_id": string }` |
+| `POST` | `/expense-analysis` | Fetches category breakdown and top 10 expenses | `{ "cus_id": string }` |
+| `POST` | `/savings-advice` | Accesses subscription trackers and runway months | `{ "cus_id": string }` |
+| `POST` | `/rag-search` | Directly queries vector database | `{ "query": string }` |
+| `GET` | `/health` | Live service health check status | `N/A` |
 
 ---
 
 ## 🔄 Complete Request Lifecycle Flow
 
-Here is a step-by-step trace of how a chat query (e.g., `"What is my account balance?"`) flows through the application:
+Here is a sequence trace showing how SAGE processes a Financial Health score request:
 
 ```mermaid
 sequenceDiagram
@@ -67,29 +81,21 @@ sequenceDiagram
     actor User as User App
     participant BE as Express Backend
     participant DB as Supabase DB
-    participant Qdrant as Qdrant Cloud
     participant Groq as Groq LLM
 
-    User->>BE: POST /ai-chat { message: "What is my balance?", cus_id: "CUST1" }
+    User->>BE: POST /ai-chat { message: "How healthy are my finances?", cus_id: "CUST1" }
     
-    note over BE: Security Interceptor Checks<br/>(Keyword filter checks if it's an action/transfer request)
-    BE->>BE: Detect Intent (Triggered: BALANCE)
+    BE->>BE: Detect Intent (Triggered: FINANCIAL_HEALTH)
     
-    note over BE: Context Aggregation
     rect rgb(240, 248, 255)
-        BE->>DB: SELECT * FROM accounts WHERE cus_id = 'CUST1'
-        DB-->>BE: Returns Accounts (1: 850000, 23: 50000)
-        BE->>BE: Compute Total Balance (900000) & format context
+        note over BE: Context Aggregation via Services
+        BE->>DB: Query accounts (balances), loans (debts), investments (assets), and transactions (inflow/outflows)
+        DB-->>BE: Returns database records
+        BE->>BE: calculateFinancialHealth() -> Score: 66/100
     end
 
-    rect rgb(245, 240, 245)
-        note over BE: RAG Ingestion
-        BE->>Qdrant: Vector Search (nomic-embed-text)
-        Qdrant-->>BE: Returns top 5 relevant policy chunks
-    end
-
-    BE->>BE: Build Prompt (User Query + Account Context + RAG Chunks + SAGE Rules)
+    BE->>BE: Build Prompt (User Query + Health Context + SAGE rules)
     BE->>Groq: Chat Completion (llama-3.3-70b-versatile)
-    Groq-->>BE: Returns formatted text response
-    BE-->>User: HTTP 200 { success: true, reply: "Your total balance is ₹900,000..." }
+    Groq-->>BE: Returns formatted health assessment text
+    BE-->>User: HTTP 200 { success: true, reply: "Your Financial Health Score is 66/100..." }
 ```

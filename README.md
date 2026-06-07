@@ -25,12 +25,14 @@ Secure Wealth is a secure fintech application designed to deliver advanced wealt
 *   **Biometric & Dynamic Re-Authentication**: Implements risk-based step-up authentication (face verification/passcode checks) for suspicious transactions.
 *   **Security Blanket Shielding**: Implements overlay attack mitigation (detecting background drawing apps) to prevent credential theft.
 
-### AI Features (SAGE Assistant)
-SAGE is an advanced, secure natural language interface built into the app to:
-*   Answer support and general banking queries.
-*   Provide real-time breakdowns of transaction risks (e.g., explaining flagged payments).
-*   Answer questions about account balances with actual, live data retrieved on-demand.
-*   Enforce absolute security guardrails (refusing to perform transfers, execute actions, or download/run code).
+### AI Features (SAGE AI Financial Copilot)
+SAGE is an advanced, secure natural language interface built into the app to act as a financial copilot:
+*   **Banking Support**: Answer customer support and general banking queries.
+*   **Financial & Spending Analysis**: Break down spending over time (WoW/MoM trends, categories, and top expenses list).
+*   **Savings Advisor**: Detect overspending spikes, identify monthly subscription commitments, calculate cash runway months, and suggest savings opportunities.
+*   **Fraud Explainability**: Provide real-time breakdowns of transaction risks (e.g., explaining flagged payments, risk scores, and matching rules).
+*   **Financial Health Scoring**: Calculate a mathematical index (0-100) assessing strengths and weaknesses across assets, debts, and cash flows.
+*   **Security Restrictions**: Enforce absolute safety guardrails (refusing to perform transfers, execute actions, or download/run code).
 
 ### Fraud Detection Engine
 An analytics and rule-based system running on the backend that calculates:
@@ -110,7 +112,7 @@ Verify the server is online at `http://localhost:3000/health`.
 cd frontend
 flutter pub get
 # Copy .env.example to .env and configure
-flutter run
+flutter run --dart-define-from-file=.env
 ```
 
 ---
