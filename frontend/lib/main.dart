@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:screen_protector/screen_protector.dart';
+import 'package:flutter/foundation.dart';
 
 import 'features/auth/screens/login_screen.dart';
 import 'features/home/screens/home_screen.dart';
@@ -10,7 +10,6 @@ import 'core/services/security_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-await ScreenProtector.preventScreenshotOn();
   const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
