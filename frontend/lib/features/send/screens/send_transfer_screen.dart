@@ -55,11 +55,7 @@ List<String> userAccounts = [
 List<String> upiContacts = ["rahul@upi", "amit@upi", "priya@upi"];
 
 void _handleGlobalHomeTap(BuildContext context) {
-  Navigator.pushNamedAndRemoveUntil(
-    context,
-    '/home',
-    (route) => false,
-  );
+  Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
 }
 
 void _handleGlobalBottomNavTap(BuildContext context, int i) {
@@ -110,6 +106,215 @@ Future<void> _handleGlobalLogout(BuildContext context) async {
       Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
     }
   }
+}
+
+//////////////////// DYNAMIC COLOR UTILS ////////////////////
+
+Color? getDynamicAmountColor(String amountStr) {
+  final amount = double.tryParse(amountStr.replaceAll(',', '')) ?? 0.0;
+  if (amount <= 1000) return null;
+  if (amount <= 5000) {
+    return Color.lerp(
+      const Color(0xFF2E7D5B),
+      Colors.amber.shade700,
+      (amount - 1000) / 4000,
+    );
+  } else if (amount <= 20000) {
+    return Color.lerp(
+      Colors.amber.shade700,
+      Colors.red.shade700,
+      (amount - 5000) / 15000,
+    );
+  } else if (amount <= 50000) {
+    return Color.lerp(
+      Colors.red.shade700,
+      const Color(0xFF800020),
+      (amount - 20000) / 30000,
+    );
+  } else {
+    return const Color(0xFF800020);
+  }
+}
+
+Widget buildDynamicEdgeHue(Color? dynamicColor) {
+  if (dynamicColor == null) return const SizedBox.shrink();
+
+  const topBottomSize = 42.0;
+  const sideSize = 35.0; // left/right strip width
+  final hue = dynamicColor.withValues(
+    alpha: 0.22,
+  ); // much lighter – no dark shadow feel
+
+  return Positioned.fill(
+    child: IgnorePointer(
+      child: Stack(
+        children: [
+          // Top edge
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: topBottomSize,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [hue, Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+          // Bottom edge
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: topBottomSize,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [hue, Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+          // Left edge – half the width
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: sideSize,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [hue, Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+          // Right edge – half the width
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: sideSize,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerRight,
+                  end: Alignment.centerLeft,
+                  colors: [hue, Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget buildRiskyWarning(String amountStr) {
+  final amount = double.tryParse(amountStr.replaceAll(',', '')) ?? 0.0;
+  if (amount <= 20000) return const SizedBox.shrink();
+  return const Expanded(
+    child: Padding(
+      padding: EdgeInsets.only(left: 8.0),
+      child: Text(
+        "* This transaction is flagged as risky. Please proceed carefully.",
+        style: TextStyle(
+          fontSize: 11,
+          fontStyle: FontStyle.italic,
+          color: Colors.red,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    ),
+  );
+}
+
+void showTransactionRiskLegend(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: const Text(
+        'Transaction Risk Levels',
+        style: TextStyle(color: kForest, fontWeight: FontWeight.bold),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildLegendItem(
+            const Color(0xFF2E7D5B),
+            'Green',
+            'safe transaction',
+          ),
+          const SizedBox(height: 12),
+          _buildLegendItem(
+            Colors.amber.shade700,
+            'Amber',
+            'moderate risk transaction',
+          ),
+          const SizedBox(height: 12),
+          _buildLegendItem(Colors.red.shade700, 'Red', 'risky transaction'),
+          const SizedBox(height: 12),
+          _buildLegendItem(
+            const Color(0xFF800020),
+            'Wine Red',
+            'high risk transaction',
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text(
+            'Close',
+            style: TextStyle(color: kForest, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildLegendItem(Color color, String label, String description) {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+        child: RichText(
+          text: TextSpan(
+            style: const TextStyle(color: Colors.black87, fontSize: 14),
+            children: [
+              TextSpan(
+                text: '$label = ',
+                style: TextStyle(fontWeight: FontWeight.bold, color: color),
+              ),
+              TextSpan(
+                text: description,
+                style: const TextStyle(color: Colors.black87),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  );
 }
 
 //////////////////// MAIN SCREEN ////////////////////
@@ -711,6 +916,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
   @override
   void initState() {
     super.initState();
+    _amountController.addListener(() => setState(() {}));
     if (widget.toAccount != null) _toAccountController.text = widget.toAccount!;
     if (widget.toIfsc != null) _toIfscController.text = widget.toIfsc!;
     if (widget.toNominee != null) _toNomineeController.text = widget.toNominee!;
@@ -745,6 +951,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final dynamicColor = getDynamicAmountColor(_amountController.text);
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
@@ -754,295 +961,307 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
           onTap: (i) => _handleGlobalBottomNavTap(context, i),
         ),
         body: SafeArea(
-          child: Column(
+          child: Stack(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 16,
-                ),
-                child: TopBar(
-                  onHomeTap: () => _handleGlobalHomeTap(context),
-                  onLogoutTap: () => _handleGlobalLogout(context),
-                  onNotificationTap: () => showNotifications(context),
-                ),
-              ),
-              LoanHeader(
-                title: "Bank Transfer",
-                subtitle: "Send Money",
-                icon: Icons.swap_horiz,
-                onBack: () => Navigator.pop(context),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      // FROM Section
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade200),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.circle,
-                                  size: 10,
-                                  color: kAccent,
-                                ),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  "FROM:",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            SearchableDropdown(
-                              label: "Select Account",
-                              hint: "Select PSB Account",
-                              items: userAccounts,
-                              value: fromAccount,
-                              showSearch: false,
-                              onChanged: (val) {
-                                setState(() {
-                                  fromAccount = val;
-                                  // Auto-fill FROM Mock Data
-                                  _fromAccController.text = val.replaceAll(
-                                    RegExp(r'[^0-9]'),
-                                    '',
-                                  );
-                                  _fromIfscController.text = "PSIB0001234";
-                                  _fromNomineeController.text = "Rajesh Kumar";
-                                });
-                              },
-                            ),
-                            customBankInput(
-                              "Account No.",
-                              "Account Number",
-                              enabled: false,
-                              controller: _fromAccController,
-                            ),
-                            customBankInput(
-                              "IFSC Code",
-                              "e.g. PSIB0000001",
-                              enabled: false,
-                              controller: _fromIfscController,
-                            ),
-                            customBankInput(
-                              "Nominee Name",
-                              "Account Holder Name",
-                              enabled: false,
-                              controller: _fromNomineeController,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // TO Section
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade200),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.circle, size: 10, color: kMid),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  "TO:",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            SearchableDropdown(
-                              label: "Select Bank",
-                              hint: "Search and select bank",
-                              items: allBanks,
-                              value: toBank,
-                              showSearch: true,
-                              onChanged: (val) {
-                                setState(() {
-                                  toBank = val;
-                                });
-                              },
-                            ),
-                            customBankInput(
-                              "Account No.",
-                              "Recipient Account Number",
-                              isNumber: true,
-                              controller: _toAccountController,
-                              maxLength: 16,
-                            ),
-                            customBankInput(
-                              "IFSC Code",
-                              "e.g. SBIN0001234",
-                              controller: _toIfscController,
-                              maxLength: 11,
-                            ),
-                            customBankInput(
-                              "Nominee Name",
-                              "Recipient Name",
-                              controller: _toNomineeController,
-                              maxLength: 50,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // PURPOSE Section
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade200),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.circle,
-                                  size: 10,
-                                  color: kForest,
-                                ),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  "PURPOSE:",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            SearchableDropdown(
-                              label: "Select Purpose",
-                              hint: "Search and select purpose",
-                              items: transferPurposes,
-                              value: transferPurpose,
-                              showSearch: true,
-                              onChanged: (val) {
-                                setState(() {
-                                  transferPurpose = val;
-                                  if (val != "Other") {
-                                    _otherPurposeController.clear();
-                                  }
-                                });
-                              },
-                            ),
-                            if (transferPurpose == "Other")
-                              customBankInput(
-                                "Specify Purpose",
-                                "Enter your reason",
-                                controller: _otherPurposeController,
-                                maxLength: 100,
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // AMOUNT Section
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade200),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.circle,
-                                  size: 10,
-                                  color: kAccent,
-                                ),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  "AMOUNT",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            customBankInput(
-                              "Enter Amount (₹)",
-                              "0.00",
-                              isNumber: true,
-                              controller: _amountController,
-                              maxLength: 12,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                    child: TopBar(
+                      onHomeTap: () => _handleGlobalHomeTap(context),
+                      onLogoutTap: () => _handleGlobalLogout(context),
+                      onNotificationTap: () => showNotifications(context),
+                    ),
                   ),
-                ),
-              ),
-            ],
-          ),
-        ),
+                  LoanHeader(
+                    title: "Bank Transfer",
+                    subtitle: "Send Money",
+                    icon: Icons.swap_horiz,
+                    onBack: () => Navigator.pop(context),
+                    onInfoTap: () => showTransactionRiskLegend(context),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          // FROM Section
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade200),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.02),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.circle,
+                                      size: 10,
+                                      color: kAccent,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      "FROM:",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                SearchableDropdown(
+                                  label: "Select Account",
+                                  hint: "Select PSB Account",
+                                  items: userAccounts,
+                                  value: fromAccount,
+                                  showSearch: false,
+                                  onChanged: (val) {
+                                    setState(() {
+                                      fromAccount = val;
+                                      // Auto-fill FROM Mock Data
+                                      _fromAccController.text = val.replaceAll(
+                                        RegExp(r'[^0-9]'),
+                                        '',
+                                      );
+                                      _fromIfscController.text = "PSIB0001234";
+                                      _fromNomineeController.text =
+                                          "Rajesh Kumar";
+                                    });
+                                  },
+                                ),
+                                customBankInput(
+                                  "Account No.",
+                                  "Account Number",
+                                  enabled: false,
+                                  controller: _fromAccController,
+                                ),
+                                customBankInput(
+                                  "IFSC Code",
+                                  "e.g. PSIB0000001",
+                                  enabled: false,
+                                  controller: _fromIfscController,
+                                ),
+                                customBankInput(
+                                  "Nominee Name",
+                                  "Account Holder Name",
+                                  enabled: false,
+                                  controller: _fromNomineeController,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // TO Section
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade200),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.02),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.circle,
+                                      size: 10,
+                                      color: kMid,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      "TO:",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                SearchableDropdown(
+                                  label: "Select Bank",
+                                  hint: "Search and select bank",
+                                  items: allBanks,
+                                  value: toBank,
+                                  showSearch: true,
+                                  onChanged: (val) {
+                                    setState(() {
+                                      toBank = val;
+                                    });
+                                  },
+                                ),
+                                customBankInput(
+                                  "Account No.",
+                                  "Recipient Account Number",
+                                  isNumber: true,
+                                  controller: _toAccountController,
+                                  maxLength: 16,
+                                ),
+                                customBankInput(
+                                  "IFSC Code",
+                                  "e.g. SBIN0001234",
+                                  controller: _toIfscController,
+                                  maxLength: 11,
+                                ),
+                                customBankInput(
+                                  "Nominee Name",
+                                  "Recipient Name",
+                                  controller: _toNomineeController,
+                                  maxLength: 50,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // PURPOSE Section
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade200),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.02),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.circle,
+                                      size: 10,
+                                      color: kForest,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      "PURPOSE:",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                SearchableDropdown(
+                                  label: "Select Purpose",
+                                  hint: "Search and select purpose",
+                                  items: transferPurposes,
+                                  value: transferPurpose,
+                                  showSearch: true,
+                                  onChanged: (val) {
+                                    setState(() {
+                                      transferPurpose = val;
+                                      if (val != "Other") {
+                                        _otherPurposeController.clear();
+                                      }
+                                    });
+                                  },
+                                ),
+                                if (transferPurpose == "Other")
+                                  customBankInput(
+                                    "Specify Purpose",
+                                    "Enter your reason",
+                                    controller: _otherPurposeController,
+                                    maxLength: 100,
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // AMOUNT Section
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade200),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.02),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.circle,
+                                      size: 10,
+                                      color: kAccent,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      "AMOUNT",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    buildRiskyWarning(_amountController.text),
+                                  ],
+                                ),
+                                customBankInput(
+                                  "Enter Amount (₹)",
+                                  "0.00",
+                                  isNumber: true,
+                                  controller: _amountController,
+                                  maxLength: 12,
+                                ),
+                              ],
+                            ),
+                          ), // closes Container
+                        ],
+                      ),
+                    ),
+                  ),
+                ], // closes Column children
+              ), // closes Column
+              buildDynamicEdgeHue(dynamicColor),
+            ], // closes Stack children
+          ), // closes Stack
+        ), // closes SafeArea
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1050,15 +1269,17 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
             width: double.infinity,
             height: 56,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [kForest, kMid],
+              gradient: LinearGradient(
+                colors: dynamicColor != null
+                    ? [dynamicColor, dynamicColor.withValues(alpha: 0.8)]
+                    : [kForest, kMid],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: kForest.withValues(alpha: 0.25),
+                  color: (dynamicColor ?? kForest).withValues(alpha: 0.25),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -1074,31 +1295,57 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
               ),
               onPressed: () async {
                 if (await SecurityService.isOnlineLockActive()) {
-                  _showSecurityLockToast(context, message: 'Online Transactions are currently blocked by Smart Lock.');
+                  _showSecurityLockToast(
+                    context,
+                    message:
+                        'Online Transactions are currently blocked by Smart Lock.',
+                  );
                   return;
                 }
-                
-                if (fromAccount == null || toBank == null || transferPurpose == null ||
-                    (transferPurpose == "Other" && _otherPurposeController.text.trim().isEmpty) ||
-                    _toAccountController.text.trim().isEmpty || _toIfscController.text.trim().isEmpty ||
-                    _toNomineeController.text.trim().isEmpty || _amountController.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fill in all compulsory details!"), backgroundColor: Colors.red));
+
+                if (fromAccount == null ||
+                    toBank == null ||
+                    transferPurpose == null ||
+                    (transferPurpose == "Other" &&
+                        _otherPurposeController.text.trim().isEmpty) ||
+                    _toAccountController.text.trim().isEmpty ||
+                    _toIfscController.text.trim().isEmpty ||
+                    _toNomineeController.text.trim().isEmpty ||
+                    _amountController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Please fill in all compulsory details!"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
                   return;
                 }
 
                 // 2. Sanitize and Validate
-                final sanitizedRecipient = SecurityValidator.sanitize(_toNomineeController.text);
-                final sanitizedAccount = SecurityValidator.sanitize(_toAccountController.text);
-                final sanitizedIFSC = SecurityValidator.sanitize(_toIfscController.text).toUpperCase();
+                final sanitizedRecipient = SecurityValidator.sanitize(
+                  _toNomineeController.text,
+                );
+                final sanitizedAccount = SecurityValidator.sanitize(
+                  _toAccountController.text,
+                );
+                final sanitizedIFSC = SecurityValidator.sanitize(
+                  _toIfscController.text,
+                ).toUpperCase();
                 final rawAmount = _amountController.text.replaceAll(',', '');
 
                 if (!SecurityValidator.isValidAmount(rawAmount)) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invalid amount entered.")));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Invalid amount entered.")),
+                  );
                   return;
                 }
 
                 if (!SecurityValidator.isValidAccountNumber(sanitizedAccount)) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invalid account number format.")));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Invalid account number format."),
+                    ),
+                  );
                   return;
                 }
 
@@ -1113,7 +1360,11 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                 };
 
                 if (!SecurityValidator.inspectPayload(payload)) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("SECURITY: Payload rejected.")));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("SECURITY: Payload rejected."),
+                    ),
+                  );
                   return;
                 }
 
@@ -1743,10 +1994,9 @@ class _UpiScreenState extends State<UpiScreen> {
     try {
       final directory = await getApplicationDocumentsDirectory();
       final file = File('${directory.path}/tagged_contacts.json');
-      await file.writeAsString(json.encode({
-        'tags': _contactTags,
-        'sections': _sections,
-      }));
+      await file.writeAsString(
+        json.encode({'tags': _contactTags, 'sections': _sections}),
+      );
     } catch (e) {
       debugPrint("Error saving tags: $e");
     }
@@ -1755,6 +2005,7 @@ class _UpiScreenState extends State<UpiScreen> {
   @override
   void initState() {
     super.initState();
+    _amountController.addListener(() => setState(() {}));
     _loadTags();
     if (widget.prefilledUpiId != null) {
       _upiIdController.text = widget.prefilledUpiId!;
@@ -1836,13 +2087,21 @@ class _UpiScreenState extends State<UpiScreen> {
           builder: (context, setDialogState) {
             return AlertDialog(
               backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              title: const Text("Tag Contact", style: TextStyle(fontWeight: FontWeight.bold, color: kForest)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: const Text(
+                "Tag Contact",
+                style: TextStyle(fontWeight: FontWeight.bold, color: kForest),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Select Contact:", style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text(
+                    "Select Contact:",
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   DropdownButton<String>(
                     value: selectedContactUpi,
                     isExpanded: true,
@@ -1859,14 +2118,23 @@ class _UpiScreenState extends State<UpiScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  const Text("Tag As:", style: TextStyle(fontWeight: FontWeight.w600)),
+                  const Text(
+                    "Tag As:",
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   DropdownButton<String>(
                     value: selectedTag,
                     isExpanded: true,
                     items: const [
-                      DropdownMenuItem(value: "Favourite", child: Text("Favourite")),
+                      DropdownMenuItem(
+                        value: "Favourite",
+                        child: Text("Favourite"),
+                      ),
                       DropdownMenuItem(value: "Family", child: Text("Family")),
-                      DropdownMenuItem(value: "None", child: Text("Remove Tag")),
+                      DropdownMenuItem(
+                        value: "None",
+                        child: Text("Remove Tag"),
+                      ),
                     ],
                     onChanged: (val) {
                       setDialogState(() {
@@ -1879,7 +2147,10 @@ class _UpiScreenState extends State<UpiScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -1896,7 +2167,10 @@ class _UpiScreenState extends State<UpiScreen> {
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: kForest),
-                  child: const Text("Save", style: TextStyle(color: Colors.white)),
+                  child: const Text(
+                    "Save",
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -1913,8 +2187,13 @@ class _UpiScreenState extends State<UpiScreen> {
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: const Text("Create New List", style: TextStyle(fontWeight: FontWeight.bold, color: kForest)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: const Text(
+            "Create New List",
+            style: TextStyle(fontWeight: FontWeight.bold, color: kForest),
+          ),
           content: TextField(
             controller: sectionNameController,
             decoration: const InputDecoration(
@@ -1942,7 +2221,10 @@ class _UpiScreenState extends State<UpiScreen> {
                 }
               },
               style: ElevatedButton.styleFrom(backgroundColor: kForest),
-              child: const Text("Create", style: TextStyle(color: Colors.white)),
+              child: const Text(
+                "Create",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -1952,11 +2234,15 @@ class _UpiScreenState extends State<UpiScreen> {
 
   void _showManageContactsMenu(BuildContext context) {
     final RenderBox button = context.findRenderObject() as RenderBox;
-    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
     final RelativeRect position = RelativeRect.fromRect(
       Rect.fromPoints(
         button.localToGlobal(Offset.zero, ancestor: overlay),
-        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+        button.localToGlobal(
+          button.size.bottomRight(Offset.zero),
+          ancestor: overlay,
+        ),
       ),
       Offset.zero & overlay.size,
     );
@@ -1964,10 +2250,7 @@ class _UpiScreenState extends State<UpiScreen> {
     showMenu<String>(
       context: context,
       position: position,
-      constraints: const BoxConstraints(
-        maxHeight: 250,
-        maxWidth: 280,
-      ),
+      constraints: const BoxConstraints(maxHeight: 250, maxWidth: 280),
       items: [
         PopupMenuItem<String>(
           enabled: false,
@@ -1985,7 +2268,8 @@ class _UpiScreenState extends State<UpiScreen> {
         ),
         ..._mockContacts.map((contact) {
           final String currentTag = _contactTags[contact["upi"]] ?? "";
-          final isTagged = (currentTag == _selectedSection) ||
+          final isTagged =
+              (currentTag == _selectedSection) ||
               (_selectedSection == "Favourites" && currentTag == "Favourite") ||
               (_selectedSection == "Family" && currentTag == "Family");
           return PopupMenuItem<String>(
@@ -2003,7 +2287,11 @@ class _UpiScreenState extends State<UpiScreen> {
                 if (isTagged)
                   const Icon(Icons.check_circle, color: kForest, size: 18)
                 else
-                  const Icon(Icons.radio_button_unchecked, color: Colors.grey, size: 18),
+                  const Icon(
+                    Icons.radio_button_unchecked,
+                    color: Colors.grey,
+                    size: 18,
+                  ),
               ],
             ),
           );
@@ -2013,7 +2301,8 @@ class _UpiScreenState extends State<UpiScreen> {
       if (value != null) {
         setState(() {
           final String currentTag = _contactTags[value] ?? "";
-          final isTagged = (currentTag == _selectedSection) ||
+          final isTagged =
+              (currentTag == _selectedSection) ||
               (_selectedSection == "Favourites" && currentTag == "Favourite") ||
               (_selectedSection == "Family" && currentTag == "Family");
           if (isTagged) {
@@ -2034,6 +2323,7 @@ class _UpiScreenState extends State<UpiScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final dynamicColor = getDynamicAmountColor(_amountController.text);
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
@@ -2043,616 +2333,772 @@ class _UpiScreenState extends State<UpiScreen> {
           onTap: (i) => _handleGlobalBottomNavTap(context, i),
         ),
         body: SafeArea(
-          child: Column(
+          child: Stack(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 16,
-                ),
-                child: TopBar(
-                  onHomeTap: () => _handleGlobalHomeTap(context),
-                  onLogoutTap: () => _handleGlobalLogout(context),
-                  onNotificationTap: () => showNotifications(context),
-                ),
-              ),
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                    child: TopBar(
+                      onHomeTap: () => _handleGlobalHomeTap(context),
+                      onLogoutTap: () => _handleGlobalLogout(context),
+                      onNotificationTap: () => showNotifications(context),
+                    ),
+                  ),
 
-              LoanHeader(
-                title: "UPI Pays",
-                subtitle: "Send Money",
-                icon: Icons.qr_code_2,
-                actionLabel: "My QR",
-                onBack: () => Navigator.pop(context),
-                onIconTap: () => showMyQrCode(context),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 16),
-                      // QR Scanner Entry
-                      GestureDetector(
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const QRScreen()),
-                          );
-                          if (result != null && result is String) {
-                            setState(() {
-                              _upiIdController.text = result;
-                            });
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.grey.shade200,
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.shade50,
-                                  borderRadius: BorderRadius.circular(12),
+                  LoanHeader(
+                    title: "UPI Pays",
+                    subtitle: "Send Money",
+                    icon: Icons.qr_code_2,
+                    actionLabel: "My QR",
+                    onBack: () => Navigator.pop(context),
+                    onIconTap: () => showMyQrCode(context),
+                    onInfoTap: () => showTransactionRiskLegend(context),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 16),
+                          // QR Scanner Entry
+                          GestureDetector(
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const QRScreen(),
                                 ),
-                                child: const Icon(
-                                  Icons.qr_code_scanner,
-                                  color: kForest,
+                              );
+                              if (result != null && result is String) {
+                                setState(() {
+                                  _upiIdController.text = result;
+                                });
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.grey.shade200,
+                                  width: 1.5,
                                 ),
                               ),
-                              const SizedBox(width: 16),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              child: Row(
                                 children: [
-                                  const Text(
-                                    "Scan QR",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Colors.black87,
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.shade50,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.qr_code_scanner,
+                                      color: kForest,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "Scan QR code to pay",
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 13,
-                                    ),
+                                  const SizedBox(width: 16),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        "Scan QR",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "Scan QR code to pay",
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Input Form
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.grey.shade200,
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "UPI ID",
-                              style: TextStyle(
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            TextField(
-                              controller: _upiIdController,
-                              maxLength: 50,
-                              decoration: InputDecoration(
-                                counterText: "",
-                                hintText: "example@ybl",
-                                hintStyle: TextStyle(
-                                  color: Colors.grey.shade400,
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: kForest),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            const Text(
-                              "Amount (₹)",
-                              style: TextStyle(
-                                color: Colors.black87,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            TextField(
-                              controller: _amountController,
-                              focusNode: _amountFocusNode,
-                              keyboardType: TextInputType.number,
-                              maxLength: 12,
-                              decoration: InputDecoration(
-                                counterText: "",
-                                hintText: "0.00",
-                                hintStyle: TextStyle(
-                                  color: Colors.grey.shade400,
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: kForest),
-                                ),
-                              ),
-                              onChanged: (val) {
-                                setState(() {});
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Contacts Section
-                      if (!_showContacts)
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: _requestContactsPermission,
-                            icon: const Icon(
-                              Icons.people_outline,
-                              color: kForest,
-                            ),
-                            label: const Text(
-                              "Show UPI Contacts",
-                              style: TextStyle(
-                                color: kForest,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              side: BorderSide(
+                          const SizedBox(height: 24),
+                          // Input Form
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
                                 color: Colors.grey.shade200,
                                 width: 1.5,
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              backgroundColor: Colors.white,
                             ),
-                          ),
-                        )
-                      else
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.grey.shade200,
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "UPI CONTACTS",
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                    ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "UPI ID",
+                                  style: TextStyle(
+                                    color: Colors.black87,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
                                   ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    ..._sections.map((section) {
-                                      final isSelected = _selectedSection == section;
-                                      return Padding(
-                                        padding: const EdgeInsets.only(right: 8),
-                                        child: ChoiceChip(
-                                          label: Text(
-                                            section,
-                                            style: TextStyle(
-                                              color: isSelected ? Colors.white : Colors.grey.shade700,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                          selected: isSelected,
-                                          onSelected: (selected) {
-                                            if (selected) {
-                                              setState(() {
-                                                _selectedSection = section;
-                                              });
-                                            }
-                                          },
-                                          selectedColor: kForest,
-                                          backgroundColor: Colors.grey.shade100,
-                                          checkmarkColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                          ),
-                                          side: BorderSide(
-                                            color: isSelected ? kForest : Colors.grey.shade300,
-                                            width: 1,
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                    IconButton(
-                                      icon: const Icon(Icons.add, color: kForest, size: 20),
-                                      onPressed: _showAddNewSectionDialog,
-                                      tooltip: "Add New List",
-                                      constraints: const BoxConstraints(),
-                                      style: IconButton.styleFrom(
-                                        backgroundColor: Colors.green.shade50,
-                                        padding: const EdgeInsets.all(8),
+                                ),
+                                const SizedBox(height: 10),
+                                TextField(
+                                  controller: _upiIdController,
+                                  maxLength: 50,
+                                  decoration: InputDecoration(
+                                    counterText: "",
+                                    hintText: "example@ybl",
+                                    hintStyle: TextStyle(
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
                                       ),
                                     ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(
+                                        color: kForest,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                Row(
+                                  children: [
+                                    const Text(
+                                      "Amount (₹)",
+                                      style: TextStyle(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    buildRiskyWarning(_amountController.text),
                                   ],
                                 ),
+                                const SizedBox(height: 10),
+                                TextField(
+                                  controller: _amountController,
+                                  focusNode: _amountFocusNode,
+                                  keyboardType: TextInputType.number,
+                                  maxLength: 12,
+                                  decoration: InputDecoration(
+                                    counterText: "",
+                                    hintText: "0.00",
+                                    hintStyle: TextStyle(
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(
+                                        color: kForest,
+                                      ),
+                                    ),
+                                  ),
+                                  onChanged: (val) {
+                                    setState(() {});
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          // Contacts Section
+                          if (!_showContacts)
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                onPressed: _requestContactsPermission,
+                                icon: const Icon(
+                                  Icons.people_outline,
+                                  color: kForest,
+                                ),
+                                label: const Text(
+                                  "Show UPI Contacts",
+                                  style: TextStyle(
+                                    color: kForest,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  side: BorderSide(
+                                    color: Colors.grey.shade200,
+                                    width: 1.5,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  backgroundColor: Colors.white,
+                                ),
                               ),
-                              const SizedBox(height: 16),
-                              SizedBox(
-                                height: 300,
-                                child: Scrollbar(
-                                  controller: _contactsScrollController,
-                                  thickness: 4,
-                                  thumbVisibility: true,
-                                  child: Builder(
-                                    builder: (context) {
-                                      final filteredContacts = _mockContacts.where((contact) {
-                                        if (_selectedSection == "All") return true;
-                                        final tag = _contactTags[contact["upi"]];
-                                        if (tag == _selectedSection) return true;
-                                        if (_selectedSection == "Favourites" && tag == "Favourite") return true;
-                                        if (_selectedSection == "Family" && tag == "Family") return true;
-                                        return false;
-                                      }).toList();
+                            )
+                          else
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.grey.shade200,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        "UPI CONTACTS",
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: [
+                                        ..._sections.map((section) {
+                                          final isSelected =
+                                              _selectedSection == section;
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                              right: 8,
+                                            ),
+                                            child: ChoiceChip(
+                                              label: Text(
+                                                section,
+                                                style: TextStyle(
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : Colors.grey.shade700,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 13,
+                                                ),
+                                              ),
+                                              selected: isSelected,
+                                              onSelected: (selected) {
+                                                if (selected) {
+                                                  setState(() {
+                                                    _selectedSection = section;
+                                                  });
+                                                }
+                                              },
+                                              selectedColor: kForest,
+                                              backgroundColor:
+                                                  Colors.grey.shade100,
+                                              checkmarkColor: Colors.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              side: BorderSide(
+                                                color: isSelected
+                                                    ? kForest
+                                                    : Colors.grey.shade300,
+                                                width: 1,
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.add,
+                                            color: kForest,
+                                            size: 20,
+                                          ),
+                                          onPressed: _showAddNewSectionDialog,
+                                          tooltip: "Add New List",
+                                          constraints: const BoxConstraints(),
+                                          style: IconButton.styleFrom(
+                                            backgroundColor:
+                                                Colors.green.shade50,
+                                            padding: const EdgeInsets.all(8),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  SizedBox(
+                                    height: 300,
+                                    child: Scrollbar(
+                                      controller: _contactsScrollController,
+                                      thickness: 4,
+                                      thumbVisibility: true,
+                                      child: Builder(
+                                        builder: (context) {
+                                          final filteredContacts = _mockContacts
+                                              .where((contact) {
+                                                if (_selectedSection == "All")
+                                                  return true;
+                                                final tag =
+                                                    _contactTags[contact["upi"]];
+                                                if (tag == _selectedSection)
+                                                  return true;
+                                                if (_selectedSection ==
+                                                        "Favourites" &&
+                                                    tag == "Favourite")
+                                                  return true;
+                                                if (_selectedSection ==
+                                                        "Family" &&
+                                                    tag == "Family")
+                                                  return true;
+                                                return false;
+                                              })
+                                              .toList();
 
-                                      if (filteredContacts.isEmpty) {
-                                        return Center(
-                                          child: Text(
-                                            "No contacts in $_selectedSection",
-                                            style: TextStyle(
-                                              color: Colors.grey.shade500,
-                                              fontSize: 14,
+                                          if (filteredContacts.isEmpty) {
+                                            return Center(
+                                              child: Text(
+                                                "No contacts in $_selectedSection",
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade500,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            );
+                                          }
+
+                                          return ListView.builder(
+                                            controller:
+                                                _contactsScrollController,
+                                            itemCount: filteredContacts.length,
+                                            itemBuilder: (context, index) {
+                                              final contact =
+                                                  filteredContacts[index];
+                                              final isSelected =
+                                                  _upiIdController.text ==
+                                                  contact["upi"];
+                                              return GestureDetector(
+                                                onTap: () {
+                                                  setState(() {
+                                                    _upiIdController.text =
+                                                        contact["upi"]!;
+                                                  });
+                                                },
+                                                child: AnimatedContainer(
+                                                  duration: const Duration(
+                                                    milliseconds: 200,
+                                                  ),
+                                                  margin: const EdgeInsets.only(
+                                                    bottom: 10,
+                                                  ),
+                                                  padding: const EdgeInsets.all(
+                                                    10,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: isSelected
+                                                        ? Colors.grey.shade100
+                                                        : Colors.transparent,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
+                                                    border: Border.all(
+                                                      color: isSelected
+                                                          ? Colors.grey.shade300
+                                                          : Colors.transparent,
+                                                    ),
+                                                  ),
+                                                  child: Row(
+                                                    children: [
+                                                      Container(
+                                                        width: 45,
+                                                        height: 45,
+                                                        decoration:
+                                                            const BoxDecoration(
+                                                              shape: BoxShape
+                                                                  .circle,
+                                                              gradient: LinearGradient(
+                                                                colors: [
+                                                                  kMid,
+                                                                  kForest,
+                                                                ],
+                                                                begin: Alignment
+                                                                    .topCenter,
+                                                                end: Alignment
+                                                                    .bottomCenter,
+                                                              ),
+                                                            ),
+                                                        child: Center(
+                                                          child: Text(
+                                                            contact["name"]![0]
+                                                                .toUpperCase(),
+                                                            style:
+                                                                const TextStyle(
+                                                                  color: Colors
+                                                                      .white,
+                                                                  fontSize: 18,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 16),
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Row(
+                                                              children: [
+                                                                Flexible(
+                                                                  child: Text(
+                                                                    contact["name"]!,
+                                                                    style: const TextStyle(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                      fontSize:
+                                                                          15,
+                                                                      color: Colors
+                                                                          .black87,
+                                                                    ),
+                                                                    overflow:
+                                                                        TextOverflow
+                                                                            .ellipsis,
+                                                                  ),
+                                                                ),
+                                                                if (_contactTags
+                                                                    .containsKey(
+                                                                      contact["upi"],
+                                                                    )) ...[
+                                                                  const SizedBox(
+                                                                    width: 8,
+                                                                  ),
+                                                                  Container(
+                                                                    padding: const EdgeInsets.symmetric(
+                                                                      horizontal:
+                                                                          6,
+                                                                      vertical:
+                                                                          2,
+                                                                    ),
+                                                                    decoration: BoxDecoration(
+                                                                      color:
+                                                                          _contactTags[contact["upi"]] ==
+                                                                              "Favourite"
+                                                                          ? Colors.orange.shade50
+                                                                          : _contactTags[contact["upi"]] ==
+                                                                                "Family"
+                                                                          ? Colors.blue.shade50
+                                                                          : Colors.green.shade50,
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                            6,
+                                                                          ),
+                                                                      border: Border.all(
+                                                                        color:
+                                                                            _contactTags[contact["upi"]] ==
+                                                                                "Favourite"
+                                                                            ? Colors.orange.shade300
+                                                                            : _contactTags[contact["upi"]] ==
+                                                                                  "Family"
+                                                                            ? Colors.blue.shade300
+                                                                            : Colors.green.shade300,
+                                                                        width:
+                                                                            0.5,
+                                                                      ),
+                                                                    ),
+                                                                    child: Text(
+                                                                      _contactTags[contact["upi"]]!,
+                                                                      style: TextStyle(
+                                                                        fontSize:
+                                                                            10,
+                                                                        fontWeight:
+                                                                            FontWeight.bold,
+                                                                        color:
+                                                                            _contactTags[contact["upi"]] ==
+                                                                                "Favourite"
+                                                                            ? Colors.orange.shade700
+                                                                            : _contactTags[contact["upi"]] ==
+                                                                                  "Family"
+                                                                            ? Colors.blue.shade700
+                                                                            : Colors.green.shade700,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ],
+                                                            ),
+                                                            const SizedBox(
+                                                              height: 4,
+                                                            ),
+                                                            Text(
+                                                              contact["upi"]!,
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .grey
+                                                                    .shade600,
+                                                                fontSize: 13,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  if (_selectedSection != "All") ...[
+                                    const SizedBox(height: 12),
+                                    Builder(
+                                      builder: (btnCtx) {
+                                        return Align(
+                                          alignment: Alignment.center,
+                                          child: OutlinedButton.icon(
+                                            onPressed: () async {
+                                              await Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) => ManageSectionScreen(
+                                                    sectionName:
+                                                        _selectedSection,
+                                                    sections: _sections,
+                                                    contactTags: _contactTags,
+                                                    mockContacts: _mockContacts,
+                                                    onUpdate:
+                                                        (
+                                                          updatedTags,
+                                                          updatedSections,
+                                                          currentSection,
+                                                        ) {
+                                                          setState(() {
+                                                            _contactTags =
+                                                                updatedTags;
+                                                            _sections =
+                                                                updatedSections;
+                                                            _selectedSection =
+                                                                currentSection;
+                                                          });
+                                                          _saveTags();
+                                                        },
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            icon: const Icon(
+                                              Icons.settings,
+                                              size: 16,
+                                              color: kForest,
+                                            ),
+                                            label: const Text(
+                                              "Manage",
+                                              style: TextStyle(
+                                                color: kForest,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            style: OutlinedButton.styleFrom(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 8,
+                                                  ),
+                                              side: const BorderSide(
+                                                color: kForest,
+                                                width: 1,
+                                              ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
                                             ),
                                           ),
                                         );
-                                      }
-
-                                      return ListView.builder(
-                                        controller: _contactsScrollController,
-                                        itemCount: filteredContacts.length,
-                                        itemBuilder: (context, index) {
-                                          final contact = filteredContacts[index];
-                                          final isSelected =
-                                              _upiIdController.text ==
-                                              contact["upi"];
-                                          return GestureDetector(
-                                            onTap: () {
-                                              setState(() {
-                                                _upiIdController.text =
-                                                    contact["upi"]!;
-                                              });
-                                            },
-                                            child: AnimatedContainer(
-                                              duration: const Duration(
-                                                milliseconds: 200,
-                                              ),
-                                              margin: const EdgeInsets.only(
-                                                bottom: 10,
-                                              ),
-                                              padding: const EdgeInsets.all(10),
-                                              decoration: BoxDecoration(
-                                                color: isSelected
-                                                    ? Colors.grey.shade100
-                                                    : Colors.transparent,
-                                                borderRadius: BorderRadius.circular(
-                                                  12,
-                                                ),
-                                                border: Border.all(
-                                                  color: isSelected
-                                                      ? Colors.grey.shade300
-                                                      : Colors.transparent,
-                                                ),
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  Container(
-                                                    width: 45,
-                                                    height: 45,
-                                                    decoration: const BoxDecoration(
-                                                      shape: BoxShape.circle,
-                                                      gradient: LinearGradient(
-                                                        colors: [kMid, kForest],
-                                                        begin: Alignment.topCenter,
-                                                        end: Alignment.bottomCenter,
-                                                      ),
-                                                    ),
-                                                    child: Center(
-                                                      child: Text(
-                                                        contact["name"]![0]
-                                                            .toUpperCase(),
-                                                        style: const TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 18,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 16),
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment.start,
-                                                      children: [
-                                                        Row(
-                                                          children: [
-                                                            Flexible(
-                                                              child: Text(
-                                                                contact["name"]!,
-                                                                style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight.bold,
-                                                                  fontSize: 15,
-                                                                  color: Colors.black87,
-                                                                ),
-                                                                overflow: TextOverflow.ellipsis,
-                                                              ),
-                                                            ),
-                                                            if (_contactTags.containsKey(contact["upi"])) ...[
-                                                              const SizedBox(width: 8),
-                                                              Container(
-                                                                padding: const EdgeInsets.symmetric(
-                                                                  horizontal: 6,
-                                                                  vertical: 2,
-                                                                ),
-                                                                decoration: BoxDecoration(
-                                                                  color: _contactTags[contact["upi"]] == "Favourite"
-                                                                      ? Colors.orange.shade50
-                                                                      : _contactTags[contact["upi"]] == "Family"
-                                                                          ? Colors.blue.shade50
-                                                                          : Colors.green.shade50,
-                                                                  borderRadius: BorderRadius.circular(6),
-                                                                  border: Border.all(
-                                                                    color: _contactTags[contact["upi"]] == "Favourite"
-                                                                        ? Colors.orange.shade300
-                                                                        : _contactTags[contact["upi"]] == "Family"
-                                                                            ? Colors.blue.shade300
-                                                                            : Colors.green.shade300,
-                                                                    width: 0.5,
-                                                                  ),
-                                                                ),
-                                                                child: Text(
-                                                                  _contactTags[contact["upi"]]!,
-                                                                  style: TextStyle(
-                                                                    fontSize: 10,
-                                                                    fontWeight: FontWeight.bold,
-                                                                    color: _contactTags[contact["upi"]] == "Favourite"
-                                                                        ? Colors.orange.shade700
-                                                                        : _contactTags[contact["upi"]] == "Family"
-                                                                            ? Colors.blue.shade700
-                                                                            : Colors.green.shade700,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ],
-                                                        ),
-                                                        const SizedBox(height: 4),
-                                                        Text(
-                                                          contact["upi"]!,
-                                                          style: TextStyle(
-                                                            color:
-                                                                Colors.grey.shade600,
-                                                            fontSize: 13,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ),
+                                      },
+                                    ),
+                                  ],
+                                ],
                               ),
-                              if (_selectedSection != "All") ...[
-                                const SizedBox(height: 12),
-                                Builder(
-                                  builder: (btnCtx) {
-                                    return Align(
-                                      alignment: Alignment.center,
-                                      child: OutlinedButton.icon(
-                                        onPressed: () async {
-                                          await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => ManageSectionScreen(
-                                                sectionName: _selectedSection,
-                                                sections: _sections,
-                                                contactTags: _contactTags,
-                                                mockContacts: _mockContacts,
-                                                onUpdate: (updatedTags, updatedSections, currentSection) {
-                                                  setState(() {
-                                                    _contactTags = updatedTags;
-                                                    _sections = updatedSections;
-                                                    _selectedSection = currentSection;
-                                                  });
-                                                  _saveTags();
-                                                },
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        icon: const Icon(Icons.settings, size: 16, color: kForest),
-                                        label: const Text(
-                                          "Manage",
-                                          style: TextStyle(
-                                            color: kForest,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        style: OutlinedButton.styleFrom(
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                          side: const BorderSide(color: kForest, width: 1),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }
+                            ),
+                          const SizedBox(height: 32),
+                          // Pay Button
+                          Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: dynamicColor != null
+                                    ? [
+                                        dynamicColor,
+                                        dynamicColor.withValues(alpha: 0.8),
+                                      ]
+                                    : [kForest, kMid],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (dynamicColor ?? kForest).withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
-                            ],
-                          ),
-                        ),
-                      const SizedBox(height: 32),
-                      // Pay Button
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [kForest, kMid],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: kForest.withValues(alpha: 0.2),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
                             ),
-                          ],
-                        ),
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            if (await SecurityService.isUpiLockActive()) {
-                              _showSecurityLockToast(context, message: 'UPI Payments are currently blocked by Smart Lock.');
-                              return;
-                            }
-                            if (_amountController.text.trim().isEmpty || _upiIdController.text.trim().isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter UPI ID and Amount"), backgroundColor: Colors.red));
-                              return;
-                            }
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                if (await SecurityService.isUpiLockActive()) {
+                                  _showSecurityLockToast(
+                                    context,
+                                    message:
+                                        'UPI Payments are currently blocked by Smart Lock.',
+                                  );
+                                  return;
+                                }
+                                if (_amountController.text.trim().isEmpty ||
+                                    _upiIdController.text.trim().isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Please enter UPI ID and Amount",
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                  return;
+                                }
 
-                            // 2. Sanitize and Validate
-                            final sanitizedUpi = SecurityValidator.sanitize(_upiIdController.text);
-                            final rawAmount = _amountController.text.replaceAll(',', '');
+                                // 2. Sanitize and Validate
+                                final sanitizedUpi = SecurityValidator.sanitize(
+                                  _upiIdController.text,
+                                );
+                                final rawAmount = _amountController.text
+                                    .replaceAll(',', '');
 
-                            if (!SecurityValidator.isValidAmount(rawAmount)) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Invalid amount entered.")));
-                              return;
-                            }
+                                if (!SecurityValidator.isValidAmount(
+                                  rawAmount,
+                                )) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Invalid amount entered."),
+                                    ),
+                                  );
+                                  return;
+                                }
 
-                            // 3. Payload Check
-                            final payload = {
-                              "upi_id": sanitizedUpi,
-                              "amount": rawAmount,
-                            };
+                                // 3. Payload Check
+                                final payload = {
+                                  "upi_id": sanitizedUpi,
+                                  "amount": rawAmount,
+                                };
 
-                            if (!SecurityValidator.inspectPayload(payload)) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("SECURITY: Payload rejected.")));
-                              return;
-                            }
+                                if (!SecurityValidator.inspectPayload(
+                                  payload,
+                                )) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "SECURITY: Payload rejected.",
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
 
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PinScreen(
-                                  recipientName: sanitizedUpi.isNotEmpty ? sanitizedUpi.split('@').first.toUpperCase() : "VERIFIED PERSON",
-                                  upiId: sanitizedUpi,
-                                  amount: rawAmount,
-                                  isUpi: true,
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => PinScreen(
+                                      recipientName: sanitizedUpi.isNotEmpty
+                                          ? sanitizedUpi
+                                                .split('@')
+                                                .first
+                                                .toUpperCase()
+                                          : "VERIFIED PERSON",
+                                      upiId: sanitizedUpi,
+                                      amount: rawAmount,
+                                      isUpi: true,
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 18,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              child: Text(
+                                _amountController.text.isEmpty
+                                    ? "Pay ₹0.00"
+                                    : "Pay ₹${_amountController.text}",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
-                          child: Text(
-                            _amountController.text.isEmpty
-                                ? "Pay ₹0.00"
-                                : "Pay ₹${_amountController.text}",
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                          const SizedBox(height: 40),
+                        ],
                       ),
-                      const SizedBox(height: 40),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            ],
-          ),
-        ),
+                ], // closes Column children
+              ), // closes Column
+              buildDynamicEdgeHue(dynamicColor),
+            ], // closes Stack children
+          ), // closes Stack
+        ), // closes SafeArea
       ),
     );
   }
@@ -2850,7 +3296,10 @@ class _PinScreenState extends State<PinScreen> {
   bool _isBalanceUnlocked = false;
   bool _isBalanceVisible = false;
   final TextEditingController _pinController = TextEditingController();
-  final List<TextEditingController> _digitControllers = List.generate(4, (_) => TextEditingController());
+  final List<TextEditingController> _digitControllers = List.generate(
+    4,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
 
   @override
@@ -2925,6 +3374,8 @@ class _PinScreenState extends State<PinScreen> {
     final upiId = widget.upiId;
     final isUpi = widget.isUpi;
 
+    final dynamicColor = getDynamicAmountColor(amount ?? "");
+
     return Scaffold(
       backgroundColor: kCream,
       bottomNavigationBar: BottomNav(
@@ -2932,207 +3383,231 @@ class _PinScreenState extends State<PinScreen> {
         onTap: (i) => _handleGlobalBottomNavTap(context, i),
       ),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: TopBar(
-                onHomeTap: () => _handleGlobalHomeTap(context),
-                onLogoutTap: () => _handleGlobalLogout(context),
-                onNotificationTap: () => showNotifications(context),
-              ),
-            ),
-            LoanHeader(
-              title: "Enter PIN",
-              subtitle: "Secure Payment",
-              icon: Icons.lock_outline_rounded,
-              onBack: () => Navigator.pop(context),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
+            Column(
+              children: [
+                Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 32,
+                    horizontal: 16,
+                    vertical: 16,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Payment Summary Card
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              "Paying to",
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade500,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              recipientName ?? "Recipient",
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            if (isUpi && upiId != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  upiId,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade400,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            const SizedBox(height: 24),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 14,
-                              ),
-                              decoration: BoxDecoration(
-                                color: kForest.withValues(alpha: 0.05),
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              child: Text(
-                                "₹$amount",
-                                style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w900,
-                                  color: kForest,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 48),
-
-                      const Text(
-                        "ENTER 4-DIGIT PIN",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.black54,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(4, (index) => box(context, index)),
-                      ),
-                      const SizedBox(height: 40),
-                      TextButton.icon(
-                        onPressed: _showPinDialog,
-                        icon: const Icon(
-                          Icons.account_balance_wallet_outlined,
-                          size: 20,
-                        ),
-                        label: Text(
-                          _isBalanceUnlocked
-                              ? "Balance: ${_isBalanceVisible ? '₹1,45,000.50' : '******'}"
-                              : "Check Balance",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        style: TextButton.styleFrom(
-                          foregroundColor: kMid,
-                          backgroundColor: kMid.withValues(alpha: 0.05),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 60),
-                      Container(
-                        width: double.infinity,
-                        height: 58,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          gradient: const LinearGradient(
-                            colors: [kForest, kMid],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: kForest.withValues(alpha: 0.25),
-                              blurRadius: 15,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            final enteredPin = _digitControllers.map((c) => c.text).join();
-                            if (enteredPin.length < 4) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Please enter the 4-digit UPI PIN to proceed"),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                              return;
-                            }
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => SuccessScreen(
-                                  recipientName: recipientName,
-                                  isUpi: isUpi,
-                                ),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: const Text(
-                            "Confirm & Pay",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: TopBar(
+                    onHomeTap: () => _handleGlobalHomeTap(context),
+                    onLogoutTap: () => _handleGlobalLogout(context),
+                    onNotificationTap: () => showNotifications(context),
                   ),
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
+                LoanHeader(
+                  title: "Enter PIN",
+                  subtitle: "Secure Payment",
+                  icon: Icons.lock_outline_rounded,
+                  onBack: () => Navigator.pop(context),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 32,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Payment Summary Card
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  "Paying to",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey.shade500,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  recipientName ?? "Recipient",
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                if (isUpi && upiId != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      upiId,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey.shade400,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                const SizedBox(height: 24),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 14,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: kForest.withValues(alpha: 0.05),
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  child: Text(
+                                    "₹$amount",
+                                    style: const TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.w900,
+                                      color: kForest,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 48),
+
+                          const Text(
+                            "ENTER 4-DIGIT PIN",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.black54,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              4,
+                              (index) => box(context, index),
+                            ),
+                          ),
+                          const SizedBox(height: 40),
+                          TextButton.icon(
+                            onPressed: _showPinDialog,
+                            icon: const Icon(
+                              Icons.account_balance_wallet_outlined,
+                              size: 20,
+                            ),
+                            label: Text(
+                              _isBalanceUnlocked
+                                  ? "Balance: ${_isBalanceVisible ? '₹1,45,000.50' : '******'}"
+                                  : "Check Balance",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: TextButton.styleFrom(
+                              foregroundColor: kMid,
+                              backgroundColor: kMid.withValues(alpha: 0.05),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 60),
+                          Container(
+                            width: double.infinity,
+                            height: 58,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              gradient: LinearGradient(
+                                colors: dynamicColor != null
+                                    ? [
+                                        dynamicColor,
+                                        dynamicColor.withValues(alpha: 0.8),
+                                      ]
+                                    : [kForest, kMid],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (dynamicColor ?? kForest).withValues(
+                                    alpha: 0.25,
+                                  ),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                final enteredPin = _digitControllers
+                                    .map((c) => c.text)
+                                    .join();
+                                if (enteredPin.length < 4) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Please enter the 4-digit UPI PIN to proceed",
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                  return;
+                                }
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => SuccessScreen(
+                                      recipientName: recipientName,
+                                      isUpi: isUpi,
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: const Text(
+                                "Confirm & Pay",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ], // closes Column children
+            ), // closes Column
+            buildDynamicEdgeHue(dynamicColor),
+          ], // closes Stack children
+        ), // closes Stack
+      ), // closes SafeArea
     );
   }
 
@@ -3499,7 +3974,12 @@ class ManageSectionScreen extends StatefulWidget {
   final List<String> sections;
   final Map<String, String> contactTags;
   final List<Map<String, String>> mockContacts;
-  final Function(Map<String, String> updatedTags, List<String> updatedSections, String currentSection) onUpdate;
+  final Function(
+    Map<String, String> updatedTags,
+    List<String> updatedSections,
+    String currentSection,
+  )
+  onUpdate;
 
   const ManageSectionScreen({
     super.key,
@@ -3538,7 +4018,10 @@ class _ManageSectionScreenState extends State<ManageSectionScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text("Rename List", style: TextStyle(fontWeight: FontWeight.bold, color: kForest)),
+        title: const Text(
+          "Rename List",
+          style: TextStyle(fontWeight: FontWeight.bold, color: kForest),
+        ),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(hintText: "Enter new name"),
@@ -3559,7 +4042,8 @@ class _ManageSectionScreenState extends State<ManageSectionScreen> {
                   }
                   _localTags.forEach((upi, tag) {
                     if (tag == _currentSectionName ||
-                        (_currentSectionName == "Favourites" && tag == "Favourite") ||
+                        (_currentSectionName == "Favourites" &&
+                            tag == "Favourite") ||
                         (_currentSectionName == "Family" && tag == "Family")) {
                       _localTags[upi] = newName;
                     }
@@ -3584,8 +4068,13 @@ class _ManageSectionScreenState extends State<ManageSectionScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text("Delete List?", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
-        content: Text("Are you sure you want to delete '$_currentSectionName'? All tagged contacts will be untagged."),
+        title: const Text(
+          "Delete List?",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+        ),
+        content: Text(
+          "Are you sure you want to delete '$_currentSectionName'? All tagged contacts will be untagged.",
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -3595,10 +4084,13 @@ class _ManageSectionScreenState extends State<ManageSectionScreen> {
             onPressed: () {
               setState(() {
                 _localSections.remove(_currentSectionName);
-                _localTags.removeWhere((upi, tag) =>
-                    tag == _currentSectionName ||
-                    (_currentSectionName == "Favourites" && tag == "Favourite") ||
-                    (_currentSectionName == "Family" && tag == "Family"));
+                _localTags.removeWhere(
+                  (upi, tag) =>
+                      tag == _currentSectionName ||
+                      (_currentSectionName == "Favourites" &&
+                          tag == "Favourite") ||
+                      (_currentSectionName == "Family" && tag == "Family"),
+                );
                 _currentSectionName = "All";
               });
               _triggerUpdate();
@@ -3619,7 +4111,8 @@ class _ManageSectionScreenState extends State<ManageSectionScreen> {
       builder: (ctx) {
         final availableContacts = widget.mockContacts.where((contact) {
           final String tag = _localTags[contact["upi"]] ?? "";
-          final isMember = (tag == _currentSectionName) ||
+          final isMember =
+              (tag == _currentSectionName) ||
               (_currentSectionName == "Favourites" && tag == "Favourite") ||
               (_currentSectionName == "Family" && tag == "Family");
           return !isMember;
@@ -3627,7 +4120,9 @@ class _ManageSectionScreenState extends State<ManageSectionScreen> {
 
         return Dialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: Container(
             width: 300,
             constraints: const BoxConstraints(maxHeight: 350),
@@ -3680,7 +4175,9 @@ class _ManageSectionScreenState extends State<ManageSectionScreen> {
                           return ListTile(
                             title: Text(
                               contact["name"]!,
-                              style: const TextStyle(fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             subtitle: Text(contact["upi"]!),
                             onTap: () {
@@ -3690,7 +4187,8 @@ class _ManageSectionScreenState extends State<ManageSectionScreen> {
                                 } else if (_currentSectionName == "Family") {
                                   _localTags[contact["upi"]!] = "Family";
                                 } else {
-                                  _localTags[contact["upi"]!] = _currentSectionName;
+                                  _localTags[contact["upi"]!] =
+                                      _currentSectionName;
                                 }
                               });
                               _triggerUpdate();
@@ -3760,7 +4258,11 @@ class _ManageSectionScreenState extends State<ManageSectionScreen> {
                         color: kMid.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.arrow_back_rounded, color: kMid, size: 20),
+                      child: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: kMid,
+                        size: 20,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -3799,7 +4301,11 @@ class _ManageSectionScreenState extends State<ManageSectionScreen> {
                         color: kMid.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.edit_outlined, color: kMid, size: 20),
+                      child: const Icon(
+                        Icons.edit_outlined,
+                        color: kMid,
+                        size: 20,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -3811,7 +4317,11 @@ class _ManageSectionScreenState extends State<ManageSectionScreen> {
                         color: Colors.red.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                      child: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.red,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
@@ -3819,7 +4329,10 @@ class _ManageSectionScreenState extends State<ManageSectionScreen> {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -3846,7 +4359,11 @@ class _ManageSectionScreenState extends State<ManageSectionScreen> {
                                 shape: BoxShape.circle,
                                 color: kForest,
                               ),
-                              child: const Icon(Icons.add, color: Colors.white, size: 24),
+                              child: const Icon(
+                                Icons.add,
+                                color: Colors.white,
+                                size: 24,
+                              ),
                             ),
                             const SizedBox(width: 16),
                             const Text(
@@ -3896,7 +4413,8 @@ class _ManageSectionScreenState extends State<ManageSectionScreen> {
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         contact["name"]!,
