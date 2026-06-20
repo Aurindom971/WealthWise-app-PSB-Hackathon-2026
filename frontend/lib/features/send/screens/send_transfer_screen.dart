@@ -2850,6 +2850,20 @@ class _PinScreenState extends State<PinScreen> {
   bool _isBalanceUnlocked = false;
   bool _isBalanceVisible = false;
   final TextEditingController _pinController = TextEditingController();
+  final List<TextEditingController> _digitControllers = List.generate(4, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+
+  @override
+  void dispose() {
+    _pinController.dispose();
+    for (var c in _digitControllers) {
+      c.dispose();
+    }
+    for (var f in _focusNodes) {
+      f.dispose();
+    }
+    super.dispose();
+  }
 
   void _showPinDialog() {
     showDialog(
@@ -3028,7 +3042,7 @@ class _PinScreenState extends State<PinScreen> {
                       const SizedBox(height: 32),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(4, (_) => box(context)),
+                        children: List.generate(4, (index) => box(context, index)),
                       ),
                       const SizedBox(height: 40),
                       TextButton.icon(
@@ -3074,6 +3088,16 @@ class _PinScreenState extends State<PinScreen> {
                         ),
                         child: ElevatedButton(
                           onPressed: () {
+                            final enteredPin = _digitControllers.map((c) => c.text).join();
+                            if (enteredPin.length < 4) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Please enter the 4-digit UPI PIN to proceed"),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
@@ -3112,12 +3136,14 @@ class _PinScreenState extends State<PinScreen> {
     );
   }
 
-  Widget box(BuildContext context) {
+  Widget box(BuildContext context, int i) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6),
       width: 60,
       height: 65,
       child: TextField(
+        controller: _digitControllers[i],
+        focusNode: _focusNodes[i],
         keyboardType: TextInputType.number,
         obscureText: true,
         textAlign: TextAlign.center,
@@ -3136,7 +3162,17 @@ class _PinScreenState extends State<PinScreen> {
           ),
         ),
         onChanged: (value) {
-          if (value.isNotEmpty) FocusScope.of(context).nextFocus();
+          if (value.isNotEmpty) {
+            if (i < 3) {
+              FocusScope.of(context).requestFocus(_focusNodes[i + 1]);
+            } else {
+              _focusNodes[i].unfocus();
+            }
+          } else {
+            if (i > 0) {
+              FocusScope.of(context).requestFocus(_focusNodes[i - 1]);
+            }
+          }
         },
       ),
     );
