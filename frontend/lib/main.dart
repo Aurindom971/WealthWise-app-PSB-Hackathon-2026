@@ -6,6 +6,8 @@ import 'features/auth/screens/login_screen.dart';
 import 'features/home/screens/home_screen.dart';
 import 'features/send/screens/send_transfer_screen.dart';
 import 'core/services/security_service.dart';
+import 'package:provider/provider.dart';
+import 'features/investments/market_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +45,9 @@ class WealthWiseApp extends StatelessWidget {
     return Listener(
       onPointerDown: (_) => SecurityService.instance.resetInactivityTimer(),
       onPointerMove: (_) => SecurityService.instance.resetInactivityTimer(),
+      child: ChangeNotifierProvider(
+  create: (_) => MarketProvider()..initialize(),
+  
       child: MaterialApp(
         navigatorKey: SecurityService.instance.navigatorKey,
         debugShowCheckedModeBanner: false,
@@ -67,6 +72,9 @@ class WealthWiseApp extends StatelessWidget {
           '/qr_scanner': (context) => const QRScreen(),
         },
       ),
-    );
+
+    ),  // ChangeNotifierProvider
+  );    // Listener
+  
   }
 }
