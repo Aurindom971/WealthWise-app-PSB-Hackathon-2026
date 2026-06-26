@@ -158,12 +158,12 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       // --- 🌍 MANDATORY LOCATION LOGGING ---
-      // TEMP DEV BYPASS
-final locResult = LocationResult.success(
-  city: 'Development',
-  state: 'Development',
-  country: 'Development',
-);
+      final locResult = await LocationHelper.getMandatoryLocation();
+if (!locResult.isSuccess) {
+  await _supabase.auth.signOut();
+  _showError("SECURITY: ${locResult.error}");
+  return;
+}
       // --- 🌍 ROBUST PUBLIC IP FETCHING ---
       String publicIp = 'unknown';
       try {
