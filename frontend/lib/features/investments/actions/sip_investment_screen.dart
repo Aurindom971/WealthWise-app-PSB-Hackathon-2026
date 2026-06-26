@@ -26,18 +26,26 @@ class _SIPInvestmentScreenState extends State<SIPInvestmentScreen> {
   String _selectedCategory = 'All';
 
   final List<Map<String, String>> _availableInvestments = [
-    {'name': 'Quant Small Cap Fund', 'type': 'Mutual Fund', 'category': 'Small Cap'},
-    {'name': 'Parag Parikh Flexi Cap', 'type': 'Mutual Fund', 'category': 'Flexi Cap'},
-    {'name': 'Nippon India Small Cap', 'type': 'Mutual Fund', 'category': 'Small Cap'},
-    {'name': 'HDFC Mid-Cap Opportunities', 'type': 'Mutual Fund', 'category': 'Mid Cap'},
-    {'name': 'Axis Bluechip Fund', 'type': 'Mutual Fund', 'category': 'Large Cap'},
-    {'name': 'SBI Magnum Equity Funds', 'type': 'Mutual Fund', 'category': 'Focused'},
-    {'name': 'Reliance Industries', 'type': 'Stock', 'category': 'Energy'},
-    {'name': 'Tata Consultancy', 'type': 'Stock', 'category': 'IT Services'},
-    {'name': 'Infosys Ltd', 'type': 'Stock', 'category': 'IT Services'},
-    {'name': 'HDFC Bank Ltd', 'type': 'Stock', 'category': 'Banking'},
-    {'name': 'Wipro Ltd', 'type': 'Stock', 'category': 'IT Services'},
-    {'name': 'ICICI Bank Ltd', 'type': 'Stock', 'category': 'Banking'},
+    {'name': 'Nippon India Taiwan Equity Fund', 'type': 'Mutual Fund', 'category': 'International'},
+    {'name': 'SBI PSU Fund', 'type': 'Mutual Fund', 'category': 'PSU'},
+    {'name': 'Bandhan Small Cap Fund', 'type': 'Mutual Fund', 'category': 'Small Cap'},
+    {'name': 'LIC MF Infrastructure Fund', 'type': 'Mutual Fund', 'category': 'Infrastructure'},
+    {'name': 'ICICI Prudential Pharma Healthcare and Diagnostics (P.H.D) Fund', 'type': 'Mutual Fund', 'category': 'Sectoral'},
+    {'name': 'Aditya Birla Sun Life PSU Equity Fund', 'type': 'Mutual Fund', 'category': 'PSU'},
+    {'name': 'Invesco India PSU Equity Fund', 'type': 'Mutual Fund', 'category': 'PSU'},
+    {'name': 'HSBC Midcap Fund', 'type': 'Mutual Fund', 'category': 'Mid Cap'},
+    {'name': 'UTI Healthcare Fund', 'type': 'Mutual Fund', 'category': 'Sectoral'},
+    {'name': 'DSP India T.I.G.E.R. (The Infrastructure Growth and Economic Reforms Fund)', 'type': 'Mutual Fund', 'category': 'Infrastructure'},
+    {'name': 'Mirae Asset Healthcare Fund', 'type': 'Mutual Fund', 'category': 'Sectoral'},
+    {'name': 'Nippon India Power & Infra Fund', 'type': 'Mutual Fund', 'category': 'Infrastructure'},
+    {'name': 'Quant Value Fund', 'type': 'Mutual Fund', 'category': 'Value'},
+    {'name': 'ITI Small Cap Fund', 'type': 'Mutual Fund', 'category': 'Small Cap'},
+    {'name': 'WhiteOak Capital Mid Cap Fund', 'type': 'Mutual Fund', 'category': 'Mid Cap'},
+    {'name': 'Canara Robeco Infrastructure Fund', 'type': 'Mutual Fund', 'category': 'Infrastructure'},
+    {'name': 'Edelweiss Mid Cap Fund', 'type': 'Mutual Fund', 'category': 'Mid Cap'},
+    {'name': 'Mahindra Manulife Mid Cap Fund', 'type': 'Mutual Fund', 'category': 'Mid Cap'},
+    {'name': 'Franklin Build India Fund', 'type': 'Mutual Fund', 'category': 'Infrastructure'},
+    {'name': 'HDFC Short Term Debt Fund', 'type': 'Mutual Fund', 'category': 'Debt'},
   ];
 
   final List<Map<String, dynamic>> _paymentMethods = [
@@ -141,21 +149,21 @@ class _SIPInvestmentScreenState extends State<SIPInvestmentScreen> {
                 ),
               ),
             ),
-            BottomNav(
-              currentIndex: 4,
-              onTap: (index) {
-                if (index == 4) return;
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  '/home',
-                  (route) => false,
-                  arguments: {'index': index},
-                );
-              },
-              onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
-              onNotificationTap: () {},
-            ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNav(
+        currentIndex: 4,
+        onTap: (index) {
+          if (index == 4) return;
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/home',
+            (route) => false,
+            arguments: {'index': index},
+          );
+        },
+        onLogoutTap: () => Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false),
+        onNotificationTap: () {},
       ),
     );
   }
@@ -222,7 +230,7 @@ class _SIPInvestmentScreenState extends State<SIPInvestmentScreen> {
           return Container(
             height: MediaQuery.of(context).size.height * 0.85,
             decoration: const BoxDecoration(
-              color: Color(0xFFF7F9F8),
+              color: kCream,
               borderRadius: BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
             ),
             child: Column(

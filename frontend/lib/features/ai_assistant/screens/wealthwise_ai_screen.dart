@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
 import '../../../services/ai_service.dart';
 
@@ -21,6 +22,37 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
   final TextEditingController _controller = TextEditingController();
   final List<ChatMessage> _messages = [];
   bool _isTyping = false;
+  String _cusId = "CUST1"; // safe fallback
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomerId();
+  }
+
+  Future<void> _loadCustomerId() async {
+    try {
+      final supabase = Supabase.instance.client;
+      final user = supabase.auth.currentUser;
+      if (user != null && user.email != null) {
+        final res = await supabase
+            .from('users')
+            .select('cus_id')
+            .eq('email', user.email!)
+            .maybeSingle();
+        if (res != null && res['cus_id'] != null) {
+          if (mounted) {
+            setState(() {
+              _cusId = res['cus_id'];
+              debugPrint('SAGE Loaded customer ID: $_cusId');
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('SAGE Error loading customer ID: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -48,7 +80,10 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
     });
 
     // 2. Call Backend AI Chat
-    final reply = await AIService.getChatReply(message: userMessage);
+    final reply = await AIService.getChatReply(
+      message: userMessage,
+      cusId: _cusId,
+    );
 
     // 3. Add AI reply to UI
     if (mounted) {

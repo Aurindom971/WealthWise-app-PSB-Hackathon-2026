@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
 import '../models/bill_models.dart';
 import '../../../services/security_service.dart';
+import '../../send/screens/send_transfer_screen.dart';
 
 class PaymentGatewayScreen extends StatefulWidget {
   final Bill bill;
@@ -48,18 +49,17 @@ class _PaymentGatewayScreenState extends State<PaymentGatewayScreen> with Single
       _showSecurityLockToast(context);
       return;
     }
-    setState(() => _isProcessing = true);
-
-    // Simulate payment processing
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) return;
-
-    setState(() {
-      _isProcessing = false;
-      _isSuccess = true;
-    });
-    _checkController.forward();
+    
+    final upiId = '${widget.bill.providerName.toLowerCase().replaceAll(' ', '')}@upi';
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UpiScreen(
+          prefilledUpiId: upiId,
+          prefilledAmount: widget.bill.amount.toString(),
+        ),
+      ),
+    );
   }
 
   @override
@@ -177,35 +177,38 @@ class _PaymentGatewayScreenState extends State<PaymentGatewayScreen> with Single
           const SizedBox(height: 16),
           
           // Mock UPI Option
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: kCard,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: kAccent),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: kAccent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+          GestureDetector(
+            onTap: _processPayment,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: kCard,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: kAccent),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: kAccent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.account_balance_wallet_rounded, color: kAccent),
                   ),
-                  child: const Icon(Icons.account_balance_wallet_rounded, color: kAccent),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('WealthWise UPI', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: kForest)),
-                      Text('rahul@swp', style: GoogleFonts.inter(color: kSub, fontSize: 12)),
-                    ],
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('WealthWise UPI', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: kForest)),
+                        Text('rahul@swp', style: GoogleFonts.inter(color: kSub, fontSize: 12)),
+                      ],
+                    ),
                   ),
-                ),
-                const Icon(Icons.check_circle_rounded, color: kAccent),
-              ],
+                  const Icon(Icons.check_circle_rounded, color: kAccent),
+                ],
+              ),
             ),
           ),
 

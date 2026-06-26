@@ -1,7 +1,11 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../home/screens/notifications_screen.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
 import '../../loans/widgets/loan_header.dart';
@@ -49,6 +53,64 @@ List<String> userAccounts = [
 ];
 
 List<String> upiContacts = ["rahul@upi", "amit@upi", "priya@upi"];
+
+void _handleGlobalHomeTap(BuildContext context) {
+  Navigator.pushNamedAndRemoveUntil(
+    context,
+    '/home',
+    (route) => false,
+  );
+}
+
+void _handleGlobalBottomNavTap(BuildContext context, int i) {
+  Navigator.pushNamedAndRemoveUntil(
+    context,
+    '/home',
+    (route) => false,
+    arguments: {'index': i},
+  );
+}
+
+Future<void> _handleGlobalLogout(BuildContext context) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: const Text(
+        'Logout',
+        style: TextStyle(color: kForest, fontWeight: FontWeight.bold),
+      ),
+      content: const Text(
+        'Are you sure you want to log out of your secure session?',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Cancel', style: TextStyle(color: kSub)),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red.shade800,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: const Text('Logout'),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmed == true) {
+    await Supabase.instance.client.auth.signOut();
+    if (context.mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    }
+  }
+}
 
 //////////////////// MAIN SCREEN ////////////////////
 
@@ -115,7 +177,7 @@ class SendTransferScreen extends StatelessWidget {
       backgroundColor: kCream, // Extremely light grey/mint background
       bottomNavigationBar: BottomNav(
         currentIndex: -1,
-        onTap: (i) => Navigator.popUntil(context, (route) => route.isFirst),
+        onTap: (i) => _handleGlobalBottomNavTap(context, i),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -128,10 +190,8 @@ class SendTransferScreen extends StatelessWidget {
                   vertical: 16,
                 ),
                 child: TopBar(
-                  onHomeTap: () =>
-                      Navigator.popUntil(context, (route) => route.isFirst),
-                  onLogoutTap: () =>
-                      Navigator.popUntil(context, (route) => route.isFirst),
+                  onHomeTap: () => _handleGlobalHomeTap(context),
+                  onLogoutTap: () => _handleGlobalLogout(context),
                   onNotificationTap: () => showNotifications(context),
                 ),
               ),
@@ -691,7 +751,7 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
         backgroundColor: kCream,
         bottomNavigationBar: BottomNav(
           currentIndex: -1,
-          onTap: (i) => Navigator.popUntil(context, (route) => route.isFirst),
+          onTap: (i) => _handleGlobalBottomNavTap(context, i),
         ),
         body: SafeArea(
           child: Column(
@@ -702,10 +762,8 @@ class _BankTransferScreenState extends State<BankTransferScreen> {
                   vertical: 16,
                 ),
                 child: TopBar(
-                  onHomeTap: () =>
-                      Navigator.popUntil(context, (route) => route.isFirst),
-                  onLogoutTap: () =>
-                      Navigator.popUntil(context, (route) => route.isFirst),
+                  onHomeTap: () => _handleGlobalHomeTap(context),
+                  onLogoutTap: () => _handleGlobalLogout(context),
                   onNotificationTap: () => showNotifications(context),
                 ),
               ),
@@ -1131,7 +1189,7 @@ class _SelfTransferScreenState extends State<SelfTransferScreen> {
         backgroundColor: kCream,
         bottomNavigationBar: BottomNav(
           currentIndex: -1,
-          onTap: (i) => Navigator.popUntil(context, (route) => route.isFirst),
+          onTap: (i) => _handleGlobalBottomNavTap(context, i),
         ),
         body: SafeArea(
           child: Column(
@@ -1142,10 +1200,8 @@ class _SelfTransferScreenState extends State<SelfTransferScreen> {
                   vertical: 16,
                 ),
                 child: TopBar(
-                  onHomeTap: () =>
-                      Navigator.popUntil(context, (route) => route.isFirst),
-                  onLogoutTap: () =>
-                      Navigator.popUntil(context, (route) => route.isFirst),
+                  onHomeTap: () => _handleGlobalHomeTap(context),
+                  onLogoutTap: () => _handleGlobalLogout(context),
                   onNotificationTap: () => showNotifications(context),
                 ),
               ),
@@ -1653,9 +1709,53 @@ class _UpiScreenState extends State<UpiScreen> {
   final FocusNode _amountFocusNode = FocusNode();
   final ScrollController _contactsScrollController = ScrollController();
 
+  Map<String, String> _contactTags = {};
+  String _selectedSection = "All";
+  List<String> _sections = ["All", "Favourites", "Family"];
+
+  Future<void> _loadTags() async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/tagged_contacts.json');
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        final Map<String, dynamic> decoded = json.decode(content);
+        setState(() {
+          if (decoded.containsKey('tags')) {
+            _contactTags = decoded['tags'].cast<String, String>();
+          } else {
+            _contactTags = decoded.cast<String, String>();
+          }
+          if (decoded.containsKey('sections')) {
+            _sections = decoded['sections'].cast<String>();
+            if (!_sections.contains("All")) _sections.insert(0, "All");
+            if (!_sections.contains("Favourites")) _sections.add("Favourites");
+            if (!_sections.contains("Family")) _sections.add("Family");
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading tags: $e");
+    }
+  }
+
+  Future<void> _saveTags() async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/tagged_contacts.json');
+      await file.writeAsString(json.encode({
+        'tags': _contactTags,
+        'sections': _sections,
+      }));
+    } catch (e) {
+      debugPrint("Error saving tags: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadTags();
     if (widget.prefilledUpiId != null) {
       _upiIdController.text = widget.prefilledUpiId!;
     }
@@ -1682,6 +1782,12 @@ class _UpiScreenState extends State<UpiScreen> {
     {"name": "Pooja Trivedi", "upi": "pooja.t@ybl"},
     {"name": "Rahul Deshmukh", "upi": "rahul.d@oksbi"},
     {"name": "Kavita Rao", "upi": "kavita.rao@paytm"},
+    {"name": "Vikram Singh", "upi": "vikram.s@oksbi"},
+    {"name": "Ananya Sharma", "upi": "ananya@ybl"},
+    {"name": "Rohan Mehta", "upi": "rohan.m@paytm"},
+    {"name": "Sneha Reddy", "upi": "sneha.r@oksbi"},
+    {"name": "Arjun Nair", "upi": "arjun.n@ybl"},
+    {"name": "Deepa Joshi", "upi": "deepa.j@paytm"},
   ];
 
   void _requestContactsPermission() {
@@ -1719,6 +1825,213 @@ class _UpiScreenState extends State<UpiScreen> {
     );
   }
 
+  void _showTagContactDialog() {
+    String? selectedContactUpi = _mockContacts.first['upi'];
+    String selectedTag = "Favourite";
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: const Text("Tag Contact", style: TextStyle(fontWeight: FontWeight.bold, color: kForest)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("Select Contact:", style: TextStyle(fontWeight: FontWeight.w600)),
+                  DropdownButton<String>(
+                    value: selectedContactUpi,
+                    isExpanded: true,
+                    items: _mockContacts.map((contact) {
+                      return DropdownMenuItem<String>(
+                        value: contact['upi'],
+                        child: Text("${contact['name']} (${contact['upi']})"),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      setDialogState(() {
+                        selectedContactUpi = val;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  const Text("Tag As:", style: TextStyle(fontWeight: FontWeight.w600)),
+                  DropdownButton<String>(
+                    value: selectedTag,
+                    isExpanded: true,
+                    items: const [
+                      DropdownMenuItem(value: "Favourite", child: Text("Favourite")),
+                      DropdownMenuItem(value: "Family", child: Text("Family")),
+                      DropdownMenuItem(value: "None", child: Text("Remove Tag")),
+                    ],
+                    onChanged: (val) {
+                      setDialogState(() {
+                        selectedTag = val!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (selectedContactUpi != null) {
+                      setState(() {
+                        if (selectedTag == "None") {
+                          _contactTags.remove(selectedContactUpi);
+                        } else {
+                          _contactTags[selectedContactUpi!] = selectedTag;
+                        }
+                      });
+                      _saveTags();
+                    }
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: kForest),
+                  child: const Text("Save", style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showAddNewSectionDialog() {
+    final TextEditingController sectionNameController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text("Create New List", style: TextStyle(fontWeight: FontWeight.bold, color: kForest)),
+          content: TextField(
+            controller: sectionNameController,
+            decoration: const InputDecoration(
+              hintText: "Enter list name (e.g. Work, Friends)",
+              hintStyle: TextStyle(color: Colors.grey),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final name = sectionNameController.text.trim();
+                if (name.isNotEmpty) {
+                  if (!_sections.contains(name)) {
+                    setState(() {
+                      _sections.add(name);
+                      _selectedSection = name;
+                    });
+                    _saveTags();
+                  }
+                  Navigator.pop(ctx);
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: kForest),
+              child: const Text("Create", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showManageContactsMenu(BuildContext context) {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    showMenu<String>(
+      context: context,
+      position: position,
+      constraints: const BoxConstraints(
+        maxHeight: 250,
+        maxWidth: 280,
+      ),
+      items: [
+        PopupMenuItem<String>(
+          enabled: false,
+          height: 20,
+          child: Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+        ),
+        ..._mockContacts.map((contact) {
+          final String currentTag = _contactTags[contact["upi"]] ?? "";
+          final isTagged = (currentTag == _selectedSection) ||
+              (_selectedSection == "Favourites" && currentTag == "Favourite") ||
+              (_selectedSection == "Family" && currentTag == "Family");
+          return PopupMenuItem<String>(
+            value: contact["upi"],
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    "${contact["name"]} (${contact["upi"]})",
+                    style: const TextStyle(fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (isTagged)
+                  const Icon(Icons.check_circle, color: kForest, size: 18)
+                else
+                  const Icon(Icons.radio_button_unchecked, color: Colors.grey, size: 18),
+              ],
+            ),
+          );
+        }),
+      ],
+    ).then((value) {
+      if (value != null) {
+        setState(() {
+          final String currentTag = _contactTags[value] ?? "";
+          final isTagged = (currentTag == _selectedSection) ||
+              (_selectedSection == "Favourites" && currentTag == "Favourite") ||
+              (_selectedSection == "Family" && currentTag == "Family");
+          if (isTagged) {
+            _contactTags.remove(value);
+          } else {
+            // Save the canonical tag. For Favourite/Family, map to the singular form used by the existing dialog
+            if (_selectedSection == "Favourites") {
+              _contactTags[value] = "Favourite";
+            } else {
+              _contactTags[value] = _selectedSection;
+            }
+          }
+        });
+        _saveTags();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -1727,7 +2040,7 @@ class _UpiScreenState extends State<UpiScreen> {
         backgroundColor: kCream,
         bottomNavigationBar: BottomNav(
           currentIndex: -1,
-          onTap: (i) => Navigator.popUntil(context, (route) => route.isFirst),
+          onTap: (i) => _handleGlobalBottomNavTap(context, i),
         ),
         body: SafeArea(
           child: Column(
@@ -1738,10 +2051,8 @@ class _UpiScreenState extends State<UpiScreen> {
                   vertical: 16,
                 ),
                 child: TopBar(
-                  onHomeTap: () =>
-                      Navigator.popUntil(context, (route) => route.isFirst),
-                  onLogoutTap: () =>
-                      Navigator.popUntil(context, (route) => route.isFirst),
+                  onHomeTap: () => _handleGlobalHomeTap(context),
+                  onLogoutTap: () => _handleGlobalLogout(context),
                   onNotificationTap: () => showNotifications(context),
                 ),
               ),
@@ -1961,13 +2272,70 @@ class _UpiScreenState extends State<UpiScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                "UPI CONTACTS",
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "UPI CONTACTS",
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: [
+                                    ..._sections.map((section) {
+                                      final isSelected = _selectedSection == section;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(right: 8),
+                                        child: ChoiceChip(
+                                          label: Text(
+                                            section,
+                                            style: TextStyle(
+                                              color: isSelected ? Colors.white : Colors.grey.shade700,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          selected: isSelected,
+                                          onSelected: (selected) {
+                                            if (selected) {
+                                              setState(() {
+                                                _selectedSection = section;
+                                              });
+                                            }
+                                          },
+                                          selectedColor: kForest,
+                                          backgroundColor: Colors.grey.shade100,
+                                          checkmarkColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          side: BorderSide(
+                                            color: isSelected ? kForest : Colors.grey.shade300,
+                                            width: 1,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                    IconButton(
+                                      icon: const Icon(Icons.add, color: kForest, size: 20),
+                                      onPressed: _showAddNewSectionDialog,
+                                      tooltip: "Add New List",
+                                      constraints: const BoxConstraints(),
+                                      style: IconButton.styleFrom(
+                                        backgroundColor: Colors.green.shade50,
+                                        padding: const EdgeInsets.all(8),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -1977,101 +2345,221 @@ class _UpiScreenState extends State<UpiScreen> {
                                   controller: _contactsScrollController,
                                   thickness: 4,
                                   thumbVisibility: true,
-                                  child: ListView.builder(
-                                    controller: _contactsScrollController,
-                                    itemCount: _mockContacts.length,
-                                    itemBuilder: (context, index) {
-                                      final contact = _mockContacts[index];
-                                      final isSelected =
-                                          _upiIdController.text ==
-                                          contact["upi"];
-                                      return GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            _upiIdController.text =
-                                                contact["upi"]!;
-                                          });
-                                        },
-                                        child: AnimatedContainer(
-                                          duration: const Duration(
-                                            milliseconds: 200,
-                                          ),
-                                          margin: const EdgeInsets.only(
-                                            bottom: 10,
-                                          ),
-                                          padding: const EdgeInsets.all(10),
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? Colors.grey.shade100
-                                                : Colors.transparent,
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            border: Border.all(
-                                              color: isSelected
-                                                  ? Colors.grey.shade300
-                                                  : Colors.transparent,
+                                  child: Builder(
+                                    builder: (context) {
+                                      final filteredContacts = _mockContacts.where((contact) {
+                                        if (_selectedSection == "All") return true;
+                                        final tag = _contactTags[contact["upi"]];
+                                        if (tag == _selectedSection) return true;
+                                        if (_selectedSection == "Favourites" && tag == "Favourite") return true;
+                                        if (_selectedSection == "Family" && tag == "Family") return true;
+                                        return false;
+                                      }).toList();
+
+                                      if (filteredContacts.isEmpty) {
+                                        return Center(
+                                          child: Text(
+                                            "No contacts in $_selectedSection",
+                                            style: TextStyle(
+                                              color: Colors.grey.shade500,
+                                              fontSize: 14,
                                             ),
                                           ),
-                                          child: Row(
-                                            children: [
-                                              Container(
-                                                width: 45,
-                                                height: 45,
-                                                decoration: const BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  gradient: LinearGradient(
-                                                    colors: [kMid, kForest],
-                                                    begin: Alignment.topCenter,
-                                                    end: Alignment.bottomCenter,
-                                                  ),
+                                        );
+                                      }
+
+                                      return ListView.builder(
+                                        controller: _contactsScrollController,
+                                        itemCount: filteredContacts.length,
+                                        itemBuilder: (context, index) {
+                                          final contact = filteredContacts[index];
+                                          final isSelected =
+                                              _upiIdController.text ==
+                                              contact["upi"];
+                                          return GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                _upiIdController.text =
+                                                    contact["upi"]!;
+                                              });
+                                            },
+                                            child: AnimatedContainer(
+                                              duration: const Duration(
+                                                milliseconds: 200,
+                                              ),
+                                              margin: const EdgeInsets.only(
+                                                bottom: 10,
+                                              ),
+                                              padding: const EdgeInsets.all(10),
+                                              decoration: BoxDecoration(
+                                                color: isSelected
+                                                    ? Colors.grey.shade100
+                                                    : Colors.transparent,
+                                                borderRadius: BorderRadius.circular(
+                                                  12,
                                                 ),
-                                                child: Center(
-                                                  child: Text(
-                                                    contact["name"]![0]
-                                                        .toUpperCase(),
-                                                    style: const TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
+                                                border: Border.all(
+                                                  color: isSelected
+                                                      ? Colors.grey.shade300
+                                                      : Colors.transparent,
                                                 ),
                                               ),
-                                              const SizedBox(width: 16),
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
+                                              child: Row(
                                                 children: [
-                                                  Text(
-                                                    contact["name"]!,
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 15,
-                                                      color: Colors.black87,
+                                                  Container(
+                                                    width: 45,
+                                                    height: 45,
+                                                    decoration: const BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      gradient: LinearGradient(
+                                                        colors: [kMid, kForest],
+                                                        begin: Alignment.topCenter,
+                                                        end: Alignment.bottomCenter,
+                                                      ),
+                                                    ),
+                                                    child: Center(
+                                                      child: Text(
+                                                        contact["name"]![0]
+                                                            .toUpperCase(),
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 18,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
                                                     ),
                                                   ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    contact["upi"]!,
-                                                    style: TextStyle(
-                                                      color:
-                                                          Colors.grey.shade600,
-                                                      fontSize: 13,
+                                                  const SizedBox(width: 16),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment.start,
+                                                      children: [
+                                                        Row(
+                                                          children: [
+                                                            Flexible(
+                                                              child: Text(
+                                                                contact["name"]!,
+                                                                style: const TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight.bold,
+                                                                  fontSize: 15,
+                                                                  color: Colors.black87,
+                                                                ),
+                                                                overflow: TextOverflow.ellipsis,
+                                                              ),
+                                                            ),
+                                                            if (_contactTags.containsKey(contact["upi"])) ...[
+                                                              const SizedBox(width: 8),
+                                                              Container(
+                                                                padding: const EdgeInsets.symmetric(
+                                                                  horizontal: 6,
+                                                                  vertical: 2,
+                                                                ),
+                                                                decoration: BoxDecoration(
+                                                                  color: _contactTags[contact["upi"]] == "Favourite"
+                                                                      ? Colors.orange.shade50
+                                                                      : _contactTags[contact["upi"]] == "Family"
+                                                                          ? Colors.blue.shade50
+                                                                          : Colors.green.shade50,
+                                                                  borderRadius: BorderRadius.circular(6),
+                                                                  border: Border.all(
+                                                                    color: _contactTags[contact["upi"]] == "Favourite"
+                                                                        ? Colors.orange.shade300
+                                                                        : _contactTags[contact["upi"]] == "Family"
+                                                                            ? Colors.blue.shade300
+                                                                            : Colors.green.shade300,
+                                                                    width: 0.5,
+                                                                  ),
+                                                                ),
+                                                                child: Text(
+                                                                  _contactTags[contact["upi"]]!,
+                                                                  style: TextStyle(
+                                                                    fontSize: 10,
+                                                                    fontWeight: FontWeight.bold,
+                                                                    color: _contactTags[contact["upi"]] == "Favourite"
+                                                                        ? Colors.orange.shade700
+                                                                        : _contactTags[contact["upi"]] == "Family"
+                                                                            ? Colors.blue.shade700
+                                                                            : Colors.green.shade700,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ],
+                                                        ),
+                                                        const SizedBox(height: 4),
+                                                        Text(
+                                                          contact["upi"]!,
+                                                          style: TextStyle(
+                                                            color:
+                                                                Colors.grey.shade600,
+                                                            fontSize: 13,
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ),
                                                 ],
                                               ),
-                                            ],
-                                          ),
-                                        ),
+                                            ),
+                                          );
+                                        },
                                       );
                                     },
                                   ),
                                 ),
                               ),
+                              if (_selectedSection != "All") ...[
+                                const SizedBox(height: 12),
+                                Builder(
+                                  builder: (btnCtx) {
+                                    return Align(
+                                      alignment: Alignment.center,
+                                      child: OutlinedButton.icon(
+                                        onPressed: () async {
+                                          await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => ManageSectionScreen(
+                                                sectionName: _selectedSection,
+                                                sections: _sections,
+                                                contactTags: _contactTags,
+                                                mockContacts: _mockContacts,
+                                                onUpdate: (updatedTags, updatedSections, currentSection) {
+                                                  setState(() {
+                                                    _contactTags = updatedTags;
+                                                    _sections = updatedSections;
+                                                    _selectedSection = currentSection;
+                                                  });
+                                                  _saveTags();
+                                                },
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        icon: const Icon(Icons.settings, size: 16, color: kForest),
+                                        label: const Text(
+                                          "Manage",
+                                          style: TextStyle(
+                                            color: kForest,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          side: const BorderSide(color: kForest, width: 1),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -2238,7 +2726,7 @@ class _QRScreenState extends State<QRScreen> {
       backgroundColor: kCream,
       bottomNavigationBar: BottomNav(
         currentIndex: -1,
-        onTap: (i) => Navigator.popUntil(context, (route) => route.isFirst),
+        onTap: (i) => _handleGlobalBottomNavTap(context, i),
       ),
       body: SafeArea(
         child: Column(
@@ -2246,10 +2734,8 @@ class _QRScreenState extends State<QRScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: TopBar(
-                onHomeTap: () =>
-                    Navigator.popUntil(context, (route) => route.isFirst),
-                onLogoutTap: () =>
-                    Navigator.popUntil(context, (route) => route.isFirst),
+                onHomeTap: () => _handleGlobalHomeTap(context),
+                onLogoutTap: () => _handleGlobalLogout(context),
                 onNotificationTap: () => showNotifications(context),
               ),
             ),
@@ -2364,6 +2850,20 @@ class _PinScreenState extends State<PinScreen> {
   bool _isBalanceUnlocked = false;
   bool _isBalanceVisible = false;
   final TextEditingController _pinController = TextEditingController();
+  final List<TextEditingController> _digitControllers = List.generate(4, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+
+  @override
+  void dispose() {
+    _pinController.dispose();
+    for (var c in _digitControllers) {
+      c.dispose();
+    }
+    for (var f in _focusNodes) {
+      f.dispose();
+    }
+    super.dispose();
+  }
 
   void _showPinDialog() {
     showDialog(
@@ -2429,7 +2929,7 @@ class _PinScreenState extends State<PinScreen> {
       backgroundColor: kCream,
       bottomNavigationBar: BottomNav(
         currentIndex: -1,
-        onTap: (i) => Navigator.popUntil(context, (route) => route.isFirst),
+        onTap: (i) => _handleGlobalBottomNavTap(context, i),
       ),
       body: SafeArea(
         child: Column(
@@ -2437,10 +2937,8 @@ class _PinScreenState extends State<PinScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: TopBar(
-                onHomeTap: () =>
-                    Navigator.popUntil(context, (route) => route.isFirst),
-                onLogoutTap: () =>
-                    Navigator.popUntil(context, (route) => route.isFirst),
+                onHomeTap: () => _handleGlobalHomeTap(context),
+                onLogoutTap: () => _handleGlobalLogout(context),
                 onNotificationTap: () => showNotifications(context),
               ),
             ),
@@ -2544,7 +3042,7 @@ class _PinScreenState extends State<PinScreen> {
                       const SizedBox(height: 32),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(4, (_) => box(context)),
+                        children: List.generate(4, (index) => box(context, index)),
                       ),
                       const SizedBox(height: 40),
                       TextButton.icon(
@@ -2590,6 +3088,16 @@ class _PinScreenState extends State<PinScreen> {
                         ),
                         child: ElevatedButton(
                           onPressed: () {
+                            final enteredPin = _digitControllers.map((c) => c.text).join();
+                            if (enteredPin.length < 4) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Please enter the 4-digit UPI PIN to proceed"),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
@@ -2628,12 +3136,14 @@ class _PinScreenState extends State<PinScreen> {
     );
   }
 
-  Widget box(BuildContext context) {
+  Widget box(BuildContext context, int i) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6),
       width: 60,
       height: 65,
       child: TextField(
+        controller: _digitControllers[i],
+        focusNode: _focusNodes[i],
         keyboardType: TextInputType.number,
         obscureText: true,
         textAlign: TextAlign.center,
@@ -2652,7 +3162,17 @@ class _PinScreenState extends State<PinScreen> {
           ),
         ),
         onChanged: (value) {
-          if (value.isNotEmpty) FocusScope.of(context).nextFocus();
+          if (value.isNotEmpty) {
+            if (i < 3) {
+              FocusScope.of(context).requestFocus(_focusNodes[i + 1]);
+            } else {
+              _focusNodes[i].unfocus();
+            }
+          } else {
+            if (i > 0) {
+              FocusScope.of(context).requestFocus(_focusNodes[i - 1]);
+            }
+          }
         },
       ),
     );
@@ -2675,7 +3195,7 @@ class SuccessScreen extends StatelessWidget {
       backgroundColor: kCream,
       bottomNavigationBar: BottomNav(
         currentIndex: -1,
-        onTap: (i) => Navigator.popUntil(context, (route) => route.isFirst),
+        onTap: (i) => _handleGlobalBottomNavTap(context, i),
       ),
       body: SafeArea(
         child: Column(
@@ -2683,10 +3203,8 @@ class SuccessScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: TopBar(
-                onHomeTap: () =>
-                    Navigator.popUntil(context, (route) => route.isFirst),
-                onLogoutTap: () =>
-                    Navigator.popUntil(context, (route) => route.isFirst),
+                onHomeTap: () => _handleGlobalHomeTap(context),
+                onLogoutTap: () => _handleGlobalLogout(context),
                 onNotificationTap: () => showNotifications(context),
               ),
             ),
@@ -2974,4 +3492,457 @@ void _showSecurityLockToast(BuildContext context, {String? message}) {
       duration: const Duration(seconds: 1),
     ),
   );
+}
+
+class ManageSectionScreen extends StatefulWidget {
+  final String sectionName;
+  final List<String> sections;
+  final Map<String, String> contactTags;
+  final List<Map<String, String>> mockContacts;
+  final Function(Map<String, String> updatedTags, List<String> updatedSections, String currentSection) onUpdate;
+
+  const ManageSectionScreen({
+    super.key,
+    required this.sectionName,
+    required this.sections,
+    required this.contactTags,
+    required this.mockContacts,
+    required this.onUpdate,
+  });
+
+  @override
+  State<ManageSectionScreen> createState() => _ManageSectionScreenState();
+}
+
+class _ManageSectionScreenState extends State<ManageSectionScreen> {
+  late Map<String, String> _localTags;
+  late List<String> _localSections;
+  late String _currentSectionName;
+
+  @override
+  void initState() {
+    super.initState();
+    _localTags = Map<String, String>.from(widget.contactTags);
+    _localSections = List<String>.from(widget.sections);
+    _currentSectionName = widget.sectionName;
+  }
+
+  void _triggerUpdate() {
+    widget.onUpdate(_localTags, _localSections, _currentSectionName);
+  }
+
+  void _showRenameDialog() {
+    final controller = TextEditingController(text: _currentSectionName);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text("Rename List", style: TextStyle(fontWeight: FontWeight.bold, color: kForest)),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: "Enter new name"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newName = controller.text.trim();
+              if (newName.isNotEmpty && newName != _currentSectionName) {
+                setState(() {
+                  final idx = _localSections.indexOf(_currentSectionName);
+                  if (idx != -1) {
+                    _localSections[idx] = newName;
+                  }
+                  _localTags.forEach((upi, tag) {
+                    if (tag == _currentSectionName ||
+                        (_currentSectionName == "Favourites" && tag == "Favourite") ||
+                        (_currentSectionName == "Family" && tag == "Family")) {
+                      _localTags[upi] = newName;
+                    }
+                  });
+                  _currentSectionName = newName;
+                });
+                _triggerUpdate();
+                Navigator.pop(ctx);
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: kForest),
+            child: const Text("Rename", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text("Delete List?", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+        content: Text("Are you sure you want to delete '$_currentSectionName'? All tagged contacts will be untagged."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _localSections.remove(_currentSectionName);
+                _localTags.removeWhere((upi, tag) =>
+                    tag == _currentSectionName ||
+                    (_currentSectionName == "Favourites" && tag == "Favourite") ||
+                    (_currentSectionName == "Family" && tag == "Family"));
+                _currentSectionName = "All";
+              });
+              _triggerUpdate();
+              Navigator.pop(ctx);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text("Delete", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddContactsDropdown(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final availableContacts = widget.mockContacts.where((contact) {
+          final String tag = _localTags[contact["upi"]] ?? "";
+          final isMember = (tag == _currentSectionName) ||
+              (_currentSectionName == "Favourites" && tag == "Favourite") ||
+              (_currentSectionName == "Family" && tag == "Family");
+          return !isMember;
+        }).toList();
+
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Container(
+            width: 300,
+            constraints: const BoxConstraints(maxHeight: 350),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "Select Contact to Add",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: kForest,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Divider(height: 1, color: Colors.black12),
+                if (availableContacts.isEmpty)
+                  const Expanded(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Text(
+                          "All contacts are already added.",
+                          style: TextStyle(color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: Scrollbar(
+                      thumbVisibility: true,
+                      thickness: 4,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: availableContacts.length,
+                        itemBuilder: (context, index) {
+                          final contact = availableContacts[index];
+                          return ListTile(
+                            title: Text(
+                              contact["name"]!,
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: Text(contact["upi"]!),
+                            onTap: () {
+                              setState(() {
+                                if (_currentSectionName == "Favourites") {
+                                  _localTags[contact["upi"]!] = "Favourite";
+                                } else if (_currentSectionName == "Family") {
+                                  _localTags[contact["upi"]!] = "Family";
+                                } else {
+                                  _localTags[contact["upi"]!] = _currentSectionName;
+                                }
+                              });
+                              _triggerUpdate();
+                              Navigator.pop(ctx);
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final members = widget.mockContacts.where((contact) {
+      final String tag = _localTags[contact["upi"]] ?? "";
+      return (tag == _currentSectionName) ||
+          (_currentSectionName == "Favourites" && tag == "Favourite") ||
+          (_currentSectionName == "Family" && tag == "Family");
+    }).toList();
+
+    return Scaffold(
+      backgroundColor: kCream,
+      bottomNavigationBar: BottomNav(
+        currentIndex: -1,
+        onTap: (i) => _handleGlobalBottomNavTap(context, i),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: TopBar(
+                onHomeTap: () => _handleGlobalHomeTap(context),
+                onLogoutTap: () => _handleGlobalLogout(context),
+                onNotificationTap: () => showNotifications(context),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: kMid.withValues(alpha: 0.1)),
+                boxShadow: [
+                  BoxShadow(
+                    color: kForest.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: kMid.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.arrow_back_rounded, color: kMid, size: 20),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          "MANAGE LIST",
+                          style: TextStyle(
+                            color: kAccent,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _currentSectionName,
+                          style: const TextStyle(
+                            color: kForest,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _showRenameDialog,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: kMid.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.edit_outlined, color: kMid, size: 20),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _showDeleteConfirmDialog,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Included",
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    InkWell(
+                      onTap: () => _showAddContactsDropdown(context),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: kForest,
+                              ),
+                              child: const Icon(Icons.add, color: Colors.white, size: 24),
+                            ),
+                            const SizedBox(width: 16),
+                            const Text(
+                              "Add contacts",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: members.length,
+                        itemBuilder: (context, index) {
+                          final contact = members[index];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      colors: [kMid, kForest],
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      contact["name"]![0].toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        contact["name"]!,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        contact["upi"]!,
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.check_circle,
+                                    color: Colors.blue.shade600,
+                                    size: 20,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _localTags.remove(contact["upi"]);
+                                    });
+                                    _triggerUpdate();
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
