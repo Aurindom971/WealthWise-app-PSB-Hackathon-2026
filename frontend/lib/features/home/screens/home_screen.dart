@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'smart_lock_screen.dart';
 import 'transaction_screen.dart';
 import 'package:flutter/material.dart';
@@ -301,7 +302,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   totalLoan: _totalLoan,
                 ),
               const SizedBox(height: 30),
-              _AIBanner(onTap: () => setState(() => _isShowingWealthWiseAI = true)),
+              _AIBanner(
+                onTap: () => setState(() => _isShowingWealthWiseAI = true),
+                onLongPress: () {
+                  SecurityService.updateSmartLockSettings({
+                    'online_enabled': true,
+                    'upi_enabled': true,
+                    'pos_enabled': true,
+                    'atm_enabled': true,
+                    'card_freeze_enabled': true,
+                    'emergency_freeze': true,
+                  });
+                  SecurityService.toggleGlobalCardFreeze(true);
+                  SecurityService.syncGlobalAtmLimits(true);
+                },
+              ),
               const SizedBox(height: 30),
               _QuickActions(
                 onCardsForexTap: () =>
@@ -1232,13 +1247,44 @@ class _Dot extends StatelessWidget {
 }
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ AI BANNER Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-class _AIBanner extends StatelessWidget {
+class _AIBanner extends StatefulWidget {
   final VoidCallback onTap;
-  const _AIBanner({required this.onTap});
+  final VoidCallback? onLongPress;
+  const _AIBanner({required this.onTap, this.onLongPress});
+
+  @override
+  State<_AIBanner> createState() => _AIBannerState();
+}
+
+class _AIBannerState extends State<_AIBanner> {
+  Timer? _holdTimer;
+
+  void _startHold() {
+    _holdTimer?.cancel();
+    _holdTimer = Timer(const Duration(seconds: 5), () {
+      if (widget.onLongPress != null) {
+        widget.onLongPress!();
+      }
+    });
+  }
+
+  void _cancelHold() {
+    _holdTimer?.cancel();
+  }
+
+  @override
+  void dispose() {
+    _holdTimer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
+      onTapDown: (_) => _startHold(),
+      onTapUp: (_) => _cancelHold(),
+      onTapCancel: _cancelHold,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
