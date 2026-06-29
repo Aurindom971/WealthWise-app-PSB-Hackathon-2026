@@ -49,7 +49,8 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   late Animation<double> _pulseAnimation;
 
   int _selectedTab = 0; // 0: Stocks, 1: F&O, 2: Mutual Funds, 3: Goals
-  int _goalsSubView = 0; // 0: None, 1: Add Goal, 2: Track Goals, 3: Goal Details
+  int _goalsSubView =
+      0; // 0: None, 1: Add Goal, 2: Track Goals, 3: Goal Details
   int _selectedGoalIndex = 0;
   double _goalsSummaryTarget = 250000;
   double _goalsSummarySaved = 157500;
@@ -142,7 +143,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   @override
   void initState() {
     super.initState();
-    
+
     // Seed initial data immediately before async fetch resolves
     _suggestedStocks = [
       {
@@ -328,21 +329,24 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
         'date': 'Closes 19 Apr',
         'min': 500.0,
         'closesInDays': 14,
-        'description': 'Tracks the Nifty Next 50 index composed of high-performing large-cap companies.',
+        'description':
+            'Tracks the Nifty Next 50 index composed of high-performing large-cap companies.',
       },
       {
         'name': 'SBI Innovation Opp.',
         'date': 'Closes 22 Apr',
         'min': 5000.0,
         'closesInDays': 17,
-        'description': 'Invests in high-growth companies driving technological and business model innovations.',
+        'description':
+            'Invests in high-growth companies driving technological and business model innovations.',
       },
       {
         'name': 'ICICI Pru Business Cycle',
         'date': 'Closes 24 Apr',
         'min': 1000.0,
         'closesInDays': 19,
-        'description': 'Tactical allocation across sectors based on macroeconomic business cycle transitions.',
+        'description':
+            'Tactical allocation across sectors based on macroeconomic business cycle transitions.',
       },
     ];
 
@@ -356,8 +360,14 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
 
     _loadApiData();
 
-    _goalsSummaryTarget = _goalsList.fold(0.0, (sum, item) => sum + item.targetValue);
-    _goalsSummarySaved = _goalsList.fold(0.0, (sum, item) => sum + item.currentValue);
+    _goalsSummaryTarget = _goalsList.fold(
+      0.0,
+      (sum, item) => sum + item.targetValue,
+    );
+    _goalsSummarySaved = _goalsList.fold(
+      0.0,
+      (sum, item) => sum + item.currentValue,
+    );
   }
 
   Future<void> _loadApiData() async {
@@ -367,7 +377,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
       final ideas = await _apiService.fetchTradingIdeas();
       final funds = await _apiService.fetchTopFunds();
       final nfos = await _apiService.fetchLiveNfos();
-      
+
       if (mounted) {
         setState(() {
           _suggestedStocks = stocks;
@@ -1226,23 +1236,29 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
             ],
           ),
           child: Column(
-            children: List.generate(_suggestedStocks.length > 5 ? 5 : _suggestedStocks.length, (index) {
-              final stock = _suggestedStocks[index];
-              return Column(
-                children: [
-                  _buildStockRow(
-                    stock['symbol'] as String,
-                    stock['name'] as String,
-                    stock['price'] as String,
-                    stock['change'] as String,
-                    stock['isUp'] as bool,
-                    (stock['history'] as List).cast<double>(),
-                  ),
-                  if (index < (_suggestedStocks.length > 5 ? 4 : _suggestedStocks.length - 1))
-                    Divider(color: Colors.grey.shade100, height: 1),
-                ],
-              );
-            }),
+            children: List.generate(
+              _suggestedStocks.length > 5 ? 5 : _suggestedStocks.length,
+              (index) {
+                final stock = _suggestedStocks[index];
+                return Column(
+                  children: [
+                    _buildStockRow(
+                      stock['symbol'] as String,
+                      stock['name'] as String,
+                      stock['price'] as String,
+                      stock['change'] as String,
+                      stock['isUp'] as bool,
+                      (stock['history'] as List).cast<double>(),
+                    ),
+                    if (index <
+                        (_suggestedStocks.length > 5
+                            ? 4
+                            : _suggestedStocks.length - 1))
+                      Divider(color: Colors.grey.shade100, height: 1),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -1296,14 +1312,19 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
             ),
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
+                ),
                 itemCount: _suggestedStocks.length,
-                separatorBuilder: (context, index) => Divider(color: Colors.grey.shade200, height: 16),
+                separatorBuilder: (context, index) =>
+                    Divider(color: Colors.grey.shade200, height: 16),
                 itemBuilder: (context, index) {
                   final stock = _suggestedStocks[index];
-                  final List<double> history = (stock['history'] as List).cast<double>();
+                  final List<double> history = (stock['history'] as List)
+                      .cast<double>();
                   final bool isUp = stock['isUp'] as bool;
-                  
+
                   return Card(
                     color: Colors.white,
                     elevation: 0,
@@ -1364,7 +1385,9 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                               child: CustomPaint(
                                 painter: MiniGraphPainter(
                                   history,
-                                  isUp ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                                  isUp
+                                      ? const Color(0xFF10B981)
+                                      : const Color(0xFFEF4444),
                                 ),
                               ),
                             ),
@@ -1384,7 +1407,9 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                                 Text(
                                   '${stock['change']}%',
                                   style: TextStyle(
-                                    color: isUp ? Colors.green.shade700 : Colors.red.shade700,
+                                    color: isUp
+                                        ? Colors.green.shade700
+                                        : Colors.red.shade700,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11,
                                   ),
@@ -2033,19 +2058,22 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
           physics: const BouncingScrollPhysics(),
           clipBehavior: Clip.none,
           child: Row(
-            children: List.generate(_liveIpos.length > 2 ? 2 : _liveIpos.length, (index) {
-              final ipo = _liveIpos[index];
-              return Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: _buildIPOCard(
-                  ipo['name'] as String,
-                  ipo['dates'] as String,
-                  ipo['price'] as String,
-                  lotSize: ipo['lot'] as int,
-                  minAmount: ipo['min'] as String,
-                ),
-              );
-            }),
+            children: List.generate(
+              _liveIpos.length > 2 ? 2 : _liveIpos.length,
+              (index) {
+                final ipo = _liveIpos[index];
+                return Padding(
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: _buildIPOCard(
+                    ipo['name'] as String,
+                    ipo['dates'] as String,
+                    ipo['price'] as String,
+                    lotSize: ipo['lot'] as int,
+                    minAmount: ipo['min'] as String,
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -2555,8 +2583,6 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     }
   }
 
-
-
   void _showAllTradingIdeasModal() {
     showModalBottomSheet(
       context: context,
@@ -2617,18 +2643,13 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(
-                        color: Colors.grey.shade200,
-                      ),
+                      side: BorderSide(color: Colors.grey.shade200),
                     ),
                     child: ListTile(
                       contentPadding: const EdgeInsets.all(16),
                       leading: CircleAvatar(
                         backgroundColor: kLightGreenBg,
-                        child: Icon(
-                          Icons.swap_vert_rounded,
-                          color: kDarkGreen,
-                        ),
+                        child: Icon(Icons.swap_vert_rounded, color: kDarkGreen),
                       ),
                       title: Text(
                         idea['contract'] as String,
@@ -2785,9 +2806,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.grey.shade200,
-                    ),
+                    border: Border.all(color: Colors.grey.shade200),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2880,10 +2899,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                         ],
                       ),
                       const SizedBox(height: 14),
-                      Divider(
-                        color: Colors.grey.shade100,
-                        height: 1,
-                      ),
+                      Divider(color: Colors.grey.shade100, height: 1),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -3598,7 +3614,9 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
             ],
           ),
           const SizedBox(height: 20),
-          ...List.generate(_topFunds.length > 4 ? 4 : _topFunds.length, (index) {
+          ...List.generate(_topFunds.length > 4 ? 4 : _topFunds.length, (
+            index,
+          ) {
             final fund = _topFunds[index];
             return Column(
               children: [
@@ -3608,7 +3626,11 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                   fund['return'] as String,
                 ),
                 if (index < (_topFunds.length > 4 ? 3 : _topFunds.length - 1))
-                  Divider(color: Colors.grey.shade100, thickness: 1, height: 32),
+                  Divider(
+                    color: Colors.grey.shade100,
+                    thickness: 1,
+                    height: 32,
+                  ),
               ],
             );
           }),
@@ -4103,7 +4125,9 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
           physics: const BouncingScrollPhysics(),
           clipBehavior: Clip.none,
           child: Row(
-            children: List.generate(_liveNfos.length > 3 ? 3 : _liveNfos.length, (index) {
+            children: List.generate(_liveNfos.length > 3 ? 3 : _liveNfos.length, (
+              index,
+            ) {
               final nfo = _liveNfos[index];
               return Padding(
                 padding: const EdgeInsets.only(right: 16.0),
@@ -4342,8 +4366,8 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
   // --- GOALS TAB BUILDERS & HELPERS ---
 
   Widget _buildGoalsSummary() {
-    double progressPercent = _goalsSummaryTarget > 0 
-        ? (_goalsSummarySaved / _goalsSummaryTarget).clamp(0.0, 1.0) 
+    double progressPercent = _goalsSummaryTarget > 0
+        ? (_goalsSummarySaved / _goalsSummaryTarget).clamp(0.0, 1.0)
         : 0.0;
     int percentage = (progressPercent * 100).toInt();
 
@@ -4388,7 +4412,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                       width: 110,
                       height: 110,
                       child: TweenAnimationBuilder<double>(
-                        key: ValueKey('goals_donut_chart_${_goalsSummarySaved}'),
+                        key: ValueKey('goals_donut_chart_$_goalsSummarySaved'),
                         tween: Tween<double>(begin: 0.0, end: 1.0),
                         duration: const Duration(milliseconds: 1000),
                         curve: Curves.easeOutCubic,
@@ -4397,7 +4421,9 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                             painter: DonutPainter(
                               progressPercent,
                               kDarkGreen,
-                              const Color(0xFFECC1B0), // Peach/orange remaining progress color
+                              const Color(
+                                0xFFECC1B0,
+                              ), // Peach/orange remaining progress color
                               value,
                             ),
                           );
@@ -4534,11 +4560,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                       color: Color(0xFFEAF1ED),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      goal.icon,
-                      color: kDarkGreen,
-                      size: 24,
-                    ),
+                    child: Icon(goal.icon, color: kDarkGreen, size: 24),
                   ),
                   const SizedBox(width: 16),
                   // Text details
@@ -4630,11 +4652,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 14,
-          ),
+          Icon(icon, color: color, size: 14),
           const SizedBox(width: 4),
           Text(
             status,
@@ -4755,7 +4773,11 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                     color: Colors.grey.shade100,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.close_rounded, color: Color(0xFF1E293B), size: 20),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    color: Color(0xFF1E293B),
+                    size: 20,
+                  ),
                 ),
               ),
             ],
@@ -4781,18 +4803,30 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                       const SizedBox(height: 8),
                       TextField(
                         controller: nameController,
-                        style: const TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          color: Color(0xFF1E293B),
+                          fontWeight: FontWeight.w600,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'e.g. Down payment',
-                          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 14,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                            horizontal: 16,
+                          ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: Colors.grey.shade300),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: kDarkGreen, width: 1.5),
+                            borderSide: BorderSide(
+                              color: kDarkGreen,
+                              width: 1.5,
+                            ),
                           ),
                         ),
                       ),
@@ -4811,12 +4845,13 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                       GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 1.1,
-                        ),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 4,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              childAspectRatio: 1.1,
+                            ),
                         itemCount: iconsGrid.length,
                         itemBuilder: (context, index) {
                           final item = iconsGrid[index];
@@ -4830,17 +4865,28 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                                 selectedIconLabel = label;
                                 selectedIcon = icon;
                                 if (nameController.text.isEmpty ||
-                                    iconsGrid.any((e) => e['label'] == nameController.text || nameController.text == 'New ' + e['label'])) {
-                                  nameController.text = label == 'Other' ? 'Custom Goal' : label;
+                                    iconsGrid.any(
+                                      (e) =>
+                                          e['label'] == nameController.text ||
+                                          nameController.text ==
+                                              'New ' + e['label'],
+                                    )) {
+                                  nameController.text = label == 'Other'
+                                      ? 'Custom Goal'
+                                      : label;
                                 }
                               });
                             },
                             child: Container(
                               decoration: BoxDecoration(
-                                color: isSelected ? const Color(0xFFEAF1ED) : Colors.white,
+                                color: isSelected
+                                    ? const Color(0xFFEAF1ED)
+                                    : Colors.white,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: isSelected ? kDarkGreen : Colors.grey.shade200,
+                                  color: isSelected
+                                      ? kDarkGreen
+                                      : Colors.grey.shade200,
                                   width: isSelected ? 2.0 : 1.0,
                                 ),
                               ),
@@ -4849,15 +4895,21 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                                 children: [
                                   Icon(
                                     icon,
-                                    color: isSelected ? kDarkGreen : const Color(0xFF1F5D3A),
+                                    color: isSelected
+                                        ? kDarkGreen
+                                        : const Color(0xFF1F5D3A),
                                     size: 24,
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
                                     label,
                                     style: TextStyle(
-                                      color: isSelected ? kDarkGreen : Colors.grey.shade600,
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                      color: isSelected
+                                          ? kDarkGreen
+                                          : Colors.grey.shade600,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
                                       fontSize: 11,
                                     ),
                                   ),
@@ -4887,16 +4939,27 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                                 TextField(
                                   controller: targetController,
                                   keyboardType: TextInputType.number,
-                                  style: const TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.w600),
+                                  style: const TextStyle(
+                                    color: Color(0xFF1E293B),
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                   decoration: InputDecoration(
-                                    contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                      horizontal: 16,
+                                    ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: kDarkGreen, width: 1.5),
+                                      borderSide: BorderSide(
+                                        color: kDarkGreen,
+                                        width: 1.5,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -4920,16 +4983,27 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                                 TextField(
                                   controller: yearController,
                                   keyboardType: TextInputType.number,
-                                  style: const TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.w600),
+                                  style: const TextStyle(
+                                    color: Color(0xFF1E293B),
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                   decoration: InputDecoration(
-                                    contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                      horizontal: 16,
+                                    ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: kDarkGreen, width: 1.5),
+                                      borderSide: BorderSide(
+                                        color: kDarkGreen,
+                                        width: 1.5,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -4941,12 +5015,20 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                       const SizedBox(height: 32),
                       ElevatedButton(
                         onPressed: () {
-                          final name = nameController.text.trim().isEmpty ? selectedIconLabel : nameController.text.trim();
-                          final targetVal = double.tryParse(targetController.text.trim()) ?? 0;
-                          
+                          final name = nameController.text.trim().isEmpty
+                              ? selectedIconLabel
+                              : nameController.text.trim();
+                          final targetVal =
+                              double.tryParse(targetController.text.trim()) ??
+                              0;
+
                           if (targetVal <= 0) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please enter a valid target amount.')),
+                              const SnackBar(
+                                content: Text(
+                                  'Please enter a valid target amount.',
+                                ),
+                              ),
                             );
                             return;
                           }
@@ -4966,20 +5048,30 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                               ),
                             );
 
-                            _goalsSummaryTarget = _goalsList.fold(0.0, (sum, item) => sum + item.targetValue);
-                            _goalsSummarySaved = _goalsList.fold(0.0, (sum, item) => sum + item.currentValue);
-                            _goalsSubView = 0; 
+                            _goalsSummaryTarget = _goalsList.fold(
+                              0.0,
+                              (sum, item) => sum + item.targetValue,
+                            );
+                            _goalsSummarySaved = _goalsList.fold(
+                              0.0,
+                              (sum, item) => sum + item.currentValue,
+                            );
+                            _goalsSubView = 0;
                           });
 
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Goal "$name" created successfully!'),
+                              content: Text(
+                                'Goal "$name" created successfully!',
+                              ),
                               backgroundColor: kDarkGreen,
                             ),
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF9ABCA7), // Sage green matching image
+                          backgroundColor: const Color(
+                            0xFF9ABCA7,
+                          ), // Sage green matching image
                           foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -5056,7 +5148,10 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
             prefixIcon: Icon(icon, color: kDarkGreen, size: 18),
             filled: true,
             fillColor: Colors.grey.shade50,
-            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 14,
+              horizontal: 16,
+            ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.grey.shade200),
@@ -5108,7 +5203,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                 final goal = _goalsList[index];
                 double remaining = goal.targetValue - goal.currentValue;
                 if (remaining < 0) remaining = 0;
-                
+
                 final savingsController = TextEditingController();
 
                 return Card(
@@ -5129,7 +5224,11 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                             CircleAvatar(
                               backgroundColor: const Color(0xFFEAF1ED),
                               radius: 20,
-                              child: Icon(goal.icon, color: kDarkGreen, size: 20),
+                              child: Icon(
+                                goal.icon,
+                                color: kDarkGreen,
+                                size: 20,
+                              ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -5186,7 +5285,9 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                           child: LinearProgressIndicator(
                             value: goal.progress,
                             backgroundColor: Colors.grey.shade100,
-                            valueColor: AlwaysStoppedAnimation<Color>(kDarkGreen),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              kDarkGreen,
+                            ),
                             minHeight: 8,
                           ),
                         ),
@@ -5201,16 +5302,28 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                                 child: TextField(
                                   controller: savingsController,
                                   keyboardType: TextInputType.number,
-                                  style: TextStyle(color: kDarkGreen, fontSize: 13, fontWeight: FontWeight.w600),
+                                  style: TextStyle(
+                                    color: kDarkGreen,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                   decoration: InputDecoration(
                                     hintText: 'Add savings (e.g. 5000)',
-                                    hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+                                    hintStyle: TextStyle(
+                                      color: Colors.grey.shade400,
+                                      fontSize: 12,
+                                    ),
                                     filled: true,
                                     fillColor: Colors.grey.shade50,
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide(color: Colors.grey.shade200),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade200,
+                                      ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8),
@@ -5223,15 +5336,25 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                             const SizedBox(width: 8),
                             ElevatedButton(
                               onPressed: () {
-                                double addAmount = double.tryParse(savingsController.text.trim()) ?? 0.0;
+                                double addAmount =
+                                    double.tryParse(
+                                      savingsController.text.trim(),
+                                    ) ??
+                                    0.0;
                                 if (addAmount <= 0) return;
-                                _showAddMoneyBottomSheet(context, addAmount, goal);
+                                _showAddMoneyBottomSheet(
+                                  context,
+                                  addAmount,
+                                  goal,
+                                );
                                 savingsController.clear();
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kDarkGreen,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -5262,27 +5385,40 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     if (index < 0 || index >= _goalsList.length) {
       return const SizedBox.shrink();
     }
-    
+
     final goal = _goalsList[index];
     double remaining = goal.targetValue - goal.currentValue;
     if (remaining < 0) remaining = 0;
 
     final addFundsController = TextEditingController();
-    final updateTargetController = TextEditingController(text: goal.targetValue.toInt().toString());
+    final updateTargetController = TextEditingController(
+      text: goal.targetValue.toInt().toString(),
+    );
 
-    String description = 'Plan and save for your custom financial milestones and dreams.';
+    String description =
+        'Plan and save for your custom financial milestones and dreams.';
     if (goal.name.toLowerCase().contains('retirement')) {
-      description = 'Secure your golden years with a robust corpus to cover post-retirement living expenses, medical care, and travel.';
-    } else if (goal.name.toLowerCase().contains('home') || goal.name.toLowerCase().contains('house')) {
-      description = 'Build or buy your dream house. Save up for down payments, registration costs, and interior designs.';
-    } else if (goal.name.toLowerCase().contains('vacation') || goal.name.toLowerCase().contains('travel')) {
-      description = 'Travel the world, explore new cultures, and make lasting memories with your loved ones.';
-    } else if (goal.name.toLowerCase().contains('car') || goal.name.toLowerCase().contains('vehicle')) {
-      description = 'Save for a down payment or full purchase of a new automobile. Ensure you cover insurance and registration costs too.';
-    } else if (goal.name.toLowerCase().contains('education') || goal.name.toLowerCase().contains('school')) {
-      description = 'Invest in higher education or professional development. Cover tuition, lodging, and academic materials.';
+      description =
+          'Secure your golden years with a robust corpus to cover post-retirement living expenses, medical care, and travel.';
+    } else if (goal.name.toLowerCase().contains('home') ||
+        goal.name.toLowerCase().contains('house')) {
+      description =
+          'Build or buy your dream house. Save up for down payments, registration costs, and interior designs.';
+    } else if (goal.name.toLowerCase().contains('vacation') ||
+        goal.name.toLowerCase().contains('travel')) {
+      description =
+          'Travel the world, explore new cultures, and make lasting memories with your loved ones.';
+    } else if (goal.name.toLowerCase().contains('car') ||
+        goal.name.toLowerCase().contains('vehicle')) {
+      description =
+          'Save for a down payment or full purchase of a new automobile. Ensure you cover insurance and registration costs too.';
+    } else if (goal.name.toLowerCase().contains('education') ||
+        goal.name.toLowerCase().contains('school')) {
+      description =
+          'Invest in higher education or professional development. Cover tuition, lodging, and academic materials.';
     } else if (goal.name.toLowerCase().contains('business')) {
-      description = 'Fund your startup or expand your existing business venture. Secure capital for equipment, marketing, and operations.';
+      description =
+          'Fund your startup or expand your existing business venture. Secure capital for equipment, marketing, and operations.';
     }
 
     return Container(
@@ -5339,7 +5475,11 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                               CircleAvatar(
                                 backgroundColor: const Color(0xFFEAF1ED),
                                 radius: 22,
-                                child: Icon(goal.icon, color: kDarkGreen, size: 24),
+                                child: Icon(
+                                  goal.icon,
+                                  color: kDarkGreen,
+                                  size: 24,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Text(
@@ -5398,7 +5538,9 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                             child: LinearProgressIndicator(
                               value: goal.progress,
                               backgroundColor: Colors.grey.shade100,
-                              valueColor: AlwaysStoppedAnimation<Color>(kDarkGreen),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                kDarkGreen,
+                              ),
                               minHeight: 8,
                             ),
                           ),
@@ -5406,9 +5548,18 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              _buildMetricTile('Saved Amount', goal.currentText),
-                              _buildMetricTile('Target Amount', goal.targetText),
-                              _buildMetricTile('Remaining', '₹${_formatCurrency(remaining)}'),
+                              _buildMetricTile(
+                                'Saved Amount',
+                                goal.currentText,
+                              ),
+                              _buildMetricTile(
+                                'Target Amount',
+                                goal.targetText,
+                              ),
+                              _buildMetricTile(
+                                'Remaining',
+                                '₹${_formatCurrency(remaining)}',
+                              ),
                             ],
                           ),
                         ],
@@ -5445,20 +5596,35 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                                   child: TextField(
                                     controller: addFundsController,
                                     keyboardType: TextInputType.number,
-                                    style: TextStyle(color: kDarkGreen, fontSize: 14, fontWeight: FontWeight.w600),
+                                    style: TextStyle(
+                                      color: kDarkGreen,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                     decoration: InputDecoration(
                                       hintText: 'Enter amount (e.g. 10000)',
-                                      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                                      hintStyle: TextStyle(
+                                        color: Colors.grey.shade400,
+                                        fontSize: 13,
+                                      ),
                                       filled: true,
                                       fillColor: Colors.grey.shade50,
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 10,
+                                          ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
-                                        borderSide: BorderSide(color: Colors.grey.shade200),
+                                        borderSide: BorderSide(
+                                          color: Colors.grey.shade200,
+                                        ),
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
-                                        borderSide: BorderSide(color: kDarkGreen),
+                                        borderSide: BorderSide(
+                                          color: kDarkGreen,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -5467,15 +5633,26 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                               const SizedBox(width: 12),
                               ElevatedButton(
                                 onPressed: () {
-                                  double amount = double.tryParse(addFundsController.text.trim()) ?? 0.0;
+                                  double amount =
+                                      double.tryParse(
+                                        addFundsController.text.trim(),
+                                      ) ??
+                                      0.0;
                                   if (amount <= 0) return;
-                                  _showAddMoneyBottomSheet(context, amount, goal);
+                                  _showAddMoneyBottomSheet(
+                                    context,
+                                    amount,
+                                    goal,
+                                  );
                                   addFundsController.clear();
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: kDarkGreen,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 14,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -5521,20 +5698,35 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                                   child: TextField(
                                     controller: updateTargetController,
                                     keyboardType: TextInputType.number,
-                                    style: TextStyle(color: kDarkGreen, fontSize: 14, fontWeight: FontWeight.w600),
+                                    style: TextStyle(
+                                      color: kDarkGreen,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                     decoration: InputDecoration(
                                       hintText: 'New Target (e.g. 1200000)',
-                                      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                                      hintStyle: TextStyle(
+                                        color: Colors.grey.shade400,
+                                        fontSize: 13,
+                                      ),
                                       filled: true,
                                       fillColor: Colors.grey.shade50,
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 10,
+                                          ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
-                                        borderSide: BorderSide(color: Colors.grey.shade200),
+                                        borderSide: BorderSide(
+                                          color: Colors.grey.shade200,
+                                        ),
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
-                                        borderSide: BorderSide(color: kDarkGreen),
+                                        borderSide: BorderSide(
+                                          color: kDarkGreen,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -5543,11 +5735,17 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                               const SizedBox(width: 12),
                               ElevatedButton(
                                 onPressed: () {
-                                  double newTarget = double.tryParse(updateTargetController.text.trim()) ?? 0.0;
+                                  double newTarget =
+                                      double.tryParse(
+                                        updateTargetController.text.trim(),
+                                      ) ??
+                                      0.0;
                                   if (newTarget <= goal.targetValue) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text('New target must be greater than current target.'),
+                                        content: Text(
+                                          'New target must be greater than current target.',
+                                        ),
                                         backgroundColor: Colors.orange,
                                       ),
                                     );
@@ -5557,23 +5755,36 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                                   setState(() {
                                     goal.targetValue = newTarget;
                                     goal.targetText = formatAmount(newTarget);
-                                    goal.progress = (goal.currentValue / goal.targetValue).clamp(0.0, 1.0);
+                                    goal.progress =
+                                        (goal.currentValue / goal.targetValue)
+                                            .clamp(0.0, 1.0);
 
-                                    _goalsSummaryTarget = _goalsList.fold(0.0, (sum, item) => sum + item.targetValue);
-                                    _goalsSummarySaved = _goalsList.fold(0.0, (sum, item) => sum + item.currentValue);
+                                    _goalsSummaryTarget = _goalsList.fold(
+                                      0.0,
+                                      (sum, item) => sum + item.targetValue,
+                                    );
+                                    _goalsSummarySaved = _goalsList.fold(
+                                      0.0,
+                                      (sum, item) => sum + item.currentValue,
+                                    );
                                   });
 
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Goal target size updated to ${goal.targetText}!'),
+                                      content: Text(
+                                        'Goal target size updated to ${goal.targetText}!',
+                                      ),
                                       backgroundColor: kDarkGreen,
                                     ),
                                   );
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFDD754E), 
+                                  backgroundColor: const Color(0xFFDD754E),
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -5622,26 +5833,36 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                           SizedBox(
                             width: double.infinity,
                             child: OutlinedButton.icon(
-                              onPressed: goal.currentValue <= 0 ? null : () {
-                                _showWithdrawalBottomSheet(context, goal);
-                              },
+                              onPressed: goal.currentValue <= 0
+                                  ? null
+                                  : () {
+                                      _showWithdrawalBottomSheet(context, goal);
+                                    },
                               icon: Icon(
                                 Icons.account_balance_wallet_rounded,
-                                color: goal.currentValue <= 0 ? Colors.grey : const Color(0xFFC2410C),
+                                color: goal.currentValue <= 0
+                                    ? Colors.grey
+                                    : const Color(0xFFC2410C),
                                 size: 18,
                               ),
                               label: Text(
                                 'Withdraw to Bank Account',
                                 style: TextStyle(
-                                  color: goal.currentValue <= 0 ? Colors.grey : const Color(0xFFC2410C),
+                                  color: goal.currentValue <= 0
+                                      ? Colors.grey
+                                      : const Color(0xFFC2410C),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               style: OutlinedButton.styleFrom(
                                 side: BorderSide(
-                                  color: goal.currentValue <= 0 ? Colors.grey.shade300 : const Color(0xFFC2410C),
+                                  color: goal.currentValue <= 0
+                                      ? Colors.grey.shade300
+                                      : const Color(0xFFC2410C),
                                 ),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -5661,7 +5882,10 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                           backgroundColor: const Color(0xFFF2F0EB),
                           title: Text(
                             'Remove Goal',
-                            style: TextStyle(color: kDarkGreen, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: kDarkGreen,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           content: Text(
                             'Are you sure you want to remove your "${goal.name}" goal? This action cannot be undone.',
@@ -5670,34 +5894,61 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                             TextButton(
                               onPressed: () {
                                 Navigator.pop(context);
                                 setState(() {
                                   _goalsList.removeAt(index);
-                                  _goalsSummaryTarget = _goalsList.fold(0.0, (sum, item) => sum + item.targetValue);
-                                  _goalsSummarySaved = _goalsList.fold(0.0, (sum, item) => sum + item.currentValue);
+                                  _goalsSummaryTarget = _goalsList.fold(
+                                    0.0,
+                                    (sum, item) => sum + item.targetValue,
+                                  );
+                                  _goalsSummarySaved = _goalsList.fold(
+                                    0.0,
+                                    (sum, item) => sum + item.currentValue,
+                                  );
                                   _goalsSubView = 0;
                                 });
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text('Goal "${goal.name}" has been removed.'),
+                                    content: Text(
+                                      'Goal "${goal.name}" has been removed.',
+                                    ),
                                     backgroundColor: Colors.red.shade800,
                                   ),
                                 );
                               },
-                              child: const Text('Remove', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                              child: const Text(
+                                'Remove',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       );
                     },
-                    icon: const Icon(Icons.delete_forever_rounded, color: Colors.white, size: 20),
+                    icon: const Icon(
+                      Icons.delete_forever_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     label: const Text(
                       'Remove Goal',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFC2410C),
@@ -5743,7 +5994,11 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
     );
   }
 
-  void _showAddMoneyBottomSheet(BuildContext context, double amount, GoalItem goal) {
+  void _showAddMoneyBottomSheet(
+    BuildContext context,
+    double amount,
+    GoalItem goal,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -5761,7 +6016,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
           child: StatefulBuilder(
             builder: (context, innerSetState) {
               // Local state inside the builder
-              innerSetState((){});
+              innerSetState(() {});
               return Navigator(
                 onGenerateRoute: (_) => MaterialPageRoute(
                   builder: (context) => _PaymentFlowWidget(
@@ -5775,10 +6030,17 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                           goal.currentValue = goal.targetValue;
                         }
                         goal.currentText = formatAmount(goal.currentValue);
-                        goal.progress = (goal.currentValue / goal.targetValue).clamp(0.0, 1.0);
-                        
-                        _goalsSummaryTarget = _goalsList.fold(0.0, (sum, item) => sum + item.targetValue);
-                        _goalsSummarySaved = _goalsList.fold(0.0, (sum, item) => sum + item.currentValue);
+                        goal.progress = (goal.currentValue / goal.targetValue)
+                            .clamp(0.0, 1.0);
+
+                        _goalsSummaryTarget = _goalsList.fold(
+                          0.0,
+                          (sum, item) => sum + item.targetValue,
+                        );
+                        _goalsSummarySaved = _goalsList.fold(
+                          0.0,
+                          (sum, item) => sum + item.currentValue,
+                        );
                       });
                     },
                     formatCurrency: _formatCurrency,
@@ -5819,8 +6081,14 @@ class _InvestmentsScreenState extends State<InvestmentsScreen>
                     goal.currentText = formatAmount(0.0);
                     goal.progress = 0.0;
 
-                    _goalsSummaryTarget = _goalsList.fold(0.0, (sum, item) => sum + item.targetValue);
-                    _goalsSummarySaved = _goalsList.fold(0.0, (sum, item) => sum + item.currentValue);
+                    _goalsSummaryTarget = _goalsList.fold(
+                      0.0,
+                      (sum, item) => sum + item.targetValue,
+                    );
+                    _goalsSummarySaved = _goalsList.fold(
+                      0.0,
+                      (sum, item) => sum + item.currentValue,
+                    );
                   });
                 },
                 formatCurrency: _formatCurrency,
@@ -5889,7 +6157,8 @@ class _PaymentFlowWidget extends StatefulWidget {
 }
 
 class _PaymentFlowWidgetState extends State<_PaymentFlowWidget> {
-  int paymentStep = 0; // 0 = Choose Payment, 1 = Enter PIN, 2 = Loading, 3 = Success
+  int paymentStep =
+      0; // 0 = Choose Payment, 1 = Enter PIN, 2 = Loading, 3 = Success
   String pin = '';
 
   @override
@@ -5913,7 +6182,8 @@ class _PaymentFlowWidgetState extends State<_PaymentFlowWidget> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded),
-                  onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+                  onPressed: () =>
+                      Navigator.of(context, rootNavigator: true).pop(),
                 ),
               ],
             ),
@@ -5933,7 +6203,10 @@ class _PaymentFlowWidgetState extends State<_PaymentFlowWidget> {
                     children: [
                       Text(
                         'Amount to Add',
-                        style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 12,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -5947,14 +6220,21 @@ class _PaymentFlowWidgetState extends State<_PaymentFlowWidget> {
                     ],
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEAF1ED),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       widget.goal.name,
-                      style: TextStyle(color: widget.kDarkGreen, fontSize: 12, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: widget.kDarkGreen,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -6084,7 +6364,10 @@ class _PaymentFlowWidgetState extends State<_PaymentFlowWidget> {
                       ),
                     );
                   } else if (index == 9) {
-                    child = Icon(Icons.backspace_outlined, color: widget.kDarkGreen);
+                    child = Icon(
+                      Icons.backspace_outlined,
+                      color: widget.kDarkGreen,
+                    );
                   } else if (index == 10) {
                     key = '0';
                     child = Text(
@@ -6096,7 +6379,11 @@ class _PaymentFlowWidgetState extends State<_PaymentFlowWidget> {
                       ),
                     );
                   } else {
-                    child = Icon(Icons.check_circle_outline_rounded, color: Colors.green.shade700, size: 28);
+                    child = Icon(
+                      Icons.check_circle_outline_rounded,
+                      color: Colors.green.shade700,
+                      size: 28,
+                    );
                   }
 
                   return GestureDetector(
@@ -6141,10 +6428,7 @@ class _PaymentFlowWidgetState extends State<_PaymentFlowWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(
-              color: widget.kDarkGreen,
-              strokeWidth: 4,
-            ),
+            CircularProgressIndicator(color: widget.kDarkGreen, strokeWidth: 4),
             const SizedBox(height: 24),
             Text(
               'Processing Secure UPI Payment...',
@@ -6188,10 +6472,7 @@ class _PaymentFlowWidgetState extends State<_PaymentFlowWidget> {
             const SizedBox(height: 8),
             Text(
               '₹${widget.formatCurrency(widget.amount)} added to ${widget.goal.name}',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
             ),
             const SizedBox(height: 32),
             Container(
@@ -6203,7 +6484,10 @@ class _PaymentFlowWidgetState extends State<_PaymentFlowWidget> {
               ),
               child: Column(
                 children: [
-                  _buildReceiptRow('Source Account', 'Punjab & Sind Bank (****7890)'),
+                  _buildReceiptRow(
+                    'Source Account',
+                    'Punjab & Sind Bank (****7890)',
+                  ),
                   const Divider(),
                   _buildReceiptRow('Transaction ID', 'TXN-9827361849'),
                   const Divider(),
@@ -6226,10 +6510,7 @@ class _PaymentFlowWidgetState extends State<_PaymentFlowWidget> {
               ),
               child: const Text(
                 'Done',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 12),
@@ -6276,10 +6557,7 @@ class _PaymentFlowWidgetState extends State<_PaymentFlowWidget> {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 11,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
                   ),
                 ],
               ),
@@ -6297,8 +6575,18 @@ class _PaymentFlowWidgetState extends State<_PaymentFlowWidget> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
-          Text(value, style: TextStyle(color: widget.kDarkGreen, fontSize: 12, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: widget.kDarkGreen,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -6365,7 +6653,8 @@ class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded),
-                  onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+                  onPressed: () =>
+                      Navigator.of(context, rootNavigator: true).pop(),
                 ),
               ],
             ),
@@ -6387,7 +6676,10 @@ class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
                         children: [
                           Text(
                             'Amount to Withdraw',
-                            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 12,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -6401,14 +6693,21 @@ class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
                         ],
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFEAF1ED),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           widget.goal.name,
-                          style: TextStyle(color: widget.kDarkGreen, fontSize: 12, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: widget.kDarkGreen,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
@@ -6418,7 +6717,11 @@ class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.account_balance_wallet_rounded, color: widget.kDarkGreen, size: 20),
+                      Icon(
+                        Icons.account_balance_wallet_rounded,
+                        color: widget.kDarkGreen,
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -6426,7 +6729,10 @@ class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
                           children: [
                             Text(
                               'Destination Bank Account',
-                              style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 11,
+                              ),
                             ),
                             const SizedBox(height: 2),
                             Text(
@@ -6455,7 +6761,11 @@ class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber_rounded, color: Color(0xFFDD754E), size: 20),
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Color(0xFFDD754E),
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -6483,10 +6793,7 @@ class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
               ),
               child: const Text(
                 'Verify & Withdraw',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 12),
@@ -6578,7 +6885,10 @@ class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
                       ),
                     );
                   } else if (index == 9) {
-                    child = Icon(Icons.backspace_outlined, color: widget.kDarkGreen);
+                    child = Icon(
+                      Icons.backspace_outlined,
+                      color: widget.kDarkGreen,
+                    );
                   } else if (index == 10) {
                     key = '0';
                     child = Text(
@@ -6590,7 +6900,11 @@ class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
                       ),
                     );
                   } else {
-                    child = Icon(Icons.check_circle_outline_rounded, color: Colors.green.shade700, size: 28);
+                    child = Icon(
+                      Icons.check_circle_outline_rounded,
+                      color: Colors.green.shade700,
+                      size: 28,
+                    );
                   }
 
                   return GestureDetector(
@@ -6635,10 +6949,7 @@ class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(
-              color: widget.kDarkGreen,
-              strokeWidth: 4,
-            ),
+            CircularProgressIndicator(color: widget.kDarkGreen, strokeWidth: 4),
             const SizedBox(height: 24),
             Text(
               'Initiating secure instant withdrawal...',
@@ -6682,10 +6993,7 @@ class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
             const SizedBox(height: 8),
             Text(
               '₹${widget.formatCurrency(widget.amount)} credited to your bank account',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -6700,7 +7008,10 @@ class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
                 children: [
                   _buildReceiptRow('Source', 'Goal: ${widget.goal.name}'),
                   const Divider(),
-                  _buildReceiptRow('Destination Account', 'Punjab & Sind Bank (****7890)'),
+                  _buildReceiptRow(
+                    'Destination Account',
+                    'Punjab & Sind Bank (****7890)',
+                  ),
                   const Divider(),
                   _buildReceiptRow('Transaction ID', 'TXN-9847161823'),
                   const Divider(),
@@ -6723,10 +7034,7 @@ class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
               ),
               child: const Text(
                 'Done',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 12),
@@ -6742,8 +7050,18 @@ class _WithdrawalFlowWidgetState extends State<_WithdrawalFlowWidget> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
-          Text(value, style: TextStyle(color: widget.kDarkGreen, fontSize: 12, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: widget.kDarkGreen,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

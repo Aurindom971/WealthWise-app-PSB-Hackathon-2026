@@ -72,8 +72,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String? _fullName;
   List<dynamic> _accounts = [];
   List<dynamic> _cards = [];
-  List<dynamic> _investments = [];
-  List<dynamic> _loans = [];
+  final List<dynamic> _investments = [];
+  final List<dynamic> _loans = [];
   double _totalInvestment = 0;
   double _totalLoan = 0;
 
@@ -250,7 +250,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ? ServicesPage()
                                       : (_isShowingWealthWiseAI
                                             ? WealthWiseAIScreen(
-                                                onBack: () => setState(() => _isShowingWealthWiseAI = false),
+                                                onBack: () => setState(
+                                                  () => _isShowingWealthWiseAI =
+                                                      false,
+                                                ),
                                               )
                                             : (_isShowingDashboard
                                                   ? _buildDashboard()
@@ -379,9 +382,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       case BillRechargeSubState.paymentGateway:
         return PaymentGatewayScreen(
           bill: _selectedBill!,
-          onBack: () => setState(
-            () => _billSubState = _previousBillSubState,
-          ),
+          onBack: () => setState(() => _billSubState = _previousBillSubState),
           onSuccess: () => setState(() {
             _billSubState = BillRechargeSubState.main;
             _isShowingBillAndRecharge = false;
@@ -446,18 +447,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildTabContent() {
-    if (_navIdx == 1)
+    if (_navIdx == 1) {
       return TransactionScreen(
         onBack: () => setState(() => _isShowingDashboard = true),
       );
-    if (_navIdx == 3)
+    }
+    if (_navIdx == 3) {
       return InvestmentsScreen(
         onBack: () => setState(() => _isShowingDashboard = true),
       );
-    if (_navIdx == 4)
+    }
+    if (_navIdx == 4) {
       return SmartLockScreen(
         onBack: () => setState(() => _isShowingDashboard = true),
       );
+    }
     if (_navIdx == 0) return const ProfilePage();
     if (_navIdx == 1) {
       return TransactionScreen(
@@ -1548,10 +1552,16 @@ class _TileState extends State<_Tile> with SingleTickerProviderStateMixin {
                     if (blocked) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: const Text('Online Transactions are currently blocked by Smart Lock.'),
+                          content: const Text(
+                            'Online Transactions are currently blocked by Smart Lock.',
+                          ),
                           backgroundColor: Colors.red.shade800,
                           behavior: SnackBarBehavior.floating,
-                          margin: const EdgeInsets.only(bottom: 90, left: 16, right: 16),
+                          margin: const EdgeInsets.only(
+                            bottom: 90,
+                            left: 16,
+                            right: 16,
+                          ),
                           duration: const Duration(seconds: 1),
                         ),
                       );

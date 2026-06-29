@@ -8,6 +8,7 @@ class LoanHeader extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback? onIconTap;
   final String? actionLabel;
+  final VoidCallback? onInfoTap;
 
   const LoanHeader({
     super.key,
@@ -17,6 +18,7 @@ class LoanHeader extends StatelessWidget {
     required this.onBack,
     this.onIconTap,
     this.actionLabel,
+    this.onInfoTap,
   });
 
   @override
@@ -84,6 +86,25 @@ class LoanHeader extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (onInfoTap != null) ...[
+                  GestureDetector(
+                    onTap: onInfoTap,
+                    child: Container(
+                      height: 44,
+                      width: 44,
+                      decoration: BoxDecoration(
+                        color: kMid.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(
+                        Icons.info_outline_rounded,
+                        color: kMid,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
                 GestureDetector(
                   onTap: onIconTap,
                   child: Container(

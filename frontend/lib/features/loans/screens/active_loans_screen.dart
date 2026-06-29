@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
-import '../../home/screens/notifications_screen.dart';
 import '../widgets/loan_header.dart';
 import '../widgets/active_loan_card.dart';
 
