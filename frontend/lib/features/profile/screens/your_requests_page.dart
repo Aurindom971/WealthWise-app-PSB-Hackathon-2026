@@ -69,9 +69,10 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
           child: LoansScreen(
             highlightType: highlightType,
             onBack: () => Navigator.pop(context),
-            onNavigate: (LoanSubState state, {String? loanType, String? loanId}) {
-              // Handle sub-navigation if needed, or just stay on main
-            },
+            onNavigate:
+                (LoanSubState state, {String? loanType, String? loanId}) {
+                  // Handle sub-navigation if needed, or just stay on main
+                },
           ),
         ),
       ),
@@ -81,9 +82,7 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
   void _navigateToInsurance() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const InsuranceScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const InsuranceScreen()),
     );
   }
 
@@ -195,8 +194,9 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
                               child: Text(
                                 'Track Requests',
                                 style: TextStyle(
-                                  color:
-                                      !isNewApplication ? Colors.white : kSub,
+                                  color: !isNewApplication
+                                      ? Colors.white
+                                      : kSub,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -214,7 +214,7 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 18),
                       scrollDirection: Axis.horizontal,
                       itemCount: categories.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 10),
+                      separatorBuilder: (_, _) => const SizedBox(width: 10),
                       itemBuilder: (context, i) {
                         final cat = categories[i]['label']!;
                         final isActive = selectedCategory == cat;
@@ -229,8 +229,9 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(18),
                               border: Border.all(
-                                color:
-                                    isActive ? kAccent : kSub.withOpacity(0.3),
+                                color: isActive
+                                    ? kAccent
+                                    : kSub.withOpacity(0.3),
                                 width: 1,
                               ),
                             ),
@@ -266,25 +267,24 @@ class _YourRequestsPageState extends State<YourRequestsPage> {
                             },
                           )
                         : trackedApplications.isEmpty
-                            ? const Center(
-                                child: Text(
-                                  'No requests to track yet.',
-                                  style: TextStyle(color: kSub),
-                                ),
-                              )
-                            : ListView.builder(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 18),
-                                itemCount: trackedApplications.length,
-                                itemBuilder: (context, i) {
-                                  final app = trackedApplications[i];
-                                  if (selectedCategory != 'All' &&
-                                      app['category'] != selectedCategory) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  return _buildTrackedCard(app);
-                                },
-                              ),
+                        ? const Center(
+                            child: Text(
+                              'No requests to track yet.',
+                              style: TextStyle(color: kSub),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 18),
+                            itemCount: trackedApplications.length,
+                            itemBuilder: (context, i) {
+                              final app = trackedApplications[i];
+                              if (selectedCategory != 'All' &&
+                                  app['category'] != selectedCategory) {
+                                return const SizedBox.shrink();
+                              }
+                              return _buildTrackedCard(app);
+                            },
+                          ),
                   ),
                 ],
               ),
