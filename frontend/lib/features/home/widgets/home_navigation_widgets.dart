@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../services/security_service.dart';
+import '../../../core/services/panic_mode_service.dart';
 
 // ─── PALETTE ─────────────────────────────────────────────────────────────────
 const kForest = Color(0xFF1A3328);

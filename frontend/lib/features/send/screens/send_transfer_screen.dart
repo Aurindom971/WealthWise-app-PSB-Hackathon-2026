@@ -11,6 +11,7 @@ import '../../home/widgets/home_navigation_widgets.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../../services/security_service.dart';
 import '../../../core/utils/security_validator.dart';
+import '../../../core/services/panic_mode_service.dart';
 
 const primaryGreen = kForest;
 const lightGreen = kAccent;
@@ -3512,7 +3513,7 @@ class _PinScreenState extends State<PinScreen> {
                             ),
                             label: Text(
                               _isBalanceUnlocked
-                                  ? "Balance: ${_isBalanceVisible ? '₹1,45,000.50' : '******'}"
+                                  ? "Balance: ${_isBalanceVisible ? (PanicModeService.instance.isPanicMode ? '₹7,900.00' : '₹1,45,000.50') : '******'}"
                                   : "Check Balance",
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
@@ -3566,6 +3567,21 @@ class _PinScreenState extends State<PinScreen> {
                                         "Please enter the 4-digit UPI PIN to proceed",
                                       ),
                                       backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                  return;
+                                }
+                                if (PanicModeService.instance.isPanicMode) {
+                                  ScaffoldMessenger.of(context).removeCurrentSnackBar();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Please contact the bank",
+                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                      backgroundColor: Colors.red,
+                                      behavior: SnackBarBehavior.floating,
+                                      margin: EdgeInsets.all(20),
                                     ),
                                   );
                                   return;

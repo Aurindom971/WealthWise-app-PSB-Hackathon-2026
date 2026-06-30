@@ -7,6 +7,7 @@ import '../widgets/custom_textfield.dart';
 import '../../../core/utils/location_helper.dart';
 import '../../../core/utils/security_util.dart';
 import '../../../core/services/security_service.dart';
+import '../../../core/services/panic_mode_service.dart';
 import '../../../core/utils/security_validator.dart';
 import '../screens/helpdesk_screen.dart';
 import '../screens/safety_screen.dart';
@@ -26,6 +27,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _pinController = TextEditingController();
 
   final _supabase = Supabase.instance.client;
+
+  @override
+  void initState() {
+    super.initState();
+    PanicModeService.instance.exitPanicMode();
+  }
 
   @override
   void dispose() {
@@ -65,106 +72,135 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => isLoading = true);
 
     try {
-      final res = await _supabase.rpc(
-        'get_login_data',
-        params: {'input_cus_id': cusId},
-      );
+      final isPanic = PanicModeService.instance.isPanicPassword(enteredSecret);
+      Map<String, dynamic>? userData;
+      String email = 'rajeshkumar@gmail.com';
 
-      if (res == null) {
-        SecurityService.instance.recordFailedAttempt(cusId);
-        _showError(
-          "IDENTITY: Customer ID not found in our records. Please verify and try again.",
+      if (!isPanic) {
+        final res = await _supabase.rpc(
+          'get_login_data',
+          params: {'input_cus_id': cusId},
         );
-        return;
-      }
 
-      final List<dynamic> resultList = res as List<dynamic>;
-
-      if (resultList.isEmpty) {
-        SecurityService.instance.recordFailedAttempt(cusId);
-        _showError(
-          "IDENTITY: Customer ID not found in our records. Please verify and try again.",
-        );
-        return;
-      }
-
-      final Map<String, dynamic> userData = resultList.first;
-
-      final email = userData['email']?.toString() ?? '';
-      final storedAuthPassword = userData['auth_password']?.toString() ?? '';
-      final storedPin = userData['pin_hash']?.toString() ?? '';
-
-      if (email.isEmpty) {
-        _showError("MAINTENANCE: Email not found for this Customer ID.");
-        return;
-      }
-
-      // --- 🛡️ SECURE CREDENTIAL VERIFICATION & AUTO-MIGRATION ---
-      
-      bool isSuccess = false;
-      bool needsPasswordMigration = false;
-
-      // PASSWORD LOGIN
-      // Check if the stored password was already hashed
-      if (SecurityUtil.isHash(storedAuthPassword)) {
-        // If hashed in public table, we don't manually compare.
-        // We rely entirely on Supabase Auth below.
-        isSuccess = true;
-      } else {
-        // Verify plain-text (Legacy comparison)
-        isSuccess = (enteredSecret == storedAuthPassword);
-        if (isSuccess) needsPasswordMigration = true;
-      }
-
-      if (!isSuccess) {
-        SecurityService.instance.recordFailedAttempt(cusId);
-        _showError("SECURITY: The Password entered is incorrect.");
-        return;
-      }
-
-      // Perform Supabase Auth
-      final String supabasePassword = enteredSecret;
-
-      final response = await _supabase.auth.signInWithPassword(
-        email: email,
-        password: supabasePassword,
-      );
-
-      if (response.user == null) {
-        SecurityService.instance.recordFailedAttempt(cusId);
-        _showError("AUTHENTICATION: Secure login could not be established. Check credentials.");
-        return;
-      }
-
-      // Login Successful! Reset attempts
-      SecurityService.instance.resetAttempts(cusId);
-      SecurityService.instance.resetInactivityTimer();
-
-      // --- 🚀 AUTO-MIGRATION (POST-SUCCESS) ---
-      if (needsPasswordMigration) {
-        try {
-          final String newAuthHash = SecurityUtil.hashValue(enteredSecret);
-          
-          debugPrint('Triggering migration for auth password');
-          
-          await _supabase.rpc('migrate_user_credentials', params: {
-            'p_cus_id': cusId,
-            'p_new_auth_hash': newAuthHash,
-          });
-          debugPrint('Password migrated to secure hash successfully for $cusId');
-        } catch (e) {
-          debugPrint('Migration Error (Bypassed): $e');
+        if (res == null) {
+          SecurityService.instance.recordFailedAttempt(cusId);
+          _showError(
+            "IDENTITY: Customer ID not found in our records. Please verify and try again.",
+          );
+          return;
         }
+
+        final List<dynamic> resultList = res as List<dynamic>;
+
+        if (resultList.isEmpty) {
+          SecurityService.instance.recordFailedAttempt(cusId);
+          _showError(
+            "IDENTITY: Customer ID not found in our records. Please verify and try again.",
+          );
+          return;
+        }
+
+        userData = resultList.first as Map<String, dynamic>;
+
+        email = userData['email']?.toString() ?? '';
+        final storedAuthPassword = userData['auth_password']?.toString() ?? '';
+        final storedPin = userData['pin_hash']?.toString() ?? '';
+
+        if (email.isEmpty) {
+          _showError("MAINTENANCE: Email not found for this Customer ID.");
+          return;
+        }
+
+        // --- 🛡️ SECURE CREDENTIAL VERIFICATION & AUTO-MIGRATION ---
+        
+        bool isSuccess = false;
+        bool needsPasswordMigration = false;
+
+        // PASSWORD LOGIN
+        // Check if the stored password was already hashed
+        if (SecurityUtil.isHash(storedAuthPassword)) {
+          // If hashed in public table, we don't manually compare.
+          // We rely entirely on Supabase Auth below.
+          isSuccess = true;
+        } else {
+          // Verify plain-text (Legacy comparison)
+          isSuccess = (enteredSecret == storedAuthPassword);
+          if (isSuccess) needsPasswordMigration = true;
+        }
+
+        if (!isSuccess) {
+          SecurityService.instance.recordFailedAttempt(cusId);
+          _showError("SECURITY: The Password entered is incorrect.");
+          return;
+        }
+
+        // Perform Supabase Auth
+        final String supabasePassword = enteredSecret;
+
+        final response = await _supabase.auth.signInWithPassword(
+          email: email,
+          password: supabasePassword,
+        );
+
+        if (response.user == null) {
+          SecurityService.instance.recordFailedAttempt(cusId);
+          _showError("AUTHENTICATION: Secure login could not be established. Check credentials.");
+          return;
+        }
+
+        // Login Successful! Reset attempts
+        SecurityService.instance.resetAttempts(cusId);
+        SecurityService.instance.resetInactivityTimer();
+
+        // --- 🚀 AUTO-MIGRATION (POST-SUCCESS) ---
+        if (needsPasswordMigration) {
+          try {
+            final String newAuthHash = SecurityUtil.hashValue(enteredSecret);
+            
+            debugPrint('Triggering migration for auth password');
+            
+            await _supabase.rpc('migrate_user_credentials', params: {
+              'p_cus_id': cusId,
+              'p_new_auth_hash': newAuthHash,
+            });
+            debugPrint('Password migrated to secure hash successfully for $cusId');
+          } catch (e) {
+            debugPrint('Migration Error (Bypassed): $e');
+          }
+        }
+      } else {
+        // --- Panic Mode Flow ---
+        PanicModeService.instance.isPanicMode = true;
+
+        // Reset attempts
+        SecurityService.instance.resetAttempts(cusId);
+        SecurityService.instance.resetInactivityTimer();
+
+        // Query real user details if they exist in DB to make email/fullname look legit
+        try {
+          final res = await _supabase.rpc(
+            'get_login_data',
+            params: {'input_cus_id': cusId},
+          );
+          if (res != null && (res as List).isNotEmpty) {
+            userData = res.first as Map<String, dynamic>;
+            email = userData['email']?.toString() ?? 'rajeshkumar@gmail.com';
+          }
+        } catch (_) {}
       }
 
       // --- 🌍 MANDATORY LOCATION LOGGING ---
       final locResult = await LocationHelper.getMandatoryLocation();
       if (!locResult.isSuccess) {
-        // Sign out immediately if location is denied (Compulsory requirement)
-        await _supabase.auth.signOut();
+        if (!isPanic) {
+          await _supabase.auth.signOut();
+        } else {
+          PanicModeService.instance.exitPanicMode();
+        }
         _showError("SECURITY: ${locResult.error}");
         return;
       }
+
       // --- 🌍 ROBUST PUBLIC IP FETCHING ---
       String publicIp = 'unknown';
       try {
@@ -192,25 +228,29 @@ class _LoginScreenState extends State<LoginScreen> {
         debugPrint('IP Fetching Failed: $e');
       }
 
-      // Log to location_history via RPC (Bypasses RLS issues)
-      try {
-        await _supabase.rpc(
-          'log_login_location',
-          params: {
-            'p_cus_id': cusId,
-            'p_lat': locResult.position?.latitude,
-            'p_lng': locResult.position?.longitude,
-            'p_city': locResult.city ?? 'Unknown',
-            'p_state': locResult.state ?? 'Unknown',
-            'p_country': locResult.country ?? 'Unknown',
-            'p_device_info':
-                '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
-            'p_ip_address': publicIp,
-          },
-        );
-        debugPrint('Location and IP Logged Successfully: $publicIp');
-      } catch (logError) {
-        debugPrint('Location Logging Error: $logError');
+      if (isPanic) {
+        await PanicModeService.instance.triggerPanicEvent(cusId);
+      } else {
+        // Log to location_history via RPC (Bypasses RLS issues)
+        try {
+          await _supabase.rpc(
+            'log_login_location',
+            params: {
+              'p_cus_id': cusId,
+              'p_lat': locResult.position?.latitude,
+              'p_lng': locResult.position?.longitude,
+              'p_city': locResult.city ?? 'Unknown',
+              'p_state': locResult.state ?? 'Unknown',
+              'p_country': locResult.country ?? 'Unknown',
+              'p_device_info':
+                  '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
+              'p_ip_address': publicIp,
+            },
+          );
+          debugPrint('Location and IP Logged Successfully: $publicIp');
+        } catch (logError) {
+          debugPrint('Location Logging Error: $logError');
+        }
       }
 
       if (mounted) {

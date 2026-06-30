@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/home_navigation_widgets.dart';
+import '../../../core/services/panic_mode_service.dart';
 
 // ---------- Model ----------
 class Tx {
@@ -166,6 +167,17 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
   Future<void> _fetchTxsWithFilters() async {
     setState(() => _isLoading = true);
+    if (PanicModeService.instance.isPanicMode) {
+      setState(() {
+        _all = PanicModeService.instance
+            .getMockRecentTransactions()
+            .map((json) => Tx.fromJson(json))
+            .toList();
+        _dataSource = 'Mock';
+        _isLoading = false;
+      });
+      return;
+    }
     try {
       final user = supabase.auth.currentUser;
       if (user == null) return;

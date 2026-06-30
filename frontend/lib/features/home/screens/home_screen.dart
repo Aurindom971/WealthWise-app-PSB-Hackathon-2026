@@ -3,6 +3,7 @@ import 'smart_lock_screen.dart';
 import 'transaction_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/services/panic_mode_service.dart';
 import 'package:wealthwise/features/cards_and_forex/screens/cards_and_forex_screen.dart';
 import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
 import 'package:wealthwise/features/loans/screens/loans_screen.dart';
@@ -77,6 +78,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   double _totalInvestment = 0;
   double _totalLoan = 0;
 
+  void _showActionUnavailable() {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'This action is currently unavailable.',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: Colors.red.shade800,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -104,6 +125,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _fetchHomeData() async {
+    if (PanicModeService.instance.isPanicMode) {
+      setState(() {
+        _accounts = PanicModeService.instance.getMockAccounts();
+        _cards = PanicModeService.instance.getMockCards();
+        _investments
+          ..clear()
+          ..addAll(PanicModeService.instance.getMockInvestmentsList());
+        _totalInvestment = PanicModeService.instance.mockInvestments;
+        _totalLoan = PanicModeService.instance.mockTotalLoan;
+        _fullName = 'Rajesh Kumar';
+        _isLoading = false;
+      });
+      return;
+    }
     try {
       final supabase = Supabase.instance.client;
       final user = supabase.auth.currentUser;
@@ -200,6 +235,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     if (confirmed == true) {
       await Supabase.instance.client.auth.signOut();
+      PanicModeService.instance.exitPanicMode();
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/login');
       }
@@ -262,15 +298,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             BottomNav(
               currentIndex: _isShowingDashboard ? -1 : _navIdx,
-              onTap: (i) => setState(() {
-                _navIdx = i;
-                _isShowingDashboard = false;
-                _isShowingCardsAndForex = false;
-                _isShowingBillAndRecharge = false;
-                _isShowingLoans = false;
-                _isShowingServices = false;
-                _isShowingWealthWiseAI = false;
-              }),
+              onTap: (i) {
+                if (PanicModeService.instance.isPanicMode && (i == 3 || i == 4)) {
+                  _showActionUnavailable();
+                  return;
+                }
+                setState(() {
+                  _navIdx = i;
+                  _isShowingDashboard = false;
+                  _isShowingCardsAndForex = false;
+                  _isShowingBillAndRecharge = false;
+                  _isShowingLoans = false;
+                  _isShowingServices = false;
+                  _isShowingWealthWiseAI = false;
+                });
+              },
             ),
           ],
         ),
@@ -322,15 +364,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(height: 30),
               _QuickActions(
-                onCardsForexTap: () =>
-                    setState(() => _isShowingCardsAndForex = true),
-                onBillRechargeTap: () =>
-                    setState(() => _isShowingBillAndRecharge = true),
-                onLoansTap: () => setState(() {
-                  _isShowingLoans = true;
-                  _loanSubState = LoanSubState.main;
-                }),
-                onServicesTap: () => setState(() => _isShowingServices = true),
+                onCardsForexTap: () {
+                  if (PanicModeService.instance.isPanicMode) {
+                    _showActionUnavailable();
+                    return;
+                  }
+                  setState(() => _isShowingCardsAndForex = true);
+                },
+                onBillRechargeTap: () {
+                  setState(() => _isShowingBillAndRecharge = true);
+                },
+                onLoansTap: () {
+                  if (PanicModeService.instance.isPanicMode) {
+                    _showActionUnavailable();
+                    return;
+                  }
+                  setState(() {
+                    _isShowingLoans = true;
+                    _loanSubState = LoanSubState.main;
+                  });
+                },
+                onServicesTap: () {
+                  if (PanicModeService.instance.isPanicMode) {
+                    _showActionUnavailable();
+                    return;
+                  }
+                  setState(() => _isShowingServices = true);
+                },
               ),
               const SizedBox(height: 28),
             ]),

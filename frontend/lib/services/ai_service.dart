@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../core/services/panic_mode_service.dart';
 
 class AIService {
   // Use http://10.0.2.2:3000 for Android Emulator
@@ -11,6 +12,9 @@ class AIService {
     required String message,
     required String cusId,
   }) async {
+    if (PanicModeService.instance.isPanicMode) {
+      return PanicModeService.instance.getMockAIChatReply(message);
+    }
     final url = "$baseUrl/ai-chat";
     final payload = jsonEncode({"message": message, "cus_id": cusId});
     try {
