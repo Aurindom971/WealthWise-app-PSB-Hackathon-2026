@@ -48,9 +48,9 @@ async function getEmbedding(text, retries = 3, delay = 1000) {
         `[EmbeddingService] Attempt ${attempt} failed: ${errorMessage}`
       );
 
-      if (isLastAttempt) {
+      if (isLastAttempt || error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
         throw new Error(
-          `Failed to get embedding after ${retries + 1} attempts. Error: ${errorMessage}`
+          `Failed to get embedding. Error: ${errorMessage}`
         );
       }
 

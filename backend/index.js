@@ -234,9 +234,13 @@ app.post('/ai-chat', async (req, res) => {
 
     const lower = message.toLowerCase();
 
-    // 🛡️ 1. SECURITY FILTER: Detect Action Requests
+    // 🛡️ 1. SECURITY FILTER: Detect Action Requests (not informational/advisory queries)
     const actionKeywords = ['send', 'transfer', 'pay', 'invest', 'withdraw', 'deposit', 'purchase', 'buy', 'sell'];
-    const isActionRequest = actionKeywords.some(word => lower.includes(word));
+    
+    // Check if the user is asking a question or seeking advice/information rather than executing an action
+    const isInformational = /\b(should|how|what|why|which|whether|recommend|suggest|advice|opinion|tell|explain|predict|forecast|info|analysis|compare|difference|list|show|view|status|eligibility)\b/.test(lower);
+    
+    const isActionRequest = actionKeywords.some(word => lower.includes(word)) && !isInformational;
 
     if (isActionRequest) {
       console.log('SECURITY: Action request blocked');
@@ -577,6 +581,7 @@ ${retrievedKnowledge}
 === RULES ===
 * You MUST answer user questions using the actual, live data provided in the CONTEXT sections above.
 * Report the overall total account balance primarily if queried about balance (e.g. "Your total account balance is ₹900,000.").
+* Do NOT mention, list, or disclose the user's account balance, savings, investments, or other personal financial figures in greetings (like "hello"), general banking questions, or topics unrelated to their account status.
 * Never invent, estimate, or round balances, transaction records, risk scores, or spending figures. Always use exact numbers.
 * Never say you cannot access account or transaction data if it is populated in the context above.
 * Never return generic answers when live financial analysis data is present.
