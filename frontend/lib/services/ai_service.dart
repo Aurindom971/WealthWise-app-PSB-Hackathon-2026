@@ -3,9 +3,9 @@ import 'package:http/http.dart' as http;
 import '../core/services/panic_mode_service.dart';
 
 class AIService {
-  // Use http://10.0.2.2:3000 for Android Emulator
+  // Use http://192.168.1.10 for Android Emulator
   // Use http://localhost:3000 for iOS Simulator, Web, or Desktop
-  static const String baseUrl = "http://10.0.2.2:3000";
+  static const String baseUrl = "http://192.168.1.10:3000";
 
   /// Calls the general AI chat endpoint (New Implementation)
   static Future<String> getChatReply({
