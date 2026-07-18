@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../screens/otp_confirmation_screen.dart';
+import '../../../services/local_db_service.dart';
 
 class SettingsModal extends StatefulWidget {
   final int cardId;
@@ -13,6 +14,7 @@ class SettingsModal extends StatefulWidget {
   final double initialMerchant;
   final double initialTap;
   final double initialOnline;
+  final double initialUpi;
   final String last4;
   final Future<void> Function()? onSaved;
 
@@ -26,6 +28,7 @@ class SettingsModal extends StatefulWidget {
     this.initialMerchant = 0.2,
     this.initialTap = 0.33,
     this.initialOnline = 0.4,
+    this.initialUpi = 1.0,
     required this.last4,
     this.onSaved,
   });
@@ -42,6 +45,7 @@ class _SettingsModalState extends State<SettingsModal> {
   late double merchantValue;
   late double tapValue;
   late double onlineValue;
+  late double upiValue;
 
   @override
   void initState() {
@@ -53,6 +57,17 @@ class _SettingsModalState extends State<SettingsModal> {
     merchantValue = widget.initialMerchant;
     tapValue = widget.initialTap;
     onlineValue = widget.initialOnline;
+    upiValue = widget.initialUpi;
+    _loadUpiLimit();
+  }
+
+  Future<void> _loadUpiLimit() async {
+    final settings = await LocalDbService.getSettings('upi_limit_setting');
+    if (settings != null && settings['upi_slider'] != null) {
+      if (mounted) {
+        setState(() => upiValue = (settings['upi_slider'] as num).toDouble());
+      }
+    }
   }
 
   final formatter = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
@@ -72,6 +87,12 @@ class _SettingsModalState extends State<SettingsModal> {
         'lim_merch': (merchantValue * 500000).toInt(),
         'lim_tap': (tapValue * 15000).toInt(),
         'lim_online': (onlineValue * 500000).toInt(),
+      });
+
+      // Persist UPI limit locally
+      await LocalDbService.saveSettings('upi_limit_setting', {
+        'upi_slider': upiValue,
+        'upi_max_amount': (upiValue * 100000).toInt(),
       });
 
       if (mounted) {
@@ -279,6 +300,14 @@ class _SettingsModalState extends State<SettingsModal> {
                   onlineValue,
                   Icons.language_rounded,
                   (val) => setState(() => onlineValue = val),
+                ),
+                _buildSliderItem(
+                  'UPI Payments',
+                  'Max ₹1,00,000/day',
+                  _formatAmount(upiValue, 100000),
+                  upiValue,
+                  Icons.account_balance_outlined,
+                  (val) => setState(() => upiValue = val),
                 ),
                 const SizedBox(height: 24),
                 

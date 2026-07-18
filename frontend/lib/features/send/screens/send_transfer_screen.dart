@@ -12,6 +12,7 @@ import '../../loans/widgets/loan_header.dart';
 import '../../../services/security_service.dart';
 import '../../../core/utils/security_validator.dart';
 import '../../../core/services/panic_mode_service.dart';
+import '../../../services/local_db_service.dart';
 
 const primaryGreen = kForest;
 const lightGreen = kAccent;
@@ -2501,6 +2502,9 @@ class _UpiScreenState extends State<UpiScreen> {
                                   focusNode: _amountFocusNode,
                                   keyboardType: TextInputType.number,
                                   maxLength: 12,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
                                   decoration: InputDecoration(
                                     counterText: "",
                                     hintText: "0.00",
@@ -3019,6 +3023,31 @@ class _UpiScreenState extends State<UpiScreen> {
                                 );
                                 final rawAmount = _amountController.text
                                     .replaceAll(',', '');
+
+                                // Check daily UPI limit (user-configurable via Card Settings)
+                                final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+                                final dailySettings = await LocalDbService.getSettings('upi_daily_limit') ?? {};
+                                final dailyTotal = (dailySettings[todayStr] as num?)?.toDouble() ?? 0.0;
+                                final currentAmount = double.tryParse(rawAmount) ?? 0.0;
+
+                                // Read configured max from Card Settings slider (default 1 Lakh)
+                                final upiLimitSettings = await LocalDbService.getSettings('upi_limit_setting');
+                                final upiMaxLimit = (upiLimitSettings != null && upiLimitSettings['upi_max_amount'] != null)
+                                    ? (upiLimitSettings['upi_max_amount'] as num).toDouble()
+                                    : 100000.0;
+
+                                if (dailyTotal + currentAmount > upiMaxLimit) {
+                                  final remaining = (upiMaxLimit - dailyTotal).clamp(0, upiMaxLimit);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        "Daily UPI limit exceeded! Max ₹${upiMaxLimit.toStringAsFixed(0)}/day. Remaining: ₹${remaining.toStringAsFixed(0)}",
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                  return;
+                                }
 
                                 if (!SecurityValidator.isValidAmount(
                                   rawAmount,
@@ -3556,7 +3585,7 @@ class _PinScreenState extends State<PinScreen> {
                               ],
                             ),
                             child: ElevatedButton(
-                              onPressed: () {
+                              onPressed: () async {
                                 final enteredPin = _digitControllers
                                     .map((c) => c.text)
                                     .join();
@@ -3586,6 +3615,16 @@ class _PinScreenState extends State<PinScreen> {
                                   );
                                   return;
                                 }
+
+                                if (isUpi) {
+                                  final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+                                  final settings = await LocalDbService.getSettings('upi_daily_limit') ?? {};
+                                  final dailyTotal = (settings[todayStr] as num?)?.toDouble() ?? 0.0;
+                                  final currentAmount = double.tryParse(amount ?? "") ?? 0.0;
+                                  settings[todayStr] = dailyTotal + currentAmount;
+                                  await LocalDbService.saveSettings('upi_daily_limit', settings);
+                                }
+
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
