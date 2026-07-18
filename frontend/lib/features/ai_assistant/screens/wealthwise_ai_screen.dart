@@ -123,7 +123,8 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
                 "Government Schemes",
                 "Digital Gold/Silver",
                 "Stocks & Equities",
-                "Derivatives & Options"
+                "Derivatives & Options",
+                "Diversify my Portfolio"
               ],
             ));
           });
@@ -135,33 +136,63 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
         _isTyping = true;
       });
       
-      if (option.contains('Mutual Funds')) {
-        _selectedAssetClass = 'mutual_funds';
-      } else if (option.contains('Fixed & Recurring')) {
-        _selectedAssetClass = 'deposits';
-      } else if (option.contains('Government')) {
-        _selectedAssetClass = 'government';
-      } else if (option.contains('Gold/Silver')) {
-        _selectedAssetClass = 'gold_silver';
-      } else if (option.contains('Stocks')) {
-        _selectedAssetClass = 'stocks';
+      if (option.contains('Diversify')) {
+        Future.delayed(const Duration(milliseconds: 200), () async {
+          try {
+            final reply = await AIService.getChatReply(
+              message: "Recommend how to diversify my portfolio based on my current and previous holdings. My risk appetite is ${_selectedRisk ?? 'moderate'}.",
+              cusId: _cusId,
+            );
+            if (mounted) {
+              setState(() {
+                _isTyping = false;
+                _messages.add(ChatMessage(
+                  text: reply,
+                  isUser: false,
+                ));
+              });
+            }
+          } catch (e) {
+            if (mounted) {
+              setState(() {
+                _isTyping = false;
+                _messages.add(ChatMessage(
+                  text: "Sorry, I was unable to retrieve your portfolio data. Please try again.",
+                  isUser: false,
+                ));
+              });
+            }
+          }
+        });
       } else {
-        _selectedAssetClass = 'derivatives';
-      }
-      
-      Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) {
-          final recommendation = _generateSageRecommendation(_selectedRisk ?? 'moderate', _selectedAssetClass ?? 'stocks');
-          final fullReply = "$recommendation\n\nDisclaimer: This suggestion is generated for educational purposes based on your self-selected risk metrics. Review your specific timeline and goals prior to deployment.";
-          setState(() {
-            _isTyping = false;
-            _messages.add(ChatMessage(
-              text: fullReply,
-              isUser: false,
-            ));
-          });
+        if (option.contains('Mutual Funds')) {
+          _selectedAssetClass = 'mutual_funds';
+        } else if (option.contains('Fixed & Recurring')) {
+          _selectedAssetClass = 'deposits';
+        } else if (option.contains('Government')) {
+          _selectedAssetClass = 'government';
+        } else if (option.contains('Gold/Silver')) {
+          _selectedAssetClass = 'gold_silver';
+        } else if (option.contains('Stocks')) {
+          _selectedAssetClass = 'stocks';
+        } else {
+          _selectedAssetClass = 'derivatives';
         }
-      });
+
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted) {
+            final recommendation = _generateSageRecommendation(_selectedRisk ?? 'moderate', _selectedAssetClass ?? 'stocks');
+            final fullReply = "$recommendation\n\nDisclaimer: This suggestion is generated for educational purposes based on your self-selected risk metrics. Review your specific timeline and goals prior to deployment.";
+            setState(() {
+              _isTyping = false;
+              _messages.add(ChatMessage(
+                text: fullReply,
+                isUser: false,
+              ));
+            });
+          }
+        });
+      }
     }
   }
 
