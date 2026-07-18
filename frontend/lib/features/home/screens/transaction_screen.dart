@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 import '../widgets/home_navigation_widgets.dart';
 import '../../../core/services/panic_mode_service.dart';
 
@@ -83,12 +85,12 @@ class Tx {
     }
 
     // Heuristic for location mapping
-    String locationStr = (json['location'] ?? 
-                          json['city'] ?? 
-                          json['city_name'] ?? 
-                          json['merchant_city'] ?? 
-                          json['merchant_location'] ?? 
-                          json['place'] ?? 
+    String locationStr = (json['location'] ??
+                          json['city'] ??
+                          json['city_name'] ??
+                          json['merchant_city'] ??
+                          json['merchant_location'] ??
+                          json['place'] ??
                           '').toString();
 
     // Smart Fallback: Infer location from name if DB returns null or empty
@@ -230,21 +232,21 @@ class _TransactionScreenState extends State<TransactionScreen> {
       if (cards.isNotEmpty) {
         debugPrint('[Transactions] Found ${cards.length} cards. Fetching individual transactions...');
         final String cusId = cards[0]['cus_id'] ?? 'CUST1';
-        
+
         for (var card in cards) {
           final dynamic cardId = card['card_id'];
           debugPrint('[Transactions] Fetching for Card ID: $cardId, Cus ID: $cusId');
-          
+
           final txResponse = await supabase.rpc('get_card_transactions', params: {
             'p_cus_id': cusId,
             'p_card_id': cardId,
           });
 
           if (txResponse != null) {
-            final List<dynamic> rawTxs = txResponse is Map 
-                ? (txResponse['transactions'] ?? txResponse['data'] ?? []) 
+            final List<dynamic> rawTxs = txResponse is Map
+                ? (txResponse['transactions'] ?? txResponse['data'] ?? [])
                 : (txResponse as List<dynamic>);
-            
+
             for (var raw in rawTxs) {
               final map = Map<String, dynamic>.from(raw as Map);
               // Normalize common field differences between RPCs
@@ -260,9 +262,9 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
               // Only add if not a duplicate (by transaction_id if exists)
               final newTx = Tx.fromJson(map);
-              if (!combinedTxs.any((existing) => 
-                  existing.name == newTx.name && 
-                  existing.amount == newTx.amount && 
+              if (!combinedTxs.any((existing) =>
+                  existing.name == newTx.name &&
+                  existing.amount == newTx.amount &&
                   existing.createdAt.isAtSameMomentAs(newTx.createdAt))) {
                 combinedTxs.add(newTx);
               }
@@ -528,6 +530,19 @@ class _TransactionScreenState extends State<TransactionScreen> {
       }
     });
     _fetchTxsWithFilters();
+  }
+
+  // ---------- Fraud / Help & Support sheet ----------
+  void _openTransactionSupport(Tx tx) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _TransactionSupportSheet(
+        tx: tx,
+        formatAmount: _formatAmount,
+      ),
+    );
   }
 
   @override
@@ -880,6 +895,15 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 ),
             ],
           ),
+          // --- Info / Help & Support button ---
+          IconButton(
+            icon: const Icon(Icons.info_outline, size: 18, color: Colors.black38),
+            padding: const EdgeInsets.only(left: 4),
+            constraints: const BoxConstraints(),
+            splashRadius: 18,
+            onPressed: () => _openTransactionSupport(tx),
+            tooltip: 'Help & support for this transaction',
+          ),
         ],
       ),
     );
@@ -1065,6 +1089,274 @@ class _TxUIDetails {
   _TxUIDetails(this.icon, this.color);
 }
 
+// ---------- Transaction Help & Support / Fraud Sheet ----------
+class _TransactionSupportSheet extends StatelessWidget {
+  final Tx tx;
+  final String Function(double) formatAmount;
+
+  const _TransactionSupportSheet({
+    required this.tx,
+    required this.formatAmount,
+  });
+
+  static const _fraudGreen = Color(0xFF1B5E20);
+  static const _fraudRed = Color(0xFFB91C1C);
+
+  Future<void> _call(String number) async {
+    final uri = Uri(scheme: 'tel', path: number);
+    await launchUrl(uri);
+  }
+
+  Future<void> _openLink(String url) async {
+    final uri = Uri.parse(url);
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _emailSupport(String subject, String body) async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: 'care@psb.co.in',
+      query: 'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
+    );
+    await launchUrl(uri);
+  }
+
+  String _buildEvidenceText() {
+    return '''
+TRANSACTION EVIDENCE REPORT
+----------------------------------
+Name/Merchant : ${tx.name}
+Amount        : ${tx.type == 'debit' ? '-' : '+'} ₹${formatAmount(tx.amount)}
+Type          : ${tx.type.toUpperCase()}
+Category      : ${tx.category}
+Date          : ${tx.date}
+Time          : ${tx.time}
+Payment Mode  : ${tx.mode}${tx.card.isNotEmpty ? ' (${tx.card})' : ''}
+Status        : ${tx.status.toUpperCase()}
+Location      : ${tx.location}
+----------------------------------
+Generated for cyber fraud reporting purposes.
+Report at: cybercrime.gov.in | Helpline: 1930
+''';
+  }
+
+  Future<void> _downloadEvidence() async {
+    final text = _buildEvidenceText();
+    await Share.share(text, subject: 'Transaction Evidence - ${tx.name}');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDebit = tx.type == 'debit';
+    return DraggableScrollableSheet(
+      initialChildSize: 0.75,
+      minChildSize: 0.5,
+      maxChildSize: 0.92,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: ListView(
+            controller: scrollController,
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.black12,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const Text(
+                'Help & Support',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _fraudGreen),
+              ),
+              const SizedBox(height: 14),
+
+              // --- Transaction summary card ---
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7F7F7),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(tx.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${tx.mode}${tx.card.isNotEmpty ? ' ${tx.card}' : ''} • ${tx.date} • ${tx.time}',
+                            style: const TextStyle(fontSize: 11, color: Colors.black54),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '${isDebit ? '-' : '+'} ₹${formatAmount(tx.amount)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: isDebit ? _fraudRed : const Color(0xFF15803D),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // --- Fraud reporting section ---
+              Text(
+                'Think this is fraud?',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _fraudRed.withValues(alpha: 0.9)),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'If you did not authorize this transaction, act fast — report it immediately.',
+                style: TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+              const SizedBox(height: 12),
+
+              _ActionTile(
+                icon: Icons.call_rounded,
+                iconColor: _fraudRed,
+                title: 'Call Fraud Helpline — 1930',
+                subtitle: 'National Cyber Crime Helpline (toll-free)',
+                onTap: () => _call('1930'),
+              ),
+              const SizedBox(height: 10),
+              _ActionTile(
+                icon: Icons.open_in_new_rounded,
+                iconColor: _fraudRed,
+                title: 'Report on I4C Portal',
+                subtitle: 'cybercrime.gov.in',
+                onTap: () => _openLink('https://cybercrime.gov.in'),
+              ),
+              const SizedBox(height: 10),
+              _ActionTile(
+                icon: Icons.download_rounded,
+                iconColor: _fraudGreen,
+                title: 'Download Evidence Pack',
+                subtitle: 'Share/export full transaction details for your report',
+                onTap: _downloadEvidence,
+              ),
+
+              const SizedBox(height: 24),
+              const Divider(height: 1, color: Color(0xFFEEEAF3)),
+              const SizedBox(height: 20),
+
+              // --- General help & support ---
+              const Text(
+                'Need other help?',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 12),
+              _ActionTile(
+                icon: Icons.support_agent_rounded,
+                iconColor: _fraudGreen,
+                title: 'Call Us',
+                subtitle: 'Speak to customer support',
+                onTap: () => _call('18004198300'),
+              ),
+              const SizedBox(height: 10),
+              _ActionTile(
+                icon: Icons.confirmation_number_outlined,
+                iconColor: _fraudGreen,
+                title: 'Raise a Ticket',
+                subtitle: 'Get help via email for this transaction',
+                onTap: () => _emailSupport(
+                  'Query regarding transaction - ${tx.name}',
+                  _buildEvidenceText(),
+                ),
+              ),
+              const SizedBox(height: 10),
+              _ActionTile(
+                icon: Icons.chat_bubble_outline_rounded,
+                iconColor: _fraudGreen,
+                title: 'Chat with Us',
+                subtitle: 'Talk to our support chatbot',
+                onTap: () {
+                  Navigator.pop(context);
+                  // TODO: hook this up to your in-app chat/support screen
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ActionTile({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFEEEAF3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: iconColor, size: 19),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.black54)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, size: 18, color: Colors.black38),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _FiltersPage extends StatefulWidget {
   final Map<String, Set<String>> initial;
   const _FiltersPage({required this.initial});
@@ -1081,12 +1373,12 @@ class _FiltersPageState extends State<_FiltersPage> {
     'Payment status': 'paymentStatus',
     'Payment types': 'paymentTypes',
   };
-  
+
   static List<String> _generateMonths() {
     final now = DateTime.now();
     final List<String> months = [];
     final monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
-    
+
     for (int i = 0; i < 6; i++) {
        final d = DateTime(now.year, now.month - i, 1);
        months.add("${monthNames[d.month - 1]} ${d.year}");
