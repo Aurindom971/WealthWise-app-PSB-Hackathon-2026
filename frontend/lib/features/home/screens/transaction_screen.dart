@@ -274,43 +274,60 @@ class _TransactionScreenState extends State<TransactionScreen> {
         currentSource = 'Card RPCs';
       }
 
-      // FALLBACK: If no card transactions found, try the general RPC
+      // ALWAYS fetch general transactions and merge with card transactions
+      debugPrint('[Transactions] Fetching general get_transactions_data to merge with card txs...');
+      var response = await supabase.rpc(
+        'get_transactions_data',
+        params: {
+          'user_email': user.email,
+          'month_filter': monthFilter.isEmpty ? null : monthFilter,
+          'category_filter': categoryFilter.isEmpty ? null : categoryFilter,
+          'status_filter': statusFilter.isEmpty ? null : statusFilter,
+        },
+      );
+
+      if (response != null && response['transactions'] != null && (response['transactions'] as List).isNotEmpty) {
+        final List<dynamic> txData = response['transactions'] as List<dynamic>;
+        final generalTxs = txData
+            .map((json) => Tx.fromJson(json as Map<String, dynamic>))
+            .toList();
+
+        // Merge: add general transactions that aren't already in combinedTxs
+        for (final gTx in generalTxs) {
+          final isDuplicate = combinedTxs.any((existing) =>
+              existing.name == gTx.name &&
+              existing.amount == gTx.amount &&
+              existing.createdAt.isAtSameMomentAs(gTx.createdAt));
+          if (!isDuplicate) {
+            combinedTxs.add(gTx);
+          }
+        }
+
+        if (currentSource == 'None') {
+          currentSource = 'General RPC';
+        } else {
+          currentSource = '$currentSource + General RPC';
+        }
+        debugPrint('[Transactions] After merge: ${combinedTxs.length} total transactions');
+      }
+
+      // FALLBACK: If still no transactions, try rajeshkumar@gmail.com
       if (combinedTxs.isEmpty) {
-        debugPrint('[Transactions] No card transactions. Trying general get_transactions_data...');
-        var response = await supabase.rpc(
+        debugPrint('[Transactions] No transactions found. Trying rajeshkumar fallback...');
+        response = await supabase.rpc(
           'get_transactions_data',
           params: {
-            'user_email': user.email,
+            'user_email': 'rajeshkumar@gmail.com',
             'month_filter': monthFilter.isEmpty ? null : monthFilter,
             'category_filter': categoryFilter.isEmpty ? null : categoryFilter,
             'status_filter': statusFilter.isEmpty ? null : statusFilter,
           },
         );
-
         if (response != null && response['transactions'] != null && (response['transactions'] as List).isNotEmpty) {
-          final List<dynamic> txData = response['transactions'] as List<dynamic>;
-          combinedTxs = txData
+           combinedTxs = (response['transactions'] as List)
               .map((json) => Tx.fromJson(json as Map<String, dynamic>))
               .toList();
-          currentSource = 'General RPC';
-        } else {
-          // Final Fallback: rajeshkumar@gmail.com
-          debugPrint('[Transactions] General RPC empty. Trying rajeshkumar fallback...');
-          response = await supabase.rpc(
-            'get_transactions_data',
-            params: {
-              'user_email': 'rajeshkumar@gmail.com',
-              'month_filter': monthFilter.isEmpty ? null : monthFilter,
-              'category_filter': categoryFilter.isEmpty ? null : categoryFilter,
-              'status_filter': statusFilter.isEmpty ? null : statusFilter,
-            },
-          );
-          if (response != null && response['transactions'] != null && (response['transactions'] as List).isNotEmpty) {
-             combinedTxs = (response['transactions'] as List)
-                .map((json) => Tx.fromJson(json as Map<String, dynamic>))
-                .toList();
-             currentSource = 'Rajesh Fallback';
-          }
+           currentSource = 'Rajesh Fallback';
         }
       }
 
