@@ -1,0 +1,82 @@
+===============================================================
+🛡️  SECUREWEALTH - FRAUD HOTSPOT INTELLIGENCE ENGINE TESTS
+===============================================================
+
+--- SCENARIO 1: Non-Hotspot Area Transaction ---
+
+[Velocity Monitor]
+Customer: CUST_TEST_1
+Transactions in active window: 1
+Historical avg: 4.0/day
+Window: 5 mins
+Velocity score: 0.00
+Weighted contribution: 0
+Final fraud score: 0
+
+Hotspot Area Flagged: NO ✅ (Safe)
+Risk Score: 0
+Breakdown keys: [
+  'amount',
+  'time',
+  'device',
+  'location',
+  'hotspot',
+  'frequency',
+  'velocity'
+]
+Breakdown hotspot value: 0
+---------------------------------------------------------------
+
+--- SCENARIO 2: Hotspot Area Transaction (110001) ---
+
+[Velocity Monitor]
+Customer: CUST_TEST_1
+Transactions in active window: 1
+Historical avg: 4.0/day
+Window: 5 mins
+Velocity score: 0.00
+Weighted contribution: 0
+Final fraud score: 16
+
+Hotspot Area Flagged: YES ✅
+Flags: HOTSPOT_AREA
+Reasons: Transaction originated from New Delhi Central, a critical fraud hotspot
+Risk Score: 16
+Breakdown details: {
+  amount: 0,
+  time: 0,
+  device: 0,
+  location: 0,
+  hotspot: 18.4,
+  frequency: 0,
+  velocity: 0
+}
+---------------------------------------------------------------
+
+--- SCENARIO 3: Multiple Anomalies & Normalization Test ---
+
+[Velocity Monitor]
+Customer: CUST_TEST_1
+Transactions in active window: 1
+Historical avg: 4.0/day
+Window: 5 mins
+Velocity score: 0.00
+Weighted contribution: 0
+Final fraud score: 58
+
+Flags triggered: AMOUNT_ANOMALY, NEW_DEVICE, NEW_LOCATION, HOTSPOT_AREA
+Risk Score: 58
+Breakdown details: {
+  amount: 30.88,
+  time: 0,
+  device: 21.25,
+  location: 10.5,
+  hotspot: 18.4,
+  frequency: 0,
+  velocity: 0
+}
+Sum of contributions from breakdown: 81.03
+Verification Success: Normalization constant and breakdown correctly calculated! ✅
+===============================================================
+✅ ALL FRAUD DETECTION INTELLIGENCE TESTS PASSED!
+===============================================================
