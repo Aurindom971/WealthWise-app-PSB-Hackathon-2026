@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:path_provider/path_provider.dart';
+import 'otp_security_service.dart';
 
 class SecurityService {
   SecurityService._privateConstructor();
@@ -93,6 +94,7 @@ class SecurityService {
       "[Security] Recorded failure for $cusId. Total attempts: ${_attempts[cusId]!.$1}",
     );
     _saveAttempts();
+    OtpSecurityService.instance.recordFailedAttempt();
   }
 
   void resetAttempts(String cusId) {
@@ -235,6 +237,7 @@ class SecurityService {
     debugPrint("[Security] Inactivity timeout reached. Triggering Logout.");
 
     try {
+      await OtpSecurityService.instance.recordLogout();
       await Supabase.instance.client.auth.signOut();
 
       final context = navigatorKey.currentContext;
