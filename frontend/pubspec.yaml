@@ -37,6 +37,7 @@ dependencies:
   geocoding: ^2.1.0
   screen_protector: ^1.5.1
   crypto: ^3.0.7
+  local_auth: ^3.0.2
 
 dev_dependencies:
   flutter_test:

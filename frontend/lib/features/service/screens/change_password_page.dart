@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../home/screens/notifications_screen.dart';
+import '../../../../core/services/otp_security_service.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -128,6 +129,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       await supabase.auth.updateUser(
         UserAttributes(password: newPass),
       );
+      await OtpSecurityService.instance.recordPasswordChanged();
 
       if (mounted) {
         setState(() => _isVerifying = false);
