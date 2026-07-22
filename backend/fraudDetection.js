@@ -24,11 +24,14 @@
  *   - Reinforcement-based fraud scoring (Dynamically adapting weights)
  */
 
+const hotspotDB = require('./data/fraudHotspots.json');
+
 const rules = [
   amountAnomaly,
   timeAnomaly,
   deviceAnomaly,
   locationAnomaly,
+  hotspotAnomaly,
   frequencyAnomaly,
   velocityAnomaly,
 ];
@@ -140,6 +143,24 @@ function locationAnomaly(txn, profile) {
   };
 }
 
+// -------------------- 5. Hotspot --------------------
+function hotspotAnomaly(txn, profile) {
+  if (!txn.pincode) return null;
+
+  const hotspot = hotspotDB.find(
+    area => area.pincode === txn.pincode
+  );
+
+  if (!hotspot) return null;
+
+  return {
+    score: hotspot.score,
+    weight: 20,
+    reason: `Transaction originated from ${hotspot.district}, a ${hotspot.riskLevel} fraud hotspot`,
+    flag: 'HOTSPOT_AREA'
+  };
+}
+
 // -------------------- 5. Frequency --------------------
 function frequencyAnomaly(txn, profile) {
   if (!profile.avgDailyTransactions || !txn.dailyTransactionCount) return null;
@@ -177,9 +198,9 @@ function velocityAnomaly(txn, profile) {
   const exists = allTxns.some(t => {
     if (!t.timestamp) return false;
     return Math.abs(new Date(t.timestamp).getTime() - currentTxnTime) < 500 && // close timestamp (within 0.5s)
-           parseFloat(t.amount) === parseFloat(txn.amount) &&
-           (t.location || '').toLowerCase() === (txn.location || '').toLowerCase() &&
-           (t.category || '').toLowerCase() === (txn.category || '').toLowerCase();
+      parseFloat(t.amount) === parseFloat(txn.amount) &&
+      (t.location || '').toLowerCase() === (txn.location || '').toLowerCase() &&
+      (t.category || '').toLowerCase() === (txn.category || '').toLowerCase();
   });
   if (!exists) {
     allTxns.push({
@@ -213,12 +234,12 @@ function velocityAnomaly(txn, profile) {
     }
     const prev = uniqueTxns[uniqueTxns.length - 1];
     const timeDiff = Math.abs(new Date(current.timestamp).getTime() - new Date(prev.timestamp).getTime()) / 1000;
-    
+
     const isDuplicate = timeDiff <= 3 &&
-                        parseFloat(current.amount) === parseFloat(prev.amount) &&
-                        (current.location || '').toLowerCase() === (prev.location || '').toLowerCase() &&
-                        (current.category || '').toLowerCase() === (prev.category || '').toLowerCase();
-    
+      parseFloat(current.amount) === parseFloat(prev.amount) &&
+      (current.location || '').toLowerCase() === (prev.location || '').toLowerCase() &&
+      (current.category || '').toLowerCase() === (prev.category || '').toLowerCase();
+
     if (!isDuplicate) {
       uniqueTxns.push(current);
     }
@@ -295,7 +316,7 @@ function detectFraud(txn, profile) {
   }
 
   // 🔥 FINAL FIX: balanced normalization
-  const MAX_WEIGHT = 135; // 35 + 20 + 25 + 15 + 15 + 25 = 135
+  const MAX_WEIGHT = 155; // 35 + 20 + 25 + 15 + 20 + 15 + 25 = 155
 
   const normalized = totalWeightedScore / MAX_WEIGHT;
 
@@ -306,7 +327,7 @@ function detectFraud(txn, profile) {
 
   // Velocity specific metrics for logging
   const velocityResult = triggered.find(t => t.flag === 'VELOCITY_ATTACK');
-  
+
   // Calculate rolling count for logging purposes (including the current txn)
   let allTxns = [];
   if (profile.recentTransactions && Array.isArray(profile.recentTransactions)) {
@@ -338,11 +359,49 @@ function detectFraud(txn, profile) {
   // Optionally trigger re-authentication if velocity attack is detected
   const reauth_required = !!velocityResult;
 
+  // 📊 Contribution breakdown for each signal (amount, time, device, location, hotspot, frequency, velocity)
+  const breakdown = {
+    amount: 0,
+    time: 0,
+    device: 0,
+    location: 0,
+    hotspot: 0,
+    frequency: 0,
+    velocity: 0
+  };
+
+  for (const t of triggered) {
+    switch (t.flag) {
+      case 'AMOUNT_ANOMALY':
+        breakdown.amount = parseFloat((t.score * t.weight).toFixed(2));
+        break;
+      case 'UNUSUAL_TIME':
+        breakdown.time = parseFloat((t.score * t.weight).toFixed(2));
+        break;
+      case 'NEW_DEVICE':
+        breakdown.device = parseFloat((t.score * t.weight).toFixed(2));
+        break;
+      case 'NEW_LOCATION':
+        breakdown.location = parseFloat((t.score * t.weight).toFixed(2));
+        break;
+      case 'HOTSPOT_AREA':
+        breakdown.hotspot = parseFloat((t.score * t.weight).toFixed(2));
+        break;
+      case 'HIGH_FREQUENCY':
+        breakdown.frequency = parseFloat((t.score * t.weight).toFixed(2));
+        break;
+      case 'VELOCITY_ATTACK':
+        breakdown.velocity = parseFloat((t.score * t.weight).toFixed(2));
+        break;
+    }
+  }
+
   return {
     risk_score,
     reasons: triggered.map(t => t.reason),
     flags: triggered.map(t => t.flag),
-    reauth_required
+    reauth_required,
+    breakdown
   };
 }
 
