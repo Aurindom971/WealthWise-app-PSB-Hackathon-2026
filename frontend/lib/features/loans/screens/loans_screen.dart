@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import '../../../providers/auth_provider.dart';
 import '../../home/screens/home_screen.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
 import '../widgets/active_loan_card.dart';
@@ -59,8 +60,8 @@ class _LoansScreenState extends State<LoansScreen> {
 
   Future<void> _fetchDashboardData() async {
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) {
+      final userEmail = AuthProvider.instance.currentUser?['email'] ?? _supabase.auth.currentUser?.email;
+      if (userEmail == null || userEmail.toString().isEmpty) {
         setState(() => _isLoading = false);
         return;
       }

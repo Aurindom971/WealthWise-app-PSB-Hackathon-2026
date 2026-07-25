@@ -40,6 +40,15 @@ app.get('/', (req, res) => {
   res.send('Backend running');
 });
 
+// ======================================================
+// 🔐 AUTHENTICATION & SESSION TOKENS (PHASE 12 / 16)
+// ======================================================
+const authController = require('./controllers/authController');
+const { sessionMiddleware } = require('./middleware/sessionMiddleware');
+app.post('/login', authController.login);
+app.post('/logout', sessionMiddleware, authController.logout);
+app.post('/refresh-session', sessionMiddleware, authController.refreshSession);
+
 
 // ======================================================
 // 🔥 FRAUD CHECK (PHASE 6)
@@ -665,7 +674,7 @@ app.post('/rag-search', async (req, res) => {
 // ======================================================
 
 // 1. POST /financial-insights
-app.post('/financial-insights', async (req, res) => {
+app.post('/financial-insights', sessionMiddleware, async (req, res) => {
   const { cus_id } = req.body;
   if (!cus_id) {
     return res.status(400).json({ success: false, error: 'cus_id is required' });
@@ -685,7 +694,7 @@ app.post('/financial-insights', async (req, res) => {
 });
 
 // 2. POST /financial-health
-app.post('/financial-health', async (req, res) => {
+app.post('/financial-health', sessionMiddleware, async (req, res) => {
   const { cus_id } = req.body;
   if (!cus_id) {
     return res.status(400).json({ success: false, error: 'cus_id is required' });
@@ -700,7 +709,7 @@ app.post('/financial-health', async (req, res) => {
 });
 
 // 3. POST /suspicious-transactions
-app.post('/suspicious-transactions', async (req, res) => {
+app.post('/suspicious-transactions', sessionMiddleware, async (req, res) => {
   const { cus_id } = req.body;
   if (!cus_id) {
     return res.status(400).json({ success: false, error: 'cus_id is required' });
@@ -715,7 +724,7 @@ app.post('/suspicious-transactions', async (req, res) => {
 });
 
 // 4. POST /expense-analysis
-app.post('/expense-analysis', async (req, res) => {
+app.post('/expense-analysis', sessionMiddleware, async (req, res) => {
   const { cus_id } = req.body;
   if (!cus_id) {
     return res.status(400).json({ success: false, error: 'cus_id is required' });
@@ -731,7 +740,7 @@ app.post('/expense-analysis', async (req, res) => {
 });
 
 // 5. POST /savings-advice
-app.post('/savings-advice', async (req, res) => {
+app.post('/savings-advice', sessionMiddleware, async (req, res) => {
   const { cus_id } = req.body;
   if (!cus_id) {
     return res.status(400).json({ success: false, error: 'cus_id is required' });
@@ -759,7 +768,7 @@ const { getOptionChains } = require('./services/optionChainService');
 const { getIPOs } = require('./services/ipoService');
 
 // GET /api/investments/stocks
-app.get('/api/investments/stocks', async (req, res) => {
+app.get('/api/investments/stocks', sessionMiddleware, async (req, res) => {
   try {
     const stocks = await getStocks();
     return res.json(stocks);
@@ -770,7 +779,7 @@ app.get('/api/investments/stocks', async (req, res) => {
 });
 
 // GET /api/investments/funds
-app.get('/api/investments/funds', async (req, res) => {
+app.get('/api/investments/funds', sessionMiddleware, async (req, res) => {
   try {
     const funds = await getMutualFunds();
     return res.json(funds);
@@ -781,7 +790,7 @@ app.get('/api/investments/funds', async (req, res) => {
 });
 
 // GET /api/investments/options
-app.get('/api/investments/options', async (req, res) => {
+app.get('/api/investments/options', sessionMiddleware, async (req, res) => {
   try {
     const options = await getOptionChains();
     return res.json(options);
@@ -792,7 +801,7 @@ app.get('/api/investments/options', async (req, res) => {
 });
 
 // GET /api/investments/ipos
-app.get('/api/investments/ipos', async (req, res) => {
+app.get('/api/investments/ipos', sessionMiddleware, async (req, res) => {
   try {
     const ipos = await getIPOs();
     return res.json(ipos);

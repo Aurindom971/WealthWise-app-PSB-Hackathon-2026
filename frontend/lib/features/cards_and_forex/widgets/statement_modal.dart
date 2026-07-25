@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../providers/auth_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -83,8 +84,8 @@ class _StatementModalState extends State<StatementModal> {
     setState(() => _isAutoFetching = true);
     try {
       final supabase = Supabase.instance.client;
-      final userEmail = supabase.auth.currentUser?.email;
-      if (userEmail == null) return;
+      final userEmail = AuthProvider.instance.currentUser?['email'] ?? supabase.auth.currentUser?.email;
+      if (userEmail == null || userEmail.toString().isEmpty) return;
 
       final response = await supabase.rpc(
         'get_cards_data',

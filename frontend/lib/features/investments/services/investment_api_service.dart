@@ -1,16 +1,14 @@
-import 'dart:async';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import '../../../../services/api_service.dart';
 
 class InvestmentApiService {
-  static const String baseUrl = "http://172.31.234.76:3000";
+  static String get baseUrl => ApiService.baseUrl;
 
   /// Fetches suggested stocks from the backend server
   Future<List<Map<String, dynamic>>> fetchSuggestedStocks() async {
     try {
-      final response = await http
-          .get(Uri.parse("$baseUrl/api/investments/stocks"))
-          .timeout(const Duration(seconds: 10));
+      final response = await ApiService.instance
+          .get("/api/investments/stocks");
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -91,9 +89,8 @@ class InvestmentApiService {
   /// Fetches a list of Live and Upcoming IPOs
   Future<List<Map<String, dynamic>>> fetchLiveIpos() async {
     try {
-      final response = await http
-          .get(Uri.parse("$baseUrl/api/investments/ipos"))
-          .timeout(const Duration(seconds: 10));
+      final response = await ApiService.instance
+          .get("/api/investments/ipos");
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -161,9 +158,8 @@ class InvestmentApiService {
   /// Fetches a list of Top Performing Mutual Funds
   Future<List<Map<String, dynamic>>> fetchTopFunds() async {
     try {
-      final response = await http
-          .get(Uri.parse("$baseUrl/api/investments/funds"))
-          .timeout(const Duration(seconds: 10));
+      final response = await ApiService.instance
+          .get("/api/investments/funds");
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);

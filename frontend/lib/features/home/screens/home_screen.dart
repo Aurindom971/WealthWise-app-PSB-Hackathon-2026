@@ -4,6 +4,7 @@ import 'transaction_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/services/panic_mode_service.dart';
+import '../../../providers/auth_provider.dart';
 import 'package:wealthwise/features/cards_and_forex/screens/cards_and_forex_screen.dart';
 import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
 import 'package:wealthwise/features/loans/screens/loans_screen.dart';
@@ -25,6 +26,7 @@ import 'package:wealthwise/features/profile/profile_page.dart';
 import 'package:wealthwise/features/service/services_page.dart';
 import 'package:wealthwise/features/ai_assistant/screens/wealthwise_ai_screen.dart';
 import '../../../services/security_service.dart';
+
 
 enum LoanSubState {
   main,
@@ -61,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // Sub-navigation state for Loans
   bool _isShowingLoans = false;
   bool _isShowingServices = false;
+
   LoanSubState _loanSubState = LoanSubState.main;
   String? _selectedLoanType;
   String? _selectedLoanId;
@@ -141,15 +144,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
     try {
       final supabase = Supabase.instance.client;
-      final user = supabase.auth.currentUser;
+      final userEmail = AuthProvider.instance.currentUser?['email'] ?? supabase.auth.currentUser?.email;
 
-      if (user == null) {
+      if (userEmail == null || userEmail.toString().isEmpty) {
         debugPrint('[Home] Error: No authenticated user found.');
         setState(() => _isLoading = false);
         return;
       }
 
-      final userEmail = user.email;
       debugPrint('[Home] Fetching get_home_data for: $userEmail');
 
       final response = await supabase.rpc(
@@ -278,22 +280,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         onBack: () =>
                             setState(() => _isShowingCardsAndForex = false),
                       )
-                    : (_isShowingBillAndRecharge
-                          ? _buildBillAndRechargeContent()
-                          : (_isShowingLoans
-                                ? _buildLoansContent()
-                                : (_isShowingServices
-                                      ? ServicesPage()
-                                      : (_isShowingWealthWiseAI
-                                            ? WealthWiseAIScreen(
-                                                onBack: () => setState(
-                                                  () => _isShowingWealthWiseAI =
-                                                      false,
-                                                ),
-                                              )
-                                            : (_isShowingDashboard
-                                                  ? _buildDashboard()
-                                                  : _buildTabContent()))))),
+                    : _isShowingBillAndRecharge
+                        ? _buildBillAndRechargeContent()
+                        : _isShowingLoans
+                            ? _buildLoansContent()
+                            : _isShowingServices
+                                ? const ServicesPage()
+                                : _isShowingWealthWiseAI
+                                    ? WealthWiseAIScreen(
+                                        onBack: () => setState(
+                                            () => _isShowingWealthWiseAI = false),
+                                      )
+                                    : (_isShowingDashboard
+                                        ? _buildDashboard()
+                                        : _buildTabContent()),
               ),
             ),
             BottomNav(

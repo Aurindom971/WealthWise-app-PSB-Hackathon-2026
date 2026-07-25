@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import '../../../providers/auth_provider.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
 import '../widgets/loan_header.dart';
 import '../widgets/active_loan_card.dart';
@@ -31,8 +32,8 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen> {
 
   Future<void> _fetchActiveLoans() async {
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) {
+      final userEmail = AuthProvider.instance.currentUser?['email'] ?? _supabase.auth.currentUser?.email;
+      if (userEmail == null || userEmail.toString().isEmpty) {
         setState(() => _isLoading = false);
         return;
       }
@@ -41,7 +42,7 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen> {
       // Fetch active loans using User Email directly
       final response = await _supabase.rpc(
         'get_user_loans_dashboard',
-        params: {'p_email': user.email},
+        params: {'p_email': userEmail},
       );
 
       if (response != null) {

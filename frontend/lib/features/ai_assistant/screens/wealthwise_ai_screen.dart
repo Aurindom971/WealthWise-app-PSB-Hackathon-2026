@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
 import '../../../services/ai_service.dart';
+import '../../../providers/auth_provider.dart';
 
 class ChatMessage {
   final String text;
@@ -45,13 +46,24 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
 
   Future<void> _loadCustomerId() async {
     try {
+      final authUser = AuthProvider.instance.currentUser;
+      if (authUser != null && authUser['cus_id'] != null) {
+        if (mounted) {
+          setState(() {
+            _cusId = authUser['cus_id'];
+            debugPrint('SAGE Loaded customer ID from AuthProvider: $_cusId');
+          });
+        }
+        return;
+      }
+
       final supabase = Supabase.instance.client;
-      final user = supabase.auth.currentUser;
-      if (user != null && user.email != null) {
+      final userEmail = authUser?['email'] ?? supabase.auth.currentUser?.email;
+      if (userEmail != null) {
         final res = await supabase
             .from('users')
             .select('cus_id')
-            .eq('email', user.email!)
+            .eq('email', userEmail)
             .maybeSingle();
         if (res != null && res['cus_id'] != null) {
           if (mounted) {
