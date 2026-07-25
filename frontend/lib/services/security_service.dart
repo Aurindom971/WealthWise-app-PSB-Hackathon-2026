@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../providers/auth_provider.dart';
 import 'local_db_service.dart';
 
 class SecurityService {
@@ -121,8 +123,8 @@ class SecurityService {
       await updateSmartLockSettings({'card_freeze_enabled': isFrozen});
 
       // 2. Fetch all cards via RPC to bypass direct table access restrictions
-      final userEmail = _supabase.auth.currentUser?.email;
-      if (userEmail == null) return;
+      final userEmail = AuthProvider.instance.currentUser?['email'] ?? _supabase.auth.currentUser?.email;
+      if (userEmail == null || userEmail.toString().isEmpty) return;
 
       final cardsResponse = await _supabase.rpc('get_cards_data', params: {
         'user_email': userEmail,
@@ -153,8 +155,8 @@ class SecurityService {
   /// Synchronizes ATM limits across all cards when ATM block is toggled
   static Future<void> syncGlobalAtmLimits(bool block) async {
     try {
-      final userEmail = _supabase.auth.currentUser?.email;
-      if (userEmail == null) return;
+      final userEmail = AuthProvider.instance.currentUser?['email'] ?? _supabase.auth.currentUser?.email;
+      if (userEmail == null || userEmail.toString().isEmpty) return;
 
       if (block) {
         // --- PHASE: BLOCKING & BACKUP ---

@@ -4,6 +4,7 @@ import '../../home/widgets/home_navigation_widgets.dart';
 import '../widgets/loan_header.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/utils/security_validator.dart';
+import '../../../providers/auth_provider.dart';
 
 class ApplyLoanScreen extends StatefulWidget {
   final String? initialLoanType;
@@ -116,8 +117,8 @@ class _ApplyLoanScreenState extends State<ApplyLoanScreen> {
     setState(() => _isSubmitting = true);
     
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) throw Exception("User not logged in");
+      final userEmail = AuthProvider.instance.currentUser?['email'] ?? _supabase.auth.currentUser?.email;
+      if (userEmail == null || userEmail.toString().isEmpty) throw Exception("User not logged in");
 
       // Generate Unique ID
       final typeCode = _selectedLoanType?.toLowerCase().contains('personal') ?? false ? 'PL' 

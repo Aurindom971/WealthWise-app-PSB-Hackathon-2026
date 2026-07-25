@@ -14,6 +14,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../../services/security_service.dart';
+import '../../../providers/auth_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // THEME
@@ -731,11 +732,11 @@ class _SecurityActivitySheetState extends State<_SecurityActivitySheet> {
 
   Future<void> _fetchActivity() async {
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) throw Exception("User not logged in");
+      final userEmail = AuthProvider.instance.currentUser?['email'] ?? _supabase.auth.currentUser?.email;
+      if (userEmail == null || userEmail.toString().isEmpty) throw Exception("User not logged in");
 
       final response = await _supabase.rpc('get_security_activity', params: {
-        'p_email': user.email,
+        'p_email': userEmail,
       });
 
       if (response != null) {

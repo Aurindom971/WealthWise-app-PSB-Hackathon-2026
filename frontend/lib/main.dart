@@ -7,6 +7,10 @@ import 'features/home/screens/home_screen.dart';
 import 'features/send/screens/send_transfer_screen.dart';
 import 'core/services/security_service.dart';
 
+
+import 'package:provider/provider.dart';
+import 'providers/auth_provider.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -31,11 +35,21 @@ Future<void> main() async {
   // Initialize security service (loads persisted attempts)
   await SecurityService.instance.initialize();
 
-  runApp(const WealthWiseApp());
+  // Always start fresh — clear any stored session on app launch
+  // User must authenticate via login screen every time the app starts
+  await AuthProvider.instance.clearSession();
+
+  runApp(
+    ChangeNotifierProvider<AuthProvider>.value(
+      value: AuthProvider.instance,
+      child: const WealthWiseApp(initialRoute: '/login'),
+    ),
+  );
 }
 
 class WealthWiseApp extends StatelessWidget {
-  const WealthWiseApp({super.key});
+  final String initialRoute;
+  const WealthWiseApp({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
@@ -50,8 +64,7 @@ class WealthWiseApp extends StatelessWidget {
         debugShowMaterialGrid: false,
         checkerboardRasterCacheImages: false,
         checkerboardOffscreenLayers: false,
-        // Always redirect to login on start as requested
-        home: const LoginScreen(),
+        initialRoute: initialRoute,
         routes: {
           '/login': (context) => const LoginScreen(),
           '/home': (context) {

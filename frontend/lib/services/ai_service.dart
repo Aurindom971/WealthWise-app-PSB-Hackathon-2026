@@ -1,12 +1,8 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../core/services/panic_mode_service.dart';
+import 'api_service.dart';
 
 class AIService {
-  // Use http://192.168.1.10 for Android Emulator
-  // Use http://localhost:3000 for iOS Simulator, Web, or Desktop
-  static const String baseUrl = "http://192.168.1.10:3000";
-
   /// Calls the general AI chat endpoint (New Implementation)
   static Future<String> getChatReply({
     required String message,
@@ -15,21 +11,18 @@ class AIService {
     if (PanicModeService.instance.isPanicMode) {
       return PanicModeService.instance.getMockAIChatReply(message);
     }
-    final url = "$baseUrl/ai-chat";
-    final payload = jsonEncode({"message": message, "cus_id": cusId});
+    final payload = {"message": message, "cus_id": cusId};
     try {
       print("[SAGE REQUEST]");
       print("message=$message");
       print("cus_id=$cusId");
 
-      print("[AI Service Request] URL: $url | Payload: $payload");
-      final response = await http
+      print("[AI Service Request] Payload: $payload");
+      final response = await ApiService.instance
           .post(
-            Uri.parse(url),
-            headers: {"Content-Type": "application/json"},
+            "/ai-chat",
             body: payload,
-          )
-          .timeout(const Duration(seconds: 30));
+          );
 
       print("[AI Service Response] Status: ${response.statusCode}");
 
@@ -54,17 +47,14 @@ class AIService {
     required String cusId,
     required Map<String, dynamic> txn,
   }) async {
-    final url = "$baseUrl/fraud-check";
-    final payload = jsonEncode({"cus_id": cusId, "txn": txn});
+    final payload = {"cus_id": cusId, "txn": txn};
     try {
-      print("[AI Service Request] URL: $url | Payload: $payload");
-      final response = await http
+      print("[AI Service Request] Payload: $payload");
+      final response = await ApiService.instance
           .post(
-            Uri.parse(url),
-            headers: {"Content-Type": "application/json"},
+            "/fraud-check",
             body: payload,
-          )
-          .timeout(const Duration(seconds: 20));
+          );
 
       print("[AI Service Response] Status: ${response.statusCode}");
 

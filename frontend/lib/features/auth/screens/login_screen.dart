@@ -12,6 +12,7 @@ import '../../../core/utils/security_validator.dart';
 import '../screens/helpdesk_screen.dart';
 import '../screens/safety_screen.dart';
 import '../screens/findatm_screen.dart';
+import '../../../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -134,17 +135,12 @@ class _LoginScreenState extends State<LoginScreen> {
           return;
         }
 
-        // Perform Supabase Auth
-        final String supabasePassword = enteredSecret;
+        // Perform AuthProvider Auth (Task 2)
+        final String? loginError = await AuthProvider.instance.login(email, enteredSecret);
 
-        final response = await _supabase.auth.signInWithPassword(
-          email: email,
-          password: supabasePassword,
-        );
-
-        if (response.user == null) {
+        if (loginError != null) {
           SecurityService.instance.recordFailedAttempt(cusId);
-          _showError("AUTHENTICATION: Secure login could not be established. Check credentials.");
+          _showError("AUTHENTICATION: $loginError");
           return;
         }
 

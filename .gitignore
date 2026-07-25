@@ -34,3 +34,6 @@ windows/flutter/ephemeral/
 
 # Misc
 *.pdb
+*.mp4
+backend/assets/videos/
+

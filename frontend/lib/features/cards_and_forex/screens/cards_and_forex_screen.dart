@@ -9,6 +9,7 @@ import '../widgets/animated_card_stack.dart';
 import '../widgets/payment_cards.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../services/security_service.dart';
+import '../../../providers/auth_provider.dart';
 import 'package:intl/intl.dart';
 
 class CardsAndForexScreen extends StatefulWidget {
@@ -54,8 +55,8 @@ class _CardsAndForexScreenState extends State<CardsAndForexScreen> {
   Future<void> _fetchCards() async {
     try {
       final supabase = Supabase.instance.client;
-      final userEmail = supabase.auth.currentUser?.email;
-      if (userEmail == null) return;
+      final userEmail = AuthProvider.instance.currentUser?['email'] ?? supabase.auth.currentUser?.email;
+      if (userEmail == null || userEmail.toString().isEmpty) return;
 
       final response = await supabase.rpc('get_cards_data', params: {
         'user_email': userEmail,

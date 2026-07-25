@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import '../widgets/home_navigation_widgets.dart';
 import '../../../core/services/panic_mode_service.dart';
+import '../../../providers/auth_provider.dart';
 
 // ---------- Model ----------
 class Tx {
@@ -181,8 +182,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       return;
     }
     try {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final userEmail = AuthProvider.instance.currentUser?['email'] ?? supabase.auth.currentUser?.email;
+      if (userEmail == null || userEmail.toString().isEmpty) return;
 
       // 1. Map Months: "Apr 2026" -> "2026-04"
       final monthFilter = _filters['months']!.map((m) {
@@ -222,7 +223,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
       debugPrint('[Transactions] Step 1: Fetching cards to get cus_id and card_ids...');
       final cardsResponse = await supabase.rpc('get_cards_data', params: {
-        'user_email': user.email,
+        'user_email': userEmail,
       });
 
       final List<dynamic> cards = (cardsResponse != null && cardsResponse['cards'] != null)
@@ -279,7 +280,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
       var response = await supabase.rpc(
         'get_transactions_data',
         params: {
-          'user_email': user.email,
+          'user_email': userEmail,
           'month_filter': monthFilter.isEmpty ? null : monthFilter,
           'category_filter': categoryFilter.isEmpty ? null : categoryFilter,
           'status_filter': statusFilter.isEmpty ? null : statusFilter,
@@ -337,7 +338,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
         if (_all.isEmpty) {
           _all = _getMockTransactions();
         }
-        _userEmail = user.email;
+        _userEmail = userEmail;
       });
 
       debugPrint('[Transactions] Total processed: ${_all.length} from $_dataSource');
