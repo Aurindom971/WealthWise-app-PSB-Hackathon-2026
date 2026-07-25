@@ -1,0 +1,103 @@
+===============================================================
+🛡️  SECUREWEALTH TWIN - TRANSACTION VELOCITY MONITOR TEST SUITE
+===============================================================
+
+--- SCENARIO A: Rapid Transaction Burst (3 in 2 mins) ---
+
+[Velocity Monitor]
+Customer: CUST_V1
+Transactions in active window: 3
+Historical avg: 4.0/day
+Window: 5 mins
+Velocity score: 0.25
+Weighted contribution: 6
+Final fraud score: 20
+
+Anomaly Triggered: YES ✅
+Flags: AMOUNT_ANOMALY, VELOCITY_ATTACK
+Reasons: Transaction amount (₹1,500) is 0.3× the user's average (₹5,000); 3 transactions detected within 5 minutes — unusual for this user
+Risk Score: 20
+---------------------------------------------------------------
+
+--- SCENARIO B: Normal Activity Spaced Out (2 in 20 mins) ---
+
+[Velocity Monitor]
+Customer: CUST_V1
+Transactions in active window: 1
+Historical avg: 4.0/day
+Window: 5 mins
+Velocity score: 0.00
+Weighted contribution: 0
+Final fraud score: 11
+
+Anomaly Triggered: NO ✅ (Safe)
+Flags: AMOUNT_ANOMALY
+Risk Score: 11
+---------------------------------------------------------------
+
+--- SCENARIO C: Rapid High-Value Transfers (Burst + High Amount) ---
+
+[Velocity Monitor]
+Customer: CUST_V1
+Transactions in active window: 3
+Historical avg: 4.0/day
+Window: 5 mins
+Velocity score: 0.25
+Weighted contribution: 6
+Final fraud score: 32
+
+Anomaly Triggered: YES ✅
+Amount Anomaly Triggered: YES ✅
+Flags: AMOUNT_ANOMALY, VELOCITY_ATTACK
+Reasons: Transaction amount (₹60,000) is 12.0× the user's average (₹5,000); 3 transactions detected within 5 minutes — unusual for this user
+Risk Score: 32 (Should be highly elevated due to multiple signals)
+---------------------------------------------------------------
+
+--- SCENARIO D: Rapid Low-Value Micro-Transactions (Micro-Attack) ---
+
+[Velocity Monitor]
+Customer: CUST_V1
+Transactions in active window: 3
+Historical avg: 4.0/day
+Window: 5 mins
+Velocity score: 0.25
+Weighted contribution: 6
+Final fraud score: 24
+
+Anomaly Triggered: YES ✅
+Flags: AMOUNT_ANOMALY, VELOCITY_ATTACK
+Reasons: Transaction amount (₹8) is 0.0× the user's average (₹5,000); 3 transactions detected within 5 minutes — unusual for this user
+Risk Score: 24
+---------------------------------------------------------------
+
+--- SCENARIO E: Transactions Outside Rolling 5-min Window ---
+
+[Velocity Monitor]
+Customer: CUST_V1
+Transactions in active window: 1
+Historical avg: 4.0/day
+Window: 5 mins
+Velocity score: 0.00
+Weighted contribution: 0
+Final fraud score: 15
+
+Anomaly Triggered: NO ✅ (Safe)
+Flags: AMOUNT_ANOMALY
+Risk Score: 15
+---------------------------------------------------------------
+
+--- BONUS SCENARIO: Accidental Retry / Double-Click Deduplication ---
+
+[Velocity Monitor]
+Customer: CUST_V1
+Transactions in active window: 3
+Historical avg: 4.0/day
+Window: 5 mins
+Velocity score: 0.00
+Weighted contribution: 0
+Final fraud score: 18
+
+Anomaly Triggered: NO ✅ (Deduplicated successfully!)
+Flags: AMOUNT_ANOMALY
+===============================================================
+

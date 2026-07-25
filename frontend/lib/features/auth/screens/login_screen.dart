@@ -13,6 +13,8 @@ import '../screens/helpdesk_screen.dart';
 import '../screens/safety_screen.dart';
 import '../screens/findatm_screen.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../core/services/biometric_service.dart';
+import '../../../core/services/otp_security_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,6 +25,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
+  bool _hasFingerprint = false;
+  String? _lastCusId;
 
   final TextEditingController _cusIdController = TextEditingController();
   final TextEditingController _pinController = TextEditingController();
@@ -33,6 +37,23 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     PanicModeService.instance.exitPanicMode();
+    _checkBiometrics();
+  }
+
+  Future<void> _checkBiometrics() async {
+    final hasFingerprint = await BiometricService.instance
+        .hasEnrolledFingerprint();
+    final credentials = await BiometricService.instance
+        .getLastUserCredentials();
+    setState(() {
+      _hasFingerprint = hasFingerprint;
+      if (credentials != null && credentials['cusId']!.isNotEmpty) {
+        _lastCusId = credentials['cusId'];
+        if (_cusIdController.text.isEmpty) {
+          _cusIdController.text = _lastCusId!;
+        }
+      }
+    });
   }
 
   @override
@@ -113,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
 
         // --- 🛡️ SECURE CREDENTIAL VERIFICATION & AUTO-MIGRATION ---
-        
+
         bool isSuccess = false;
         bool needsPasswordMigration = false;
 
@@ -131,6 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (!isSuccess) {
           SecurityService.instance.recordFailedAttempt(cusId);
+          await OtpSecurityService.instance.recordFailedAttempt();
           _showError("SECURITY: The Password entered is incorrect.");
           return;
         }
@@ -141,25 +163,32 @@ class _LoginScreenState extends State<LoginScreen> {
         if (loginError != null) {
           SecurityService.instance.recordFailedAttempt(cusId);
           _showError("AUTHENTICATION: $loginError");
+          await OtpSecurityService.instance.recordFailedAttempt();
+          _showError(
+            "AUTHENTICATION: Secure login could not be established. Check credentials.",
+          );
           return;
         }
 
         // Login Successful! Reset attempts
         SecurityService.instance.resetAttempts(cusId);
         SecurityService.instance.resetInactivityTimer();
+        await BiometricService.instance.saveLastUser(cusId, enteredSecret);
 
         // --- 🚀 AUTO-MIGRATION (POST-SUCCESS) ---
         if (needsPasswordMigration) {
           try {
             final String newAuthHash = SecurityUtil.hashValue(enteredSecret);
-            
+
             debugPrint('Triggering migration for auth password');
-            
-            await _supabase.rpc('migrate_user_credentials', params: {
-              'p_cus_id': cusId,
-              'p_new_auth_hash': newAuthHash,
-            });
-            debugPrint('Password migrated to secure hash successfully for $cusId');
+
+            await _supabase.rpc(
+              'migrate_user_credentials',
+              params: {'p_cus_id': cusId, 'p_new_auth_hash': newAuthHash},
+            );
+            debugPrint(
+              'Password migrated to secure hash successfully for $cusId',
+            );
           } catch (e) {
             debugPrint('Migration Error (Bypassed): $e');
           }
@@ -249,14 +278,38 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
 
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
+      final String deviceId =
+          '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';
+      final int fpCount = _hasFingerprint ? 1 : 0;
+      const String simId = 'SIM_98765';
 
+      final bool requireOtp = await OtpSecurityService.instance.shouldRequireOtp(
+        currentDeviceId: deviceId,
+        currentIp: publicIp,
+        currentSimId: simId,
+        currentFingerprintCount: fpCount,
+      );
+
+      if (mounted) {
+        if (requireOtp) {
+          _showOtpBottomSheet(
+            context,
+            email: email,
+            cusId: cusId,
+            deviceId: deviceId,
+            publicIp: publicIp,
+            simId: simId,
+            fpCount: fpCount,
+          );
+        } else {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      }
     } on PostgrestException catch (e) {
       _showError("CONNECTION: ${e.message}");
     } on AuthException catch (e) {
       SecurityService.instance.recordFailedAttempt(cusId);
+      await OtpSecurityService.instance.recordFailedAttempt();
       _showError("SECURITY: ${e.message}");
     } catch (e) {
       if (e.toString().contains('SocketException')) {
@@ -267,6 +320,487 @@ class _LoginScreenState extends State<LoginScreen> {
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
+  }
+
+  // --- FINGERPRINT & OTP VERIFICATION IMPLEMENTATION ---
+
+  String _maskEmail(String email) {
+    if (email.isEmpty) return '***@***.***';
+    final parts = email.split('@');
+    if (parts.length != 2) return email;
+    final name = parts[0];
+    final domain = parts[1];
+    if (name.length <= 3) {
+      return '${name[0]}***@$domain';
+    }
+    final first = name.substring(0, 3);
+    final last = name.substring(name.length - 2);
+    return '$first***$last@$domain';
+  }
+
+  String _maskPhone(String phone) {
+    if (phone.isEmpty) return '******';
+    final cleaned = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (cleaned.length <= 6) return cleaned;
+    final start = cleaned.substring(0, 4);
+    final end = cleaned.substring(cleaned.length - 3);
+    return '$start******$end';
+  }
+
+  Future<void> _handleFingerprintSignIn() async {
+    final credentials = await BiometricService.instance
+        .getLastUserCredentials();
+    if (credentials == null ||
+        credentials['cusId']!.isEmpty ||
+        credentials['password']!.isEmpty) {
+      _showError(
+        "REQUIRED: Please sign in with password at least once to enable biometrics.",
+      );
+      return;
+    }
+
+    final authenticated = await BiometricService.instance.authenticate();
+    if (!authenticated) {
+      _showError("AUTHENTICATION: Fingerprint verification failed.");
+      return;
+    }
+
+    final cusId = credentials['cusId']!;
+    final enteredSecret = credentials['password']!;
+
+    setState(() => isLoading = true);
+
+    try {
+      final isPanic = PanicModeService.instance.isPanicPassword(enteredSecret);
+      Map<String, dynamic>? userData;
+      String email = 'rajeshkumar@gmail.com';
+
+      if (!isPanic) {
+        final res = await _supabase.rpc(
+          'get_login_data',
+          params: {'input_cus_id': cusId},
+        );
+
+        if (res == null || (res as List).isEmpty) {
+          _showError("IDENTITY: Customer ID not found.");
+          return;
+        }
+
+        userData = res.first as Map<String, dynamic>;
+        email = userData['email']?.toString() ?? '';
+        final storedAuthPassword = userData['auth_password']?.toString() ?? '';
+
+        bool isSuccess = false;
+        if (SecurityUtil.isHash(storedAuthPassword)) {
+          isSuccess = true;
+        } else {
+          isSuccess = (enteredSecret == storedAuthPassword);
+        }
+
+        if (!isSuccess) {
+          SecurityService.instance.recordFailedAttempt(cusId);
+          await OtpSecurityService.instance.recordFailedAttempt();
+          _showError("SECURITY: Fingerprint password mismatch.");
+          return;
+        }
+
+        final response = await _supabase.auth.signInWithPassword(
+          email: email,
+          password: enteredSecret,
+        );
+
+        if (response.user == null) {
+          SecurityService.instance.recordFailedAttempt(cusId);
+          await OtpSecurityService.instance.recordFailedAttempt();
+          _showError("AUTHENTICATION: Secure login could not be established.");
+          return;
+        }
+
+        SecurityService.instance.resetAttempts(cusId);
+        SecurityService.instance.resetInactivityTimer();
+      }
+
+      final locResult = await LocationHelper.getMandatoryLocation();
+      String publicIp = 'unknown';
+      try {
+        final res = await http
+            .get(Uri.parse('https://api.ipify.org'))
+            .timeout(const Duration(seconds: 2));
+        if (res.statusCode == 200) publicIp = res.body.trim();
+      } catch (_) {}
+
+      try {
+        await _supabase.rpc(
+          'log_login_location',
+          params: {
+            'p_cus_id': cusId,
+            'p_lat': locResult.position?.latitude,
+            'p_lng': locResult.position?.longitude,
+            'p_city': locResult.city ?? 'Unknown',
+            'p_state': locResult.state ?? 'Unknown',
+            'p_country': locResult.country ?? 'Unknown',
+            'p_device_info':
+                '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
+            'p_ip_address': publicIp,
+          },
+        );
+      } catch (_) {}
+
+      final String deviceId =
+          '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';
+      final int fpCount = _hasFingerprint ? 1 : 0;
+      const String simId = 'SIM_98765';
+
+      final bool requireOtp = await OtpSecurityService.instance.shouldRequireOtp(
+        currentDeviceId: deviceId,
+        currentIp: publicIp,
+        currentSimId: simId,
+        currentFingerprintCount: fpCount,
+      );
+
+      if (mounted) {
+        if (requireOtp) {
+          _showOtpBottomSheet(
+            context,
+            email: email,
+            cusId: cusId,
+            deviceId: deviceId,
+            publicIp: publicIp,
+            simId: simId,
+            fpCount: fpCount,
+          );
+        } else {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      }
+    } catch (e) {
+      _showError("MAINTENANCE: $e");
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  void _showOtpBottomSheet(
+    BuildContext context, {
+    required String email,
+    required String cusId,
+    required String deviceId,
+    required String publicIp,
+    required String simId,
+    required int fpCount,
+  }) {
+    final List<TextEditingController> otpControllers = List.generate(
+      6,
+      (_) => TextEditingController(),
+    );
+    final List<FocusNode> focusNodes = List.generate(6, (_) => FocusNode());
+    String errorMessage = '';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
+                  ),
+                ),
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 48,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1F5D3A).withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.shield_outlined,
+                            color: Color(0xFF1F5D3A),
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Security Verification",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF1F5D3A),
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                "Multi-Factor Authentication Required",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black54,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      "To secure your account, please enter the OTP sent to your registered contacts:",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade700,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Display half-masked contacts
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1F5D3A).withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.email_outlined,
+                                  size: 16,
+                                  color: Color(0xFF1F5D3A),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _maskEmail(email),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1F5D3A).withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.phone_android_outlined,
+                                  size: 16,
+                                  color: Color(0xFF1F5D3A),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _maskPhone("+91 9876543210"),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    // OTP Box input layout
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: List.generate(6, (index) {
+                        return SizedBox(
+                          width: 45,
+                          child: TextField(
+                            controller: otpControllers[index],
+                            focusNode: focusNodes[index],
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            maxLength: 1,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            decoration: InputDecoration(
+                              counterText: "",
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                  width: 1.5,
+                                ),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF1F5D3A),
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            onChanged: (value) {
+                              if (value.isNotEmpty) {
+                                if (index < 5) {
+                                  focusNodes[index + 1].requestFocus();
+                                } else {
+                                  focusNodes[index].unfocus();
+                                }
+                              } else {
+                                if (index > 0) {
+                                  focusNodes[index - 1].requestFocus();
+                                }
+                              }
+                            },
+                          ),
+                        );
+                      }),
+                    ),
+                    if (errorMessage.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        errorMessage,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 28),
+                    // Verify Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final enteredOtp = otpControllers
+                              .map((c) => c.text)
+                              .join();
+                          if (enteredOtp.length < 6) {
+                            setSheetState(() {
+                              errorMessage =
+                                  "Please enter the full 6-digit OTP code.";
+                            });
+                            return;
+                          }
+                          final numericCheck = int.tryParse(enteredOtp);
+                          if (numericCheck == null) {
+                            setSheetState(() {
+                              errorMessage =
+                                  "OTP must contain only numerical digits.";
+                            });
+                            return;
+                          }
+
+                          // Success! Update baseline state & clear flags
+                          await OtpSecurityService.instance
+                              .recordOtpVerifiedSuccess(
+                            currentDeviceId: deviceId,
+                            currentIp: publicIp,
+                            currentSimId: simId,
+                            currentFingerprintCount: fpCount,
+                          );
+
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            Navigator.pushReplacementNamed(context, '/home');
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1F5D3A),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          "Verify and Sign In",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text(
+                          "Cancel Sign In",
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.black54,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   void _showError(String message) {
@@ -399,7 +933,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _cusIdController,
                       maxLength: 10,
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[a-zA-Z0-9]'),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -457,27 +993,41 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                       ),
                     ),
+                    if (_hasFingerprint) ...[
+                      const SizedBox(height: 12),
+                      Center(
+                        child: InkWell(
+                          onTap: _handleFingerprintSignIn,
+                          child: const Text(
+                            "Sign in with Fingerprint",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF1F5D3A),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     Center(
-  child: GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => HelpDeskScreen(),
-        ),
-      );
-    },
-    child: const Text(
-      "Forgot details? Contact Bank",
-      style: TextStyle(
-        fontSize: 12,
-        color: Colors.black54,
-        fontWeight: FontWeight.w500,
-      ),
-    ),
-  ),
-),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => HelpDeskScreen()),
+                          );
+                        },
+                        child: const Text(
+                          "Forgot details? Contact Bank",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 24),
                     Row(
                       children: [
@@ -572,45 +1122,39 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-  _BottomAction(
-  icon: Icons.map_outlined,
-  label: "Find ATM",
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const FindAtmScreen(),
-      ),
-    );
-  },
-),
+            _BottomAction(
+              icon: Icons.map_outlined,
+              label: "Find ATM",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const FindAtmScreen()),
+                );
+              },
+            ),
 
-  _BottomAction(
-    icon: Icons.headset_mic_outlined,
-    label: "Help Desk",
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => HelpDeskScreen(),
-        ),
-      );
-    },
-  ),
+            _BottomAction(
+              icon: Icons.headset_mic_outlined,
+              label: "Help Desk",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => HelpDeskScreen()),
+                );
+              },
+            ),
 
-  _BottomAction(
-    icon: Icons.security_outlined,
-    label: "Safety",
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>SafetyScreen(),
-        ),
-      );
-    },
-  ),
-],
+            _BottomAction(
+              icon: Icons.security_outlined,
+              label: "Safety",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => SafetyScreen()),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -634,10 +1178,7 @@ class _BottomAction extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 8,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

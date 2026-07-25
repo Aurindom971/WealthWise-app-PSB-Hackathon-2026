@@ -1,0 +1,47 @@
+[
+  {
+    "pincode": "110001",
+    "district": "New Delhi Central",
+    "state": "Delhi",
+    "riskLevel": "critical",
+    "fraudCases": 182,
+    "lastUpdated": "2026-07-20T00:00:00Z",
+    "score": 0.92
+  },
+  {
+    "pincode": "400001",
+    "district": "Mumbai Fort",
+    "state": "Maharashtra",
+    "riskLevel": "high",
+    "fraudCases": 94,
+    "lastUpdated": "2026-07-19T00:00:00Z",
+    "score": 0.78
+  },
+  {
+    "pincode": "560001",
+    "district": "Bangalore G.P.O.",
+    "state": "Karnataka",
+    "riskLevel": "medium",
+    "fraudCases": 41,
+    "lastUpdated": "2026-07-18T00:00:00Z",
+    "score": 0.55
+  },
+  {
+    "pincode": "700001",
+    "district": "Kolkata G.P.O.",
+    "state": "West Bengal",
+    "riskLevel": "high",
+    "fraudCases": 72,
+    "lastUpdated": "2026-07-15T00:00:00Z",
+    "score": 0.70
+  },
+  {
+    "pincode": "600001",
+    "district": "Chennai G.P.O.",
+    "state": "Tamil Nadu",
+    "riskLevel": "low",
+    "fraudCases": 12,
+    "lastUpdated": "2026-07-10T00:00:00Z",
+    "score": 0.25
+  }
+]
