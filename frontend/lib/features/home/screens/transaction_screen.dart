@@ -221,62 +221,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       List<Tx> combinedTxs = [];
       String currentSource = 'None';
 
-      debugPrint('[Transactions] Step 1: Fetching cards to get cus_id and card_ids...');
-      final cardsResponse = await supabase.rpc('get_cards_data', params: {
-        'user_email': userEmail,
-      });
-
-      final List<dynamic> cards = (cardsResponse != null && cardsResponse['cards'] != null)
-          ? cardsResponse['cards'] as List<dynamic>
-          : [];
-
-      if (cards.isNotEmpty) {
-        debugPrint('[Transactions] Found ${cards.length} cards. Fetching individual transactions...');
-        final String cusId = cards[0]['cus_id'] ?? 'CUST1';
-
-        for (var card in cards) {
-          final dynamic cardId = card['card_id'];
-          debugPrint('[Transactions] Fetching for Card ID: $cardId, Cus ID: $cusId');
-
-          final txResponse = await supabase.rpc('get_card_transactions', params: {
-            'p_cus_id': cusId,
-            'p_card_id': cardId,
-          });
-
-          if (txResponse != null) {
-            final List<dynamic> rawTxs = txResponse is Map
-                ? (txResponse['transactions'] ?? txResponse['data'] ?? [])
-                : (txResponse as List<dynamic>);
-
-            for (var raw in rawTxs) {
-              final map = Map<String, dynamic>.from(raw as Map);
-              // Normalize common field differences between RPCs
-              if (!map.containsKey('amount') && map.containsKey('transaction_amount')) {
-                map['amount'] = map['transaction_amount'];
-              }
-              if (!map.containsKey('counterparty_name') && map.containsKey('merchant_name')) {
-                map['counterparty_name'] = map['merchant_name'];
-              }
-              if (!map.containsKey('transaction_type') && map.containsKey('type')) {
-                map['transaction_type'] = map['type'];
-              }
-
-              // Only add if not a duplicate (by transaction_id if exists)
-              final newTx = Tx.fromJson(map);
-              if (!combinedTxs.any((existing) =>
-                  existing.name == newTx.name &&
-                  existing.amount == newTx.amount &&
-                  existing.createdAt.isAtSameMomentAs(newTx.createdAt))) {
-                combinedTxs.add(newTx);
-              }
-            }
-          }
-        }
-        currentSource = 'Card RPCs';
-      }
-
-      // ALWAYS fetch general transactions and merge with card transactions
-      debugPrint('[Transactions] Fetching general get_transactions_data to merge with card txs...');
+      // Step 1: Fetch all transactions via get_transactions_data RPC
+      debugPrint('[Transactions] Step 1: Fetching get_transactions_data for $userEmail...');
       var response = await supabase.rpc(
         'get_transactions_data',
         params: {
@@ -289,46 +235,61 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
       if (response != null && response['transactions'] != null && (response['transactions'] as List).isNotEmpty) {
         final List<dynamic> txData = response['transactions'] as List<dynamic>;
-        final generalTxs = txData
+        combinedTxs = txData
             .map((json) => Tx.fromJson(json as Map<String, dynamic>))
             .toList();
-
-        // Merge: add general transactions that aren't already in combinedTxs
-        for (final gTx in generalTxs) {
-          final isDuplicate = combinedTxs.any((existing) =>
-              existing.name == gTx.name &&
-              existing.amount == gTx.amount &&
-              existing.createdAt.isAtSameMomentAs(gTx.createdAt));
-          if (!isDuplicate) {
-            combinedTxs.add(gTx);
-          }
-        }
-
-        if (currentSource == 'None') {
-          currentSource = 'General RPC';
-        } else {
-          currentSource = '$currentSource + General RPC';
-        }
-        debugPrint('[Transactions] After merge: ${combinedTxs.length} total transactions');
+        currentSource = 'General RPC';
+        debugPrint('[Transactions] get_transactions_data returned ${combinedTxs.length} transactions');
       }
 
-      // FALLBACK: If still no transactions, try rajeshkumar@gmail.com
-      if (combinedTxs.isEmpty) {
-        debugPrint('[Transactions] No transactions found. Trying rajeshkumar fallback...');
-        response = await supabase.rpc(
-          'get_transactions_data',
-          params: {
-            'user_email': 'rajeshkumar@gmail.com',
-            'month_filter': monthFilter.isEmpty ? null : monthFilter,
-            'category_filter': categoryFilter.isEmpty ? null : categoryFilter,
-            'status_filter': statusFilter.isEmpty ? null : statusFilter,
-          },
-        );
-        if (response != null && response['transactions'] != null && (response['transactions'] as List).isNotEmpty) {
-           combinedTxs = (response['transactions'] as List)
-              .map((json) => Tx.fromJson(json as Map<String, dynamic>))
-              .toList();
-           currentSource = 'Rajesh Fallback';
+      // Step 2: Also fetch card transactions and merge any missing card-specific items
+      debugPrint('[Transactions] Step 2: Fetching cards to check card-specific transactions...');
+      final cardsResponse = await supabase.rpc('get_cards_data', params: {
+        'user_email': userEmail,
+      });
+
+      final List<dynamic> cards = (cardsResponse != null && cardsResponse['cards'] != null)
+          ? cardsResponse['cards'] as List<dynamic>
+          : [];
+
+      if (cards.isNotEmpty) {
+        final String cusId = cards[0]['cus_id'] ?? 'CUST1';
+        for (var card in cards) {
+          final dynamic cardId = card['card_id'];
+          final txResponse = await supabase.rpc('get_card_transactions', params: {
+            'p_cus_id': cusId,
+            'p_card_id': cardId,
+          });
+
+          if (txResponse != null) {
+            final List<dynamic> rawTxs = txResponse is Map
+                ? (txResponse['transactions'] ?? txResponse['data'] ?? [])
+                : (txResponse as List<dynamic>);
+
+            for (var raw in rawTxs) {
+              if (raw is Map) {
+                final map = Map<String, dynamic>.from(raw);
+                if (!map.containsKey('amount') && map.containsKey('transaction_amount')) {
+                  map['amount'] = map['transaction_amount'];
+                }
+                if (!map.containsKey('counterparty_name') && map.containsKey('merchant_name')) {
+                  map['counterparty_name'] = map['merchant_name'];
+                }
+                if (!map.containsKey('transaction_type') && map.containsKey('type')) {
+                  map['transaction_type'] = map['type'];
+                }
+
+                final newTx = Tx.fromJson(map);
+                final isDuplicate = combinedTxs.any((existing) =>
+                    existing.name == newTx.name &&
+                    existing.amount == newTx.amount &&
+                    existing.createdAt.isAtSameMomentAs(newTx.createdAt));
+                if (!isDuplicate) {
+                  combinedTxs.add(newTx);
+                }
+              }
+            }
+          }
         }
       }
 
@@ -384,6 +345,9 @@ class _TransactionScreenState extends State<TransactionScreen> {
   List<Tx> get _filtered {
     final q = _search.trim().toLowerCase();
     final list = _all.where((tx) {
+      // 0. Exclude unknown or empty transactions
+      if (tx.name.isEmpty || tx.name == 'Unknown') return false;
+
       // 1. Search Query
       if (q.isNotEmpty) {
         final matchesName = tx.name.toLowerCase().contains(q);

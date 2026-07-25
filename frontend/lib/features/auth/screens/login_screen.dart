@@ -162,11 +162,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (loginError != null) {
           SecurityService.instance.recordFailedAttempt(cusId);
-          _showError("AUTHENTICATION: $loginError");
           await OtpSecurityService.instance.recordFailedAttempt();
-          _showError(
-            "AUTHENTICATION: Secure login could not be established. Check credentials.",
-          );
+          _showError("AUTHENTICATION: $loginError");
           return;
         }
 
