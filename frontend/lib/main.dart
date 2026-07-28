@@ -7,15 +7,20 @@ import 'features/home/screens/home_screen.dart';
 import 'features/send/screens/send_transfer_screen.dart';
 import 'core/services/security_service.dart';
 
-
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://kbyfljxmbzzgowautqyb.supabase.co',
+  );
+  const supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: 'sb_publishable_GZdb1XwqNJ8hPiTscRueRg_rF5uhWoI',
+  );
 
   if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
     debugPrint(
@@ -24,13 +29,10 @@ Future<void> main() async {
       'or use: flutter run --dart-define-from-file=.env',
     );
     // In a production scenario, you would navigate to a configuration error screen here.
-    return; 
+    return;
   }
 
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-  );
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 
   // Initialize security service (loads persisted attempts)
   await SecurityService.instance.initialize();

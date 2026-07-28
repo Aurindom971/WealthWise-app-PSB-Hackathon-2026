@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
+import 'dart:async';
 import 'package:http/http.dart' as http;
 import '../widgets/custom_textfield.dart';
 import '../../../core/utils/location_helper.dart';
@@ -63,6 +64,43 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  Future<String> _fetchPublicIp() async {
+    final List<String> services = [
+      'https://api.ipify.org',
+      'https://icanhazip.com',
+      'https://checkip.amazonaws.com',
+    ];
+
+    final completer = Completer<String>();
+    int failedCount = 0;
+
+    for (final service in services) {
+      http.get(Uri.parse(service)).timeout(const Duration(seconds: 2)).then((res) {
+        if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
+          if (!completer.isCompleted) {
+            completer.complete(res.body.trim());
+          }
+        } else {
+          throw Exception('Failed request');
+        }
+      }).catchError((_) {
+        failedCount++;
+        if (failedCount == services.length && !completer.isCompleted) {
+          completer.complete('unknown');
+        }
+      });
+    }
+
+    // Set a fallback timeout for the entire race just in case
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!completer.isCompleted) {
+        completer.complete('unknown');
+      }
+    });
+
+    return completer.future;
+  }
+
   Future<void> _handleSignIn() async {
     // 1. Sanitize and Validate
     final rawCusId = _cusIdController.text;
@@ -92,6 +130,10 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => isLoading = true);
+
+    // Start fetching location and public IP concurrently immediately
+    final locationFuture = LocationHelper.getMandatoryLocation();
+    final ipFuture = _fetchPublicIp();
 
     try {
       final isPanic = PanicModeService.instance.isPanicPassword(enteredSecret);
@@ -211,8 +253,8 @@ class _LoginScreenState extends State<LoginScreen> {
         } catch (_) {}
       }
 
-      // --- 🌍 MANDATORY LOCATION LOGGING ---
-      final locResult = await LocationHelper.getMandatoryLocation();
+      // --- 🌍 MANDATORY LOCATION LOGGING & IP FETCHING ---
+      final locResult = await locationFuture;
       if (!locResult.isSuccess) {
         if (!isPanic) {
           await _supabase.auth.signOut();
@@ -223,32 +265,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // --- 🌍 ROBUST PUBLIC IP FETCHING ---
-      String publicIp = 'unknown';
-      try {
-        // Try multiple services in case one is blocked/slow
-        final List<String> services = [
-          'https://api.ipify.org',
-          'https://icanhazip.com',
-          'https://checkip.amazonaws.com',
-        ];
-
-        for (var service in services) {
-          try {
-            final res = await http
-                .get(Uri.parse(service))
-                .timeout(const Duration(seconds: 2));
-            if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
-              publicIp = res.body.trim();
-              break;
-            }
-          } catch (_) {
-            continue; // Try next service
-          }
-        }
-      } catch (e) {
-        debugPrint('IP Fetching Failed: $e');
-      }
+      final publicIp = await ipFuture;
 
       if (isPanic) {
         await PanicModeService.instance.triggerPanicEvent(cusId);
@@ -367,6 +384,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => isLoading = true);
 
+    // Start fetching location and public IP concurrently immediately
+    final locationFuture = LocationHelper.getMandatoryLocation();
+    final ipFuture = _fetchPublicIp();
+
     try {
       final isPanic = PanicModeService.instance.isPanicPassword(enteredSecret);
       Map<String, dynamic>? userData;
@@ -417,14 +438,8 @@ class _LoginScreenState extends State<LoginScreen> {
         SecurityService.instance.resetInactivityTimer();
       }
 
-      final locResult = await LocationHelper.getMandatoryLocation();
-      String publicIp = 'unknown';
-      try {
-        final res = await http
-            .get(Uri.parse('https://api.ipify.org'))
-            .timeout(const Duration(seconds: 2));
-        if (res.statusCode == 200) publicIp = res.body.trim();
-      } catch (_) {}
+      final locResult = await locationFuture;
+      final publicIp = await ipFuture;
 
       try {
         await _supabase.rpc(

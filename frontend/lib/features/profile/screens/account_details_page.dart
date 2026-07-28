@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../home/screens/notifications_screen.dart';
+import 'kyc_verification_page.dart';
 
 class AccountInfo {
   final String holder;
@@ -96,82 +97,121 @@ class _AccountDetailsPageState extends State<AccountDetailsPage> {
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(18),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+                child: Column(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                        margin: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: kCream,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: kMid.withOpacity(0.2)),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<int>(
-                            value: _selectedAccountIndex,
-                            isExpanded: true,
-                            icon: const Icon(Icons.arrow_drop_down, color: kForest),
-                            dropdownColor: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            style: const TextStyle(
-                              color: kForest,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            margin: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: kCream,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: kMid.withOpacity(0.2)),
                             ),
-                            items: const [
-                              DropdownMenuItem(
-                                value: 0,
-                                child: Text('Savings Account (•••• 1234)'),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<int>(
+                                value: _selectedAccountIndex,
+                                isExpanded: true,
+                                icon: const Icon(Icons.arrow_drop_down, color: kForest),
+                                dropdownColor: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                style: const TextStyle(
+                                  color: kForest,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: 0,
+                                    child: Text('Savings Account (•••• 1234)'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 1,
+                                    child: Text('Current Account (•••• 7654)'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 2,
+                                    child: Text('Salary Account (•••• 9988)'),
+                                  ),
+                                ],
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    setState(() {
+                                      _selectedAccountIndex = val;
+                                    });
+                                  }
+                                },
                               ),
-                              DropdownMenuItem(
-                                value: 1,
-                                child: Text('Current Account (•••• 7654)'),
-                              ),
-                              DropdownMenuItem(
-                                value: 2,
-                                child: Text('Salary Account (•••• 9988)'),
-                              ),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() {
-                                  _selectedAccountIndex = val;
-                                });
-                              }
-                            },
+                            ),
+                          ),
+                          _buildDivider(),
+                          _buildRow('Account Holder', selectedAccount.holder),
+                          _buildDivider(),
+                          _buildRow('Account Number', selectedAccount.number),
+                          _buildDivider(),
+                          _buildRow('Account Type', selectedAccount.type),
+                          _buildDivider(),
+                          _buildRow('Branch', selectedAccount.branch),
+                          _buildDivider(),
+                          _buildRow('IFSC Code', selectedAccount.ifsc),
+                          _buildDivider(),
+                          _buildRow('MICR Code', selectedAccount.micr),
+                          _buildDivider(),
+                          _buildRow('Opening Date', selectedAccount.openingDate),
+                          _buildDivider(),
+                          _buildRow('Nomination', selectedAccount.nomination),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showKycRequirementDialog(context),
+                        icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
+                        label: const Text(
+                          'Open New Savings Account',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kForest,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
                       ),
-                      _buildDivider(),
-                      _buildRow('Account Holder', selectedAccount.holder),
-                      _buildDivider(),
-                      _buildRow('Account Number', selectedAccount.number),
-                      _buildDivider(),
-                      _buildRow('Account Type', selectedAccount.type),
-                      _buildDivider(),
-                      _buildRow('Branch', selectedAccount.branch),
-                      _buildDivider(),
-                      _buildRow('IFSC Code', selectedAccount.ifsc),
-                      _buildDivider(),
-                      _buildRow('MICR Code', selectedAccount.micr),
-                      _buildDivider(),
-                      _buildRow('Opening Date', selectedAccount.openingDate),
-                      _buildDivider(),
-                      _buildRow('Nomination', selectedAccount.nomination),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -220,6 +260,53 @@ class _AccountDetailsPageState extends State<AccountDetailsPage> {
       color: kSub.withOpacity(0.1),
       indent: 16,
       endIndent: 16,
+    );
+  }
+
+  void _showKycRequirementDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        title: const Row(
+          children: [
+            Icon(Icons.verified_user_rounded, color: kForest, size: 28),
+            SizedBox(width: 10),
+            Text(
+              'KYC Required',
+              style: TextStyle(color: kForest, fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ],
+        ),
+        content: const Text(
+          'To open a new Savings Account, RBI & SEBI regulations mandate up-to-date KYC verification.\n\nPlease verify or complete your KYC details to proceed.',
+          style: TextStyle(color: kSub, fontSize: 14, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Cancel', style: TextStyle(color: kSub, fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogCtx);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const KycVerificationPage()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kForest,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text(
+              'Proceed to KYC',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

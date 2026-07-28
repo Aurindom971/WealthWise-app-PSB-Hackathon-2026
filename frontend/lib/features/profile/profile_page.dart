@@ -8,6 +8,7 @@ import 'package:wealthwise/features/profile/screens/terms_conditions_page.dart';
 import 'package:wealthwise/features/profile/screens/whats_new_page.dart';
 import 'package:wealthwise/features/profile/screens/your_requests_page.dart';
 import 'package:wealthwise/features/profile/screens/personal_fraud_risk_report_page.dart';
+import 'package:wealthwise/features/profile/screens/kyc_verification_page.dart';
 
 class ProfilePage extends StatefulWidget {
   final VoidCallback? onServicesTap;
@@ -190,6 +191,11 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
         const SizedBox(height: 20),
+        _buildTile(
+          'KYC Verification',
+          Icons.verified_user_outlined,
+          const KycVerificationPage(),
+        ),
         _buildTile(
           'Relationship manager',
           Icons.people_outline_rounded,
