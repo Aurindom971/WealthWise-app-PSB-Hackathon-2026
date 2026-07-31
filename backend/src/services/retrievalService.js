@@ -101,6 +101,11 @@ async function searchKnowledgeBase(query, limit = 5) {
   const fetchLimit = 30;
   console.log(`[RetrievalService] Fetching top ${fetchLimit} candidate points from Qdrant...`);
 
+  if (!client) {
+    console.warn('[RetrievalService] Qdrant client is not initialized. Skipping vector search.');
+    return [];
+  }
+
   const rawResults = await client.search(COLLECTION_NAME, {
     vector: queryVector,
     limit: fetchLimit,

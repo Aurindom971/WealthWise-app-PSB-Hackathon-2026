@@ -8,6 +8,7 @@ import 'package:wealthwise/features/profile/screens/terms_conditions_page.dart';
 import 'package:wealthwise/features/profile/screens/whats_new_page.dart';
 import 'package:wealthwise/features/profile/screens/your_requests_page.dart';
 import 'package:wealthwise/features/profile/screens/personal_fraud_risk_report_page.dart';
+import 'package:wealthwise/features/profile/screens/kyc_verification_page.dart';
 
 class ProfilePage extends StatefulWidget {
   final VoidCallback? onServicesTap;
@@ -138,7 +139,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Rajesh Kumar',
+                      'Rajesh Sharma',
                       style: TextStyle(
                         color: kForest,
                         fontSize: 18,
@@ -152,7 +153,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           _obscureKyc ? 'KYC No: XXXXXXXX' : 'KYC No: 12345678',
                           style: const TextStyle(color: kSub, fontSize: 13),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         GestureDetector(
                           onTap: () =>
                               setState(() => _obscureKyc = !_obscureKyc),
@@ -162,6 +163,37 @@ class _ProfilePageState extends State<ProfilePage> {
                                 : Icons.visibility_off_outlined,
                             color: kSub,
                             size: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const KycVerificationPage()),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F5E9),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.check_circle_rounded,
+                                    size: 11, color: Color(0xFF2E7D32)),
+                                SizedBox(width: 3),
+                                Text(
+                                  'Verified',
+                                  style: TextStyle(
+                                    color: Color(0xFF2E7D32),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -190,6 +222,11 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
         const SizedBox(height: 20),
+        _buildTile(
+          'KYC Verification (RBI Mandate)',
+          Icons.verified_user_outlined,
+          const KycVerificationPage(),
+        ),
         _buildTile(
           'Relationship manager',
           Icons.people_outline_rounded,

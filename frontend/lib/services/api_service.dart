@@ -9,7 +9,7 @@ class ApiService {
   // Base URL for the Node.js backend (10.0.2.2 maps to host localhost in Android emulator)
   static const String baseUrl = String.fromEnvironment(
     'BACKEND_URL', 
-    defaultValue: 'http://10.0.2.2:3000'
+    defaultValue: 'http://10.0.2.2:5000'
   );
 
   ApiService._internal() {

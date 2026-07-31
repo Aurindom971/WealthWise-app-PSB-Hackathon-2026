@@ -14,23 +14,21 @@ import 'providers/auth_provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://placeholder.supabase.co');
+  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'placeholder_key');
 
-  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-    debugPrint(
-      'ERROR: Supabase credentials not found.\n'
-      'Collaborators: Please copy .env.example to .env and run via VS Code,\n'
-      'or use: flutter run --dart-define-from-file=.env',
-    );
-    // In a production scenario, you would navigate to a configuration error screen here.
-    return; 
+  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
+    try {
+      await Supabase.initialize(
+        url: supabaseUrl,
+        anonKey: supabaseAnonKey,
+      );
+    } catch (e) {
+      debugPrint('Warning: Supabase initialization skipped or failed: $e');
+    }
+  } else {
+    debugPrint('Notice: Running without active Supabase credentials.');
   }
-
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-  );
 
   // Initialize security service (loads persisted attempts)
   await SecurityService.instance.initialize();

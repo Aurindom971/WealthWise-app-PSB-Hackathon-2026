@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 const { detectFraud } = require('./fraudDetection');
 const {
   saveTransaction,
@@ -48,6 +48,16 @@ const { sessionMiddleware } = require('./middleware/sessionMiddleware');
 app.post('/login', authController.login);
 app.post('/logout', sessionMiddleware, authController.logout);
 app.post('/refresh-session', sessionMiddleware, authController.refreshSession);
+
+// ======================================================
+// 🔒 KYC VERIFICATION ENDPOINTS
+// ======================================================
+const kycController = require('./controllers/kycController');
+app.post('/kyc/save', kycController.saveKyc);
+app.get('/kyc/status/:cus_id', kycController.getKycStatus);
+app.get('/kyc/status', kycController.getKycStatus);
+app.delete('/kyc/delete/:cus_id', kycController.deleteKyc);
+app.post('/kyc/delete/:cus_id', kycController.deleteKyc);
 
 
 // ======================================================

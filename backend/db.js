@@ -171,9 +171,135 @@ async function buildUserProfile(cus_id, txnTimestamp = new Date()) {
   };
 }
 
+/**
+ * 🔒 Initialize KYC table schema
+ */
+async function initKycDb() {
+  const createTableQuery = `
+    CREATE TABLE IF NOT EXISTS kyc_records (
+      cus_id VARCHAR(50) PRIMARY KEY,
+      full_name VARCHAR(150),
+      dob VARCHAR(20),
+      gender VARCHAR(20),
+      pan_number VARCHAR(20),
+      aadhaar_number VARCHAR(30),
+      ovd_type VARCHAR(50),
+      ovd_number VARCHAR(50),
+      address_line1 TEXT,
+      address_line2 TEXT,
+      city VARCHAR(100),
+      state VARCHAR(100),
+      pincode VARCHAR(20),
+      occupation VARCHAR(100),
+      annual_income VARCHAR(100),
+      fatca_resident BOOLEAN DEFAULT TRUE,
+      pep_status BOOLEAN DEFAULT FALSE,
+      status VARCHAR(30) DEFAULT 'VERIFIED',
+      ckyc_ref_no VARCHAR(50),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+  try {
+    await pool.query(createTableQuery);
+    console.log('[DB] KYC records table ready');
+  } catch (err) {
+    console.error('[DB] Error initializing KYC table:', err.message);
+  }
+}
+
+// Auto-run init
+initKycDb();
+
+/**
+ * 🔒 Save or Update KYC Record
+ */
+async function saveKycToDb(cusId, data) {
+  const ckycRefNo = data.ckyc_ref_no || `CKYC-${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+  const query = `
+    INSERT INTO kyc_records (
+      cus_id, full_name, dob, gender, pan_number, aadhaar_number,
+      ovd_type, ovd_number, address_line1, address_line2, city, state, pincode,
+      occupation, annual_income, fatca_resident, pep_status, status, ckyc_ref_no, updated_at
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, CURRENT_TIMESTAMP)
+    ON CONFLICT (cus_id) DO UPDATE SET
+      full_name = EXCLUDED.full_name,
+      dob = EXCLUDED.dob,
+      gender = EXCLUDED.gender,
+      pan_number = EXCLUDED.pan_number,
+      aadhaar_number = EXCLUDED.aadhaar_number,
+      ovd_type = EXCLUDED.ovd_type,
+      ovd_number = EXCLUDED.ovd_number,
+      address_line1 = EXCLUDED.address_line1,
+      address_line2 = EXCLUDED.address_line2,
+      city = EXCLUDED.city,
+      state = EXCLUDED.state,
+      pincode = EXCLUDED.pincode,
+      occupation = EXCLUDED.occupation,
+      annual_income = EXCLUDED.annual_income,
+      fatca_resident = EXCLUDED.fatca_resident,
+      pep_status = EXCLUDED.pep_status,
+      status = EXCLUDED.status,
+      updated_at = CURRENT_TIMESTAMP
+    RETURNING *;
+  `;
+
+  const values = [
+    cusId,
+    data.full_name || 'Rajesh Kumar',
+    data.dob || '15/08/1990',
+    data.gender || 'Male',
+    data.pan_number || 'ABCDE1234F',
+    data.aadhaar_number || '9876 5432 1098',
+    data.ovd_type || 'Aadhaar Card',
+    data.ovd_number || '9876 5432 1098',
+    data.address_line1 || '',
+    data.address_line2 || '',
+    data.city || '',
+    data.state || '',
+    data.pincode || '',
+    data.occupation || 'Salaried',
+    data.annual_income || '₹5 Lakhs - ₹10 Lakhs',
+    data.fatca_resident !== undefined ? data.fatca_resident : true,
+    data.pep_status !== undefined ? data.pep_status : false,
+    data.status || 'VERIFIED',
+    ckycRefNo
+  ];
+
+  const res = await pool.query(query, values);
+  return res.rows[0];
+}
+
+/**
+ * 🔒 Get KYC Record
+ */
+async function getKycFromDb(cusId) {
+  const query = `SELECT * FROM kyc_records WHERE cus_id = $1;`;
+  const res = await pool.query(query, [cusId]);
+  return res.rows[0] || null;
+}
+
+/**
+ * 🗑️ Delete / Mark Removed KYC Record
+ */
+async function deleteKycFromDb(cusId) {
+  const query = `
+    UPDATE kyc_records 
+    SET status = 'REMOVED', updated_at = NOW() 
+    WHERE cus_id = $1 
+    RETURNING *;
+  `;
+  const res = await pool.query(query, [cusId]);
+  return res.rows[0] || null;
+}
+
 module.exports = {
   saveTransaction,
   saveFraudResult,
   buildUserProfile,
+  saveKycToDb,
+  getKycFromDb,
+  deleteKycFromDb,
   pool
 };
