@@ -144,12 +144,13 @@ function locationAnomaly(txn, profile) {
 }
 
 // -------------------- 5. Hotspot --------------------
+const hotspotService = require('./src/services/hotspotService');
+
 function hotspotAnomaly(txn, profile) {
   if (!txn.pincode) return null;
 
-  const hotspot = hotspotDB.find(
-    area => area.pincode === txn.pincode
-  );
+  const hotspot = hotspotService.getHotspotByPincode(txn.pincode) ||
+    hotspotDB.find(area => area.pincode === txn.pincode && (area.accessibilityMode == null || area.accessibilityMode === 'Start Monitoring'));
 
   if (!hotspot) return null;
 

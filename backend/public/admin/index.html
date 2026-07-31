@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Hotspot Control Center | Banking Fraud Engine</title>
+  
+  <!-- Google Fonts & FontAwesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <!-- Custom Dark Theme Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="admin-container">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-title-group">
+        <div class="header-icon">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="header-title">
+          <h1>Admin Hotspot Control Center</h1>
+          <p>National Fraud Hotspot Intelligence & Geographic Risk Management</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="status-badge" id="systemStatusBadge">
+          <span class="status-dot"></span>
+          <span id="systemStatusText">ACTIVE & MONITORING</span>
+        </div>
+        <button class="btn btn-secondary" onclick="refreshDatabase()">
+          <i class="fa-solid fa-rotate-right"></i> Refresh DB
+        </button>
+      </div>
+    </header>
+
+    <!-- Top Dashboard KPI Cards Grid -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-info">
+          <h3>Total Checkpoints</h3>
+          <div class="kpi-value" id="kpiTotalCheckpoints">20</div>
+          <div class="kpi-subtext">National Monitoring Network</div>
+        </div>
+        <div class="kpi-icon-wrapper kpi-blue">
+          <i class="fa-solid fa-map-location-dot"></i>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-info">
+          <h3>Risk Checkpoints</h3>
+          <div class="kpi-value" id="kpiRiskCheckpoints">18</div>
+          <div class="kpi-subtext">High/Critical Hotspots</div>
+        </div>
+        <div class="kpi-icon-wrapper kpi-red">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-info">
+          <h3>Warning Checkpoints</h3>
+          <div class="kpi-value" id="kpiWarningCheckpoints">2</div>
+          <div class="kpi-subtext">Preemptively Watched</div>
+        </div>
+        <div class="kpi-icon-wrapper kpi-amber">
+          <i class="fa-solid fa-bell"></i>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-info">
+          <h3>Accounts in Hotspots</h3>
+          <div class="kpi-value" id="kpiTotalAccounts">17,450</div>
+          <div class="kpi-subtext">Associated Customer Accounts</div>
+        </div>
+        <div class="kpi-icon-wrapper kpi-emerald">
+          <i class="fa-solid fa-users-rectangle"></i>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-info">
+          <h3>Average Risk Score</h3>
+          <div class="kpi-value" id="kpiAvgRiskScore">68%</div>
+          <div class="kpi-subtext">Global Severity Weight</div>
+        </div>
+        <div class="kpi-icon-wrapper kpi-purple">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- Toolbar & Search/Filter Bar -->
+    <section class="toolbar-card">
+      <div class="search-filter-group">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search pincode, district, state..." oninput="handleSearchFilter()">
+        </div>
+
+        <select id="stateFilter" class="filter-select" onchange="handleSearchFilter()">
+          <option value="">All States</option>
+        </select>
+
+        <select id="districtFilter" class="filter-select" onchange="handleSearchFilter()">
+          <option value="">All Districts</option>
+        </select>
+
+        <select id="riskLevelFilter" class="filter-select" onchange="handleSearchFilter()">
+          <option value="">All Risk Levels</option>
+          <option value="Critical">Critical</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+
+        <select id="statusFilter" class="filter-select" onchange="handleSearchFilter()">
+          <option value="">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="openAddModal()">
+          <i class="fa-solid fa-plus"></i> Add Checkpoint
+        </button>
+        <button class="btn btn-secondary" onclick="openImportModal()">
+          <i class="fa-solid fa-file-import"></i> Import
+        </button>
+        <button class="btn btn-outline" onclick="exportData('csv')">
+          <i class="fa-solid fa-file-export"></i> Export CSV
+        </button>
+      </div>
+    </section>
+
+    <!-- Main Dashboard Grid -->
+    <div class="dashboard-grid">
+      
+      <!-- Left Column: Checkpoint Data Table -->
+      <main class="main-content">
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="fa-solid fa-list-check"></i>
+              Hotspot Checkpoints (<span id="tableResultCount">20</span>)
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="custom-table" id="checkpointsTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Checkpoint & Location</th>
+                  <th>Type</th>
+                  <th>Risk Score</th>
+                  <th>Status</th>
+                  <th>Cases</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <!-- Dynamically populated via app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+
+      <!-- Right Column: Interactive Map, Recent Activity, Alerts -->
+      <aside class="sidebar-content">
+        
+        <!-- India Interactive Hotspot Map -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="fa-solid fa-earth-asia"></i>
+              India Hotspot Visualization
+            </div>
+          </div>
+          <div id="indiaMap"></div>
+          <div style="font-size: 11px; color: var(--text-dim); margin-top: 10px; display: flex; justify-content: space-between;">
+            <span><i class="fa-solid fa-circle" style="color: #ef4444;"></i> Red: Risk Checkpoints</span>
+            <span><i class="fa-solid fa-circle" style="color: #f59e0b;"></i> Yellow: Warning Checkpoints</span>
+          </div>
+        </div>
+
+        <!-- Recent Alerts -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="fa-solid fa-circle-exclamation" style="color: var(--accent-danger);"></i>
+              Recent Alerts
+            </div>
+          </div>
+          <ul class="alert-list" id="alertsList">
+            <!-- Dynamically populated -->
+          </ul>
+        </div>
+
+        <!-- Recent Activity Audit Trail -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+              Recent Audit Activity
+            </div>
+          </div>
+          <ul class="activity-list" id="activityList">
+            <!-- Dynamically populated -->
+          </ul>
+        </div>
+
+      </aside>
+
+    </div>
+
+  </div>
+
+  <!-- Add/Edit Checkpoint Modal -->
+  <div class="modal-overlay" id="checkpointModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Add Hotspot Checkpoint</div>
+        <button class="modal-close" onclick="closeModal('checkpointModal')">&times;</button>
+      </div>
+
+      <form id="checkpointForm" onsubmit="handleSaveCheckpoint(event)">
+        <input type="hidden" id="formCheckpointId">
+        
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="formName">Checkpoint Name *</label>
+            <input type="text" id="formName" class="form-control" placeholder="e.g. Connaught Place Hub" required>
+          </div>
+
+          <div class="form-group">
+            <label for="formState">State *</label>
+            <input type="text" id="formState" class="form-control" placeholder="e.g. Delhi" required>
+          </div>
+
+          <div class="form-group">
+            <label for="formDistrict">District / City *</label>
+            <input type="text" id="formDistrict" class="form-control" placeholder="e.g. New Delhi Central" required>
+          </div>
+
+          <div class="form-group">
+            <label for="formPincode">Pincode *</label>
+            <input type="text" id="formPincode" class="form-control" placeholder="e.g. 110001" required pattern="\d{6}">
+          </div>
+
+          <div class="form-group">
+            <label for="formRiskLevel">Risk Level *</label>
+            <select id="formRiskLevel" class="form-control" onchange="syncScoreWithLevel()">
+              <option value="Critical">Critical (85 - 100%)</option>
+              <option value="High">High (65 - 84%)</option>
+              <option value="Medium">Medium (35 - 64%)</option>
+              <option value="Low">Low (0 - 34%)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="formRiskScore">Risk Score (0 - 100%) *</label>
+            <input type="number" id="formRiskScore" class="form-control" min="0" max="100" value="75" required>
+          </div>
+
+          <div class="form-group">
+            <label for="formStatus">Status *</label>
+            <select id="formStatus" class="form-control">
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="formFraudCases">Fraud Case Count</label>
+            <input type="number" id="formFraudCases" class="form-control" min="0" value="0">
+          </div>
+
+          <div class="form-group">
+            <label for="formLatitude">Latitude (Optional)</label>
+            <input type="number" step="any" id="formLatitude" class="form-control" placeholder="28.6315">
+          </div>
+
+          <div class="form-group">
+            <label for="formLongitude">Longitude (Optional)</label>
+            <input type="number" step="any" id="formLongitude" class="form-control" placeholder="77.2167">
+          </div>
+
+          <div class="form-group">
+            <label for="formLastReviewDate">Last Review Date</label>
+            <input type="date" id="formLastReviewDate" class="form-control">
+          </div>
+
+          <div class="form-group full-width">
+            <label for="formNotes">Notes / Risk Synopsis</label>
+            <textarea id="formNotes" class="form-control" rows="3" placeholder="Notes regarding attack vector, mule account clusters..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('checkpointModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveModalBtn">Save Checkpoint</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Import Modal -->
+  <div class="modal-overlay" id="importModal">
+    <div class="modal-card" style="max-width: 500px;">
+      <div class="modal-header">
+        <div class="modal-title">Import Hotspot Checkpoints</div>
+        <button class="modal-close" onclick="closeModal('importModal')">&times;</button>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="importTextarea">Paste JSON Dataset (Array of Objects)</label>
+        <textarea id="importTextarea" class="form-control" rows="8" placeholder='[{"pincode": "110001", "district": "New Delhi Central", "state": "Delhi", "score": 0.92}]'></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('importModal')">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="handleImportSubmit()">Import Checkpoints</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Custom Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

@@ -813,6 +813,155 @@ app.get('/api/investments/ipos', sessionMiddleware, async (req, res) => {
 
 
 // ======================================================
+// 🗺️ ADMIN HOTSPOT CONTROL CENTER API & STATIC ROUTER
+// ======================================================
+const path = require('path');
+const hotspotService = require('./src/services/hotspotService');
+
+// Serve Admin Control Center static assets
+app.use('/admin', express.static(path.join(__dirname, 'public/admin')));
+app.get('/admin/hotspots', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/admin/index.html'));
+});
+
+// GET /api/hotspots/stats - Overview KPI Metrics
+app.get('/api/hotspots/stats', (req, res) => {
+  try {
+    const stats = hotspotService.getStats();
+    return res.json({ success: true, data: stats });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/hotspots - List checkpoints with filters & search
+app.get('/api/hotspots', (req, res) => {
+  try {
+    const filters = {
+      state: req.query.state,
+      district: req.query.district,
+      riskLevel: req.query.riskLevel,
+      accessibilityMode: req.query.accessibilityMode,
+      status: req.query.status,
+      search: req.query.search
+    };
+    const list = hotspotService.getAllCheckpoints(filters);
+    return res.json({ success: true, count: list.length, data: list });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/hotspots/activity - Audit trail & alerts
+app.get('/api/hotspots/activity', (req, res) => {
+  try {
+    const activityData = hotspotService.getActivitiesAndAlerts();
+    return res.json({ success: true, data: activityData });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/hotspots/export - Export hotspot data as JSON/CSV
+app.get('/api/hotspots/export', (req, res) => {
+  try {
+    const format = (req.query.format || 'json').toLowerCase();
+    const list = hotspotService.getAllCheckpoints();
+
+    if (format === 'csv') {
+      const headers = ['ID', 'Name', 'State', 'District', 'Pincode', 'Type', 'RiskLevel', 'RiskScore', 'AccessibilityMode', 'Status', 'FraudCases', 'AccountsCount', 'LastUpdated', 'Notes'];
+      const rows = list.map(c => [
+        c.id, `"${c.name}"`, `"${c.state}"`, `"${c.district}"`, c.pincode, c.type, c.riskLevel, c.riskScore, `"${c.accessibilityMode}"`, c.status, c.fraudCases, c.accountsCount, c.lastUpdated, `"${(c.notes || '').replace(/"/g, '""')}"`
+      ]);
+      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="fraud_hotspots_export.csv"');
+      return res.send(csvContent);
+    }
+
+    return res.json({ success: true, count: list.length, data: list });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/hotspots/:id - Get single checkpoint
+app.get('/api/hotspots/:id', (req, res) => {
+  try {
+    const checkpoint = hotspotService.getCheckpointById(req.params.id);
+    if (!checkpoint) return res.status(404).json({ success: false, error: 'Checkpoint not found' });
+    return res.json({ success: true, data: checkpoint });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/hotspots - Create Checkpoint
+app.post('/api/hotspots', (req, res) => {
+  try {
+    const newCheckpoint = hotspotService.createCheckpoint(req.body);
+    return res.status(201).json({ success: true, data: newCheckpoint });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PUT /api/hotspots/:id - Update Checkpoint
+app.put('/api/hotspots/:id', (req, res) => {
+  try {
+    const updated = hotspotService.updateCheckpoint(req.params.id, req.body);
+    if (!updated) return res.status(404).json({ success: false, error: 'Checkpoint not found' });
+    return res.json({ success: true, data: updated });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// DELETE /api/hotspots/:id - Delete Checkpoint
+app.delete('/api/hotspots/:id', (req, res) => {
+  try {
+    const success = hotspotService.deleteCheckpoint(req.params.id);
+    if (!success) return res.status(404).json({ success: false, error: 'Checkpoint not found' });
+    return res.json({ success: true, message: 'Checkpoint deleted successfully' });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PATCH /api/hotspots/:id/accessibility - Toggle Accessibility Mode (Start Monitoring vs Store Only)
+app.patch('/api/hotspots/:id/accessibility', (req, res) => {
+  try {
+    const newMode = req.body.accessibilityMode;
+    const updated = hotspotService.toggleAccessibilityMode(req.params.id, newMode);
+    if (!updated) return res.status(404).json({ success: false, error: 'Checkpoint not found' });
+    return res.json({ success: true, data: updated });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/hotspots/import - Import CSV/JSON dataset
+app.post('/api/hotspots/import', (req, res) => {
+  try {
+    const items = req.body.items || req.body;
+    const result = hotspotService.importHotspots(items);
+    return res.json({ success: true, message: `Successfully imported ${result.count} checkpoints`, data: result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/hotspots/refresh - Refresh Database & Recalculate
+app.post('/api/hotspots/refresh', (req, res) => {
+  try {
+    const stats = hotspotService.refreshDatabase();
+    return res.json({ success: true, message: 'Database refreshed and synchronized', data: stats });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ======================================================
 // 🏥 HEALTH CHECK
 // ======================================================
 app.get('/health', (req, res) => {
