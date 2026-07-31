@@ -29,7 +29,8 @@ class LocationHelper {
       if (!serviceEnabled) {
         return LocationResult(
           isSuccess: false,
-          error: 'Location services are disabled. Please enable GPS to proceed.',
+          error:
+              'Location services are disabled. Please enable GPS to proceed.',
         );
       }
 
@@ -39,7 +40,8 @@ class LocationHelper {
         if (permission == LocationPermission.denied) {
           return LocationResult(
             isSuccess: false,
-            error: 'Location permission denied. This app requires location for security.',
+            error:
+                'Location permission denied. This app requires location for security.',
           );
         }
       }
@@ -47,17 +49,18 @@ class LocationHelper {
       if (permission == LocationPermission.deniedForever) {
         return LocationResult(
           isSuccess: false,
-          error: 'Location permissions are permanently denied. Please enable them in settings.',
+          error:
+              'Location permissions are permanently denied. Please enable them in settings.',
         );
       }
 
-      // Fetch Position with a strict timeout
-      final position = await Geolocator.getCurrentPosition(
+      // Fetch real live current device location exclusively
+      final Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
+        timeLimit: const Duration(seconds: 20),
       );
 
-      // Fetch AddressDetails with a very short timeout (Reverse Geocoding)
+      // Fetch AddressDetails with a short timeout (Reverse Geocoding)
       String? city;
       String? state;
       String? country;
@@ -67,7 +70,7 @@ class LocationHelper {
           position.latitude,
           position.longitude,
         ).timeout(const Duration(seconds: 3));
-        
+
         if (placemarks.isNotEmpty) {
           final place = placemarks.first;
           city = place.locality ?? place.subAdministrativeArea;
