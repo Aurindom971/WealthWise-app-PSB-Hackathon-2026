@@ -73,10 +73,10 @@ class BiometricService {
   }
 
   /// Trigger biometric authentication
-  Future<bool> authenticate() async {
+  Future<bool> authenticate({String? reason}) async {
     try {
       return await _auth.authenticate(
-        localizedReason:
+        localizedReason: reason ??
             'Please authenticate using your fingerprint to sign in securely.',
         biometricOnly: true,
         persistAcrossBackgrounding: true,
@@ -84,6 +84,37 @@ class BiometricService {
     } catch (e) {
       debugPrint('[BiometricService] Biometric authentication error: $e');
       return false;
+    }
+  }
+
+  /// Get biometric payment toggle state (defaults to true)
+  Future<bool> isBiometricPaymentEnabled() async {
+    try {
+      final file = await _configFile;
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        final data = json.decode(content) as Map<String, dynamic>;
+        return data['biometric_payment_enabled'] ?? true;
+      }
+    } catch (e) {
+      debugPrint('[BiometricService] Error reading biometric toggle: $e');
+    }
+    return true;
+  }
+
+  /// Save biometric payment toggle state
+  Future<void> setBiometricPaymentEnabled(bool enabled) async {
+    try {
+      final file = await _configFile;
+      Map<String, dynamic> data = {};
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        data = json.decode(content) as Map<String, dynamic>;
+      }
+      data['biometric_payment_enabled'] = enabled;
+      await file.writeAsString(json.encode(data));
+    } catch (e) {
+      debugPrint('[BiometricService] Error saving biometric toggle: $e');
     }
   }
 }
