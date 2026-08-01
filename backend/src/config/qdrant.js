@@ -8,11 +8,12 @@ if (!qdrantUrl) {
   console.warn('[QdrantConfig] WARNING: QDRANT_URL is not defined in the environment variables.');
 }
 
-// Initialize the Qdrant Client
-const client = new QdrantClient({
+// Initialize the Qdrant Client conditionally
+const client = qdrantUrl ? new QdrantClient({
   url: qdrantUrl,
-  apiKey: qdrantApiKey,
-});
+  apiKey: qdrantApiKey || undefined,
+  checkCompatibility: false,
+}) : null;
 
 /**
  * Checks if the "banking_knowledge" collection exists in Qdrant.
@@ -26,6 +27,10 @@ async function ensureCollection() {
   console.log(`[QdrantConfig] Verifying collection: "${collectionName}"...`);
 
   try {
+    if (!client) {
+      console.warn('[QdrantConfig] Skipping collection check because Qdrant client is not configured.');
+      return false;
+    }
     // Retrieve list of all collections
     const result = await client.getCollections();
     const collectionExists = result.collections.some(
