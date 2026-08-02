@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:wealthwise/features/home/widgets/home_navigation_widgets.dart';
 import 'package:wealthwise/features/service/screens/change_atm_pin_page.dart';
 import 'package:wealthwise/features/service/screens/change_password_page.dart';
+import 'package:wealthwise/features/service/screens/biometric_verification_setting_page.dart';
 import '../../loans/widgets/loan_header.dart';
 import '../../home/screens/notifications_screen.dart';
 
@@ -172,6 +173,9 @@ class PinPasswordsPage extends StatelessWidget {
                   _buildTile(context, 'Change login password',
                       Icons.lock_outline_rounded,
                       target: const ChangePasswordPage()),
+                  _buildTile(context, 'Enable biometric verification',
+                      Icons.fingerprint_rounded,
+                      target: const BiometricVerificationSettingPage()),
                   _buildTile(
                     context,
                     'Reset transaction password',

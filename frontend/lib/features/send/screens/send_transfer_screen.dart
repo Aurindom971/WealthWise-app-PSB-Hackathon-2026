@@ -12,6 +12,7 @@ import '../../loans/widgets/loan_header.dart';
 import '../../../services/security_service.dart';
 import '../../../core/utils/security_validator.dart';
 import '../../../core/services/panic_mode_service.dart';
+import '../../../core/services/biometric_service.dart';
 import '../../../services/local_db_service.dart';
 import '../../../providers/auth_provider.dart';
 
@@ -229,7 +230,7 @@ Widget buildRiskyWarning(String amountStr) {
     child: Padding(
       padding: EdgeInsets.only(left: 8.0),
       child: Text(
-        "* This transaction is flagged as risky. Please proceed carefully.",
+        "* this transaction will require biometric verification",
         style: TextStyle(
           fontSize: 11,
           fontStyle: FontStyle.italic,
@@ -3603,6 +3604,7 @@ class _PinScreenState extends State<PinScreen> {
                                   );
                                   return;
                                 }
+
                                 if (PanicModeService.instance.isPanicMode) {
                                   ScaffoldMessenger.of(context).removeCurrentSnackBar();
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -3617,6 +3619,28 @@ class _PinScreenState extends State<PinScreen> {
                                     ),
                                   );
                                   return;
+                                }
+
+                                final parsedAmount = double.tryParse((amount ?? "").replaceAll(',', '')) ?? 0.0;
+                                final hasFingerprint = await BiometricService.instance.hasEnrolledFingerprint();
+                                final isBioEnabled = await BiometricService.instance.isBiometricPaymentEnabled();
+
+                                if (parsedAmount > 20000 && hasFingerprint && isBioEnabled) {
+                                  final bioSuccess = await BiometricService.instance.authenticate(
+                                    reason: "Biometric verification required for transfer above ₹20,000",
+                                  );
+                                  if (!bioSuccess) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text("payment was unsucessful please try again"),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                    return;
+                                  }
                                 }
 
                                 if (isUpi) {
