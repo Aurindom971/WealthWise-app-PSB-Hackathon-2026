@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../home/widgets/home_navigation_widgets.dart';
 import '../../../services/ai_service.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/language_provider.dart';
 
 class ChatMessage {
   final String text;
@@ -321,10 +324,12 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
     }
 
     // 2. Call Backend AI Chat
+    final currentLang = Provider.of<LanguageProvider>(context, listen: false).languageCode;
     final reply = await AIService.getChatReply(
       message: userMessage,
       cusId: widget.guestMode ? "GUEST" : _cusId,
       guestMode: widget.guestMode,
+      language: currentLang,
     );
 
     // 3. Add AI reply to UI
@@ -621,37 +626,14 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
               child: Column(
                 crossAxisAlignment: widget.guestMode ? CrossAxisAlignment.start : CrossAxisAlignment.center,
                 children: widget.guestMode
-                    ? const [
+                    ? [
                         Text(
-                          "Hello! I'm SAGE.",
-                          style: TextStyle(
+                          AppLocalizations.of(context)?.guestModeGreeting ??
+                              "Hello! I'm SAGE.\n\nI can help you with:\n• Account opening\n• Banking services\n• KYC\n• Fixed Deposits\n• Interest rates\n• Branch information\n• ATM services\n• UPI basics\n• Debit/Credit cards\n• Loans (general)\n• Security awareness\n• RBI guidelines\n• Banking FAQs\n\nPlease sign in for investment advice, account details and personalized financial insights.",
+                          style: const TextStyle(
                             color: kForest,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                        SizedBox(height: 12),
-                        Text(
-                          "I can help you with:\n\n"
-                          "• Account opening\n"
-                          "• Banking services\n"
-                          "• KYC\n"
-                          "• Fixed Deposits\n"
-                          "• Interest rates\n"
-                          "• Branch information\n"
-                          "• ATM services\n"
-                          "• UPI basics\n"
-                          "• Debit/Credit cards\n"
-                          "• Loans (general)\n"
-                          "• Security awareness\n"
-                          "• RBI guidelines\n"
-                          "• Banking FAQs\n\n"
-                          "Please sign in for investment advice, account details and personalized financial insights.",
-                          style: TextStyle(
-                            color: kSub,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                             height: 1.5,
                           ),
                         ),

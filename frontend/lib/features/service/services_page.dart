@@ -7,6 +7,7 @@ import 'package:wealthwise/features/service/screens/order_cheque_book_page.dart'
 import 'package:wealthwise/features/service/screens/manage_autopay_page.dart';
 import 'package:wealthwise/features/service/screens/report_suspicious_activity_page.dart';
 import 'package:wealthwise/features/service/screens/pin_passwords_page.dart';
+import '../../l10n/app_localizations.dart';
 
 class ServicesPage extends StatelessWidget {
   const ServicesPage({super.key});
@@ -92,6 +93,7 @@ class ServicesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -103,9 +105,9 @@ class ServicesPage extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Services',
-                  style: TextStyle(
+                Text(
+                  l10n?.services ?? 'Services',
+                  style: const TextStyle(
                     color: kForest,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -128,43 +130,43 @@ class ServicesPage extends StatelessWidget {
         const SizedBox(height: 24),
         _buildTile(
           context,
-          'Order cheque book',
+          l10n?.orderChequeBook ?? 'Order cheque book',
           Icons.menu_book_rounded,
           const OrderChequeBookPage(),
         ),
         _buildTile(
           context,
-          'Accounts services',
+          l10n?.accountsServices ?? 'Accounts services',
           Icons.account_balance_outlined,
           const AccountServicesPage(),
         ),
         _buildTile(
           context,
-          'Manage autopay',
+          l10n?.manageAutopay ?? 'Manage autopay',
           Icons.autorenew_rounded,
           const ManageAutopayPage(),
         ),
         _buildTile(
           context,
-          'Cards services',
+          l10n?.cardsServices ?? 'Cards services',
           Icons.credit_card_outlined,
           const CardServicesPage(),
         ),
         _buildTile(
           context,
-          'Manage deliverables',
+          l10n?.manageDeliverables ?? 'Manage deliverables',
           Icons.inventory_2_outlined,
           const ManageDeliverablesPage(),
         ),
         _buildTile(
           context,
-          'Pin and passwords management',
+          l10n?.pinPasswords ?? 'Pin and passwords management',
           Icons.vpn_key_outlined,
           const PinPasswordsPage(),
         ),
         _buildTile(
           context,
-          'Report suspicious activities',
+          l10n?.reportSuspicious ?? 'Report suspicious activities',
           Icons.privacy_tip_outlined,
           const ReportSuspiciousActivityPage(),
         ),

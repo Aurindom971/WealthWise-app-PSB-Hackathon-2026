@@ -26,6 +26,7 @@ import 'package:wealthwise/features/profile/profile_page.dart';
 import 'package:wealthwise/features/service/services_page.dart';
 import 'package:wealthwise/features/ai_assistant/screens/wealthwise_ai_screen.dart';
 import '../../../services/security_service.dart';
+import '../../../l10n/app_localizations.dart';
 
 
 enum LoanSubState {
@@ -364,6 +365,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(height: 30),
               _QuickActions(
+                onSendTransferTap: () {
+                  if (PanicModeService.instance.isPanicMode) {
+                    _showActionUnavailable();
+                    return;
+                  }
+                  Navigator.pushNamed(context, '/send_transfer');
+                },
                 onCardsForexTap: () {
                   if (PanicModeService.instance.isPanicMode) {
                     _showActionUnavailable();
@@ -917,7 +925,7 @@ class _LoanCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    'pull down to reveal next',
+                    AppLocalizations.of(context)?.pullDownNext ?? 'pull down to reveal next',
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.35),
                       fontSize: 9,
@@ -1088,7 +1096,7 @@ class _PortfolioCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  'pull down to reveal next',
+                  AppLocalizations.of(context)?.pullDownNext ?? 'pull down to reveal next',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.35),
                     fontSize: 9,
@@ -1142,7 +1150,7 @@ class _SavingsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const _Glass('SAVINGS'),
+              _Glass(AppLocalizations.of(context)?.savings ?? 'SAVINGS'),
               const Spacer(),
               const _Dot(true),
               const SizedBox(width: 4),
@@ -1172,7 +1180,7 @@ class _SavingsCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        'TOTAL BALANCE',
+                        AppLocalizations.of(context)?.totalBalance ?? 'TOTAL BALANCE',
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 9,
@@ -1256,7 +1264,7 @@ class _SavingsCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  'pull down to reveal next',
+                  AppLocalizations.of(context)?.pullDownNext ?? 'pull down to reveal next',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.35),
                     fontSize: 9,
@@ -1387,23 +1395,23 @@ class _AIBannerState extends State<_AIBanner> {
               ),
             ),
             const SizedBox(width: 14),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'NEED HELP?',
-                    style: TextStyle(
+                    AppLocalizations.of(context)?.needHelp ?? 'NEED HELP?',
+                    style: const TextStyle(
                       color: kAccent,
                       fontSize: 9,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.2,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    'SAGE',
-                    style: TextStyle(
+                    AppLocalizations.of(context)?.sageTitle ?? 'SAGE',
+                    style: const TextStyle(
                       color: kForest,
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
@@ -1435,11 +1443,13 @@ class _AIBannerState extends State<_AIBanner> {
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ QUICK ACTIONS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 class _QuickActions extends StatelessWidget {
+  final VoidCallback onSendTransferTap;
   final VoidCallback onCardsForexTap;
   final VoidCallback onBillRechargeTap;
   final VoidCallback onLoansTap;
   final VoidCallback onServicesTap;
   const _QuickActions({
+    required this.onSendTransferTap,
     required this.onCardsForexTap,
     required this.onBillRechargeTap,
     required this.onLoansTap,
@@ -1493,12 +1503,67 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final localizedData = [
+      _AData(
+        Icons.send_rounded,
+        l10n?.sendTransfer ?? 'Send /\nTransfer',
+        const Color(0xFFE3F5EC),
+        const Color(0xFFBBE8D0),
+        const Color(0xFF1B7A49),
+      ),
+      _AData(
+        Icons.receipt_long_rounded,
+        l10n?.billsAndRecharge ?? 'Bills &\nRecharge',
+        const Color(0xFFFFF4E5),
+        const Color(0xFFFFE0B2),
+        const Color(0xFFD4820A),
+      ),
+      _AData(
+        Icons.account_balance,
+        l10n?.loans ?? 'Loans',
+        const Color(0xFFEAF6F0),
+        const Color(0xFFEAF6F0),
+        const Color(0xFF1F5D3A),
+      ),
+      _AData(
+        Icons.credit_card_rounded,
+        l10n?.cardsAndForex ?? 'Cards &\nForex',
+        const Color(0xFFF3E8FF),
+        const Color(0xFFE1BEFF),
+        const Color(0xFF7B2FBE),
+      ),
+      _AData(
+        Icons.tune_rounded,
+        l10n?.services ?? 'Services',
+        const Color(0xFFFFE8EC),
+        const Color(0xFFFFBBC8),
+        const Color(0xFFCE2D48),
+      ),
+      _AData(
+        Icons.shield_outlined,
+        l10n?.insurance ?? 'Insurance',
+        const Color(0xFFE6F0FA),
+        const Color(0xFFE6F0FA),
+        const Color(0xFF2F6FD6),
+      ),
+    ];
+
+    // Index-based tap handlers: 0=Send, 1=Bills, 2=Loans, 3=Cards, 4=Services, 5=Insurance
+    final tapHandlers = <int, VoidCallback>{
+      0: onSendTransferTap,
+      1: onBillRechargeTap,
+      2: onLoansTap,
+      3: onCardsForexTap,
+      4: onServicesTap,
+    };
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'QUICK ACTIONS',
-          style: TextStyle(
+        Text(
+          l10n?.quickActions ?? 'QUICK ACTIONS',
+          style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.3,
@@ -1509,7 +1574,7 @@ class _QuickActions extends StatelessWidget {
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: _data.length,
+          itemCount: localizedData.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
             mainAxisSpacing: 12,
@@ -1517,16 +1582,8 @@ class _QuickActions extends StatelessWidget {
             childAspectRatio: 0.97,
           ),
           itemBuilder: (_, i) => _Tile(
-            d: _data[i],
-            onTap: _data[i].label == 'Cards &\nForex'
-                ? onCardsForexTap
-                : (_data[i].label == 'Bills &\nRecharge'
-                      ? onBillRechargeTap
-                      : (_data[i].label == 'Loans'
-                            ? onLoansTap
-                            : (_data[i].label == 'Services'
-                                  ? onServicesTap
-                                  : null))),
+            d: localizedData[i],
+            onTap: tapHandlers[i],
           ),
         ),
       ],

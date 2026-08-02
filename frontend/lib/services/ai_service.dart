@@ -8,6 +8,7 @@ class AIService {
     required String message,
     required String cusId,
     bool guestMode = false,
+    String language = "en",
   }) async {
     if (PanicModeService.instance.isPanicMode) {
       return PanicModeService.instance.getMockAIChatReply(message);
@@ -16,12 +17,14 @@ class AIService {
       "message": message,
       "cus_id": cusId,
       "guestMode": guestMode,
+      "language": language,
     };
     try {
       print("[SAGE REQUEST]");
       print("message=$message");
       print("cus_id=$cusId");
       print("guestMode=$guestMode");
+      print("language=$language");
 
       print("[AI Service Request] Payload: $payload");
       final response = await ApiService.instance

@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 
 import 'features/auth/screens/login_screen.dart';
 import 'features/home/screens/home_screen.dart';
 import 'features/send/screens/send_transfer_screen.dart';
 import 'core/services/security_service.dart';
 
-
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/language_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,13 +35,18 @@ Future<void> main() async {
   // Initialize security service (loads persisted attempts)
   await SecurityService.instance.initialize();
 
+  // Initialize language provider (loads saved language)
+  await LanguageProvider.instance.initialize();
+
   // Always start fresh — clear any stored session on app launch
-  // User must authenticate via login screen every time the app starts
   await AuthProvider.instance.clearSession();
 
   runApp(
-    ChangeNotifierProvider<AuthProvider>.value(
-      value: AuthProvider.instance,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AuthProvider>.value(value: AuthProvider.instance),
+        ChangeNotifierProvider<LanguageProvider>.value(value: LanguageProvider.instance),
+      ],
       child: const WealthWiseApp(initialRoute: '/login'),
     ),
   );
@@ -51,17 +58,26 @@ class WealthWiseApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
     return Listener(
       onPointerDown: (_) => SecurityService.instance.resetInactivityTimer(),
       onPointerMove: (_) => SecurityService.instance.resetInactivityTimer(),
       child: MaterialApp(
         navigatorKey: SecurityService.instance.navigatorKey,
         debugShowCheckedModeBanner: false,
-        showPerformanceOverlay: false,
-        showSemanticsDebugger: false,
-        debugShowMaterialGrid: false,
-        checkerboardRasterCacheImages: false,
-        checkerboardOffscreenLayers: false,
+        locale: languageProvider.locale,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('en'),
+          Locale('hi'),
+          Locale('pa'),
+        ],
         initialRoute: initialRoute,
         routes: {
           '/login': (context) => const LoginScreen(),
@@ -69,7 +85,6 @@ class WealthWiseApp extends StatelessWidget {
             final args =
                 ModalRoute.of(context)?.settings.arguments
                     as Map<String, dynamic>?;
-            // Ensure timer starts on home screen
             SecurityService.instance.resetInactivityTimer();
             return HomeScreen(initialIndex: args?['index'] as int?);
           },
@@ -80,3 +95,4 @@ class WealthWiseApp extends StatelessWidget {
     );
   }
 }
+

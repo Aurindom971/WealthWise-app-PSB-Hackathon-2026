@@ -267,7 +267,7 @@ function isGuestPersonalizedInvestmentQuery(text) {
 // ======================================================
 app.post('/ai-chat', async (req, res) => {
   try {
-    const { message, cus_id, guestMode } = req.body;
+    const { message, cus_id, guestMode, language } = req.body;
 
     if (!message) {
       return res.status(400).json({
@@ -276,8 +276,9 @@ app.post('/ai-chat', async (req, res) => {
       });
     }
 
+    const langCode = (language || 'en').toLowerCase();
     const isGuest = guestMode === true || !cus_id;
-    console.log(`AI Query (${isGuest ? 'GUEST MODE' : 'AUTHENTICATED'}):`, message);
+    console.log(`AI Query (${isGuest ? 'GUEST MODE' : 'AUTHENTICATED'}) [Lang: ${langCode}]:`, message);
 
     const lower = message.toLowerCase();
 
@@ -607,7 +608,7 @@ Metrics:
     console.log("Account Context:", accountData);
 
     // 🧠 6. Upgraded SAGE Prompt Construction
-    const prompt = `You are SAGE, an AI Financial Copilot.
+    let prompt = `You are SAGE, an AI Financial Copilot.
 
 User Question:
 ${message}
@@ -652,6 +653,15 @@ ${retrievedKnowledge}
 * Never say you cannot access account or transaction data if it is populated in the context above.
 * Never return generic answers when live financial analysis data is present.
 * Strictly enforce safety limits: SAGE cannot perform transactions, transfer money, or invest on behalf of users. Only provide explanations, analysis, and recommendations.`;
+
+    let langInstruction = "* Answer normally in clear, professional English.";
+    if (langCode === 'hi') {
+      langInstruction = "* CRITICAL LANGUAGE MANDATE: You MUST answer ENTIRELY in Hindi (हिन्दी) using natural, simple, and professional banking language. Do not output English responses.";
+    } else if (langCode === 'pa') {
+      langInstruction = "* CRITICAL LANGUAGE MANDATE: You MUST answer ENTIRELY in Punjabi (ਪੰਜਾਬੀ) using natural and professional Punjabi language. Do not output English responses.";
+    }
+
+    prompt += `\n${langInstruction}`;
 
     const promptSize = prompt.length;
 

@@ -16,6 +16,7 @@ import '../../../providers/auth_provider.dart';
 import '../../../core/services/biometric_service.dart';
 import '../../../core/services/otp_security_service.dart';
 import '../../ai_assistant/screens/wealthwise_ai_screen.dart';
+import '../../../l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -904,10 +905,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           height: 32,
                         ),
                         const SizedBox(width: 10),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            "Welcome Back",
-                            style: TextStyle(
+                            AppLocalizations.of(context)?.welcomeBack ?? "Welcome Back",
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 19,
                               fontWeight: FontWeight.w600,
@@ -932,9 +933,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "CUSTOMER ID",
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context)?.customerId.toUpperCase() ?? "CUSTOMER ID",
+                      style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: Colors.black54,
@@ -954,9 +955,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                     const SizedBox(height: 20),
-                    const Text(
-                      "ACCOUNT PASSWORD",
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context)?.password.toUpperCase() ?? "ACCOUNT PASSWORD",
+                      style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: Colors.black54,
@@ -998,9 +999,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                               )
-                            : const Text(
-                                "Sign in Securely",
-                                style: TextStyle(
+                            : Text(
+                                AppLocalizations.of(context)?.signInSecurely ?? "Sign in Securely",
+                                style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 0.2,
@@ -1052,11 +1053,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             thickness: 1,
                           ),
                         ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 14),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
                           child: Text(
-                            "SUPPORT",
-                            style: TextStyle(
+                            AppLocalizations.of(context)?.support.toUpperCase() ?? "SUPPORT",
+                            style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
                               color: Colors.grey,
@@ -1113,9 +1114,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            const Text(
-                              "Talk to SAGE",
-                              style: TextStyle(
+                             Text(
+                              AppLocalizations.of(context)?.talkToSage ?? "Talk to SAGE",
+                              style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
                               ),

@@ -9,6 +9,8 @@ import 'package:wealthwise/features/profile/screens/whats_new_page.dart';
 import 'package:wealthwise/features/profile/screens/your_requests_page.dart';
 import 'package:wealthwise/features/profile/screens/personal_fraud_risk_report_page.dart';
 import 'package:wealthwise/features/profile/screens/kyc_verification_page.dart';
+import 'package:wealthwise/features/profile/screens/language_settings_page.dart';
+import '../../l10n/app_localizations.dart';
 
 class ProfilePage extends StatefulWidget {
   final VoidCallback? onServicesTap;
@@ -206,9 +208,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           builder: (_) => const PersonalInfoPage(),
                         ),
                       ),
-                      child: const Text(
-                        'View profile',
-                        style: TextStyle(
+                      child: Text(
+                        AppLocalizations.of(context)?.viewProfile ?? 'View profile',
+                        style: const TextStyle(
                           color: kMid,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -223,46 +225,51 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         const SizedBox(height: 20),
         _buildTile(
-          'KYC Verification (RBI Mandate)',
+          AppLocalizations.of(context)?.kycVerification ?? 'KYC Verification (RBI Mandate)',
           Icons.verified_user_outlined,
           const KycVerificationPage(),
         ),
         _buildTile(
-          'Relationship manager',
+          AppLocalizations.of(context)?.relationshipManager ?? 'Relationship manager',
           Icons.people_outline_rounded,
           const RelationshipManagerPage(),
         ),
         _buildTile(
-          'Personal Fraud Risk Report',
+          AppLocalizations.of(context)?.personalFraudReport ?? 'Personal Fraud Risk Report',
           Icons.shield_outlined,
           const PersonalFraudRiskReportPage(),
         ),
         _buildTile(
-          'Account details',
+          AppLocalizations.of(context)?.accountDetails ?? 'Account details',
           Icons.description_outlined,
           const AccountDetailsPage(),
         ),
         _buildTile(
-          'Your requests',
+          AppLocalizations.of(context)?.yourRequests ?? 'Your requests',
           Icons.assignment_outlined,
           const YourRequestsPage(),
         ),
         _buildTile(
-          'Feedback',
+          AppLocalizations.of(context)?.feedback ?? 'Feedback',
           Icons.chat_bubble_outline_rounded,
           const FeedbackPage(),
         ),
         _buildTile(
-          'Terms and Condition',
+          AppLocalizations.of(context)?.termsConditions ?? 'Terms and Condition',
           Icons.article_outlined,
           const TermsConditionsPage(),
+        ),
+        _buildTile(
+          AppLocalizations.of(context)?.language ?? 'Language',
+          Icons.language_rounded,
+          const LanguageSettingsPage(),
         ),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'App version: 29.8.7',
+              AppLocalizations.of(context)?.appVersion ?? 'App version: 29.8.7',
               style: TextStyle(color: kSub.withOpacity(0.8), fontSize: 12),
             ),
             GestureDetector(
@@ -270,9 +277,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 context,
                 MaterialPageRoute(builder: (_) => const WhatsNewPage()),
               ),
-              child: const Text(
-                'What\'s new',
-                style: TextStyle(
+              child: Text(
+                AppLocalizations.of(context)?.whatsNew ?? 'What\'s new',
+                style: const TextStyle(
                   color: kMid,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,

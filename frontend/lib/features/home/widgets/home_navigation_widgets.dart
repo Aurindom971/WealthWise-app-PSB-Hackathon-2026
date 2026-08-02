@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../services/security_service.dart';
 import '../../../core/services/panic_mode_service.dart';
 
@@ -55,7 +56,7 @@ class TopBar extends StatelessWidget {
                 const Icon(Icons.search_rounded, color: kSub, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  searchText,
+                  AppLocalizations.of(context)?.searchHere ?? searchText,
                   style: const TextStyle(
                     color: kSub,
                     fontSize: 13,
@@ -153,6 +154,15 @@ class BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final items = [
+      (Icons.person_rounded, l10n?.profile ?? 'Profile', false),
+      (Icons.swap_horiz_rounded, l10n?.transactions ?? 'Transactions', false),
+      (Icons.qr_code_scanner_rounded, 'UPI', true),
+      (Icons.bar_chart_rounded, l10n?.investments ?? 'Investments', false),
+      (Icons.lock_rounded, l10n?.smartLock ?? 'Smart Lock', false),
+    ];
+
     return Container(
       decoration: BoxDecoration(
         color: kCard,
@@ -170,8 +180,8 @@ class BottomNav extends StatelessWidget {
           height: 64,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(_items.length, (i) {
-              final (icon, label, isCenter) = _items[i];
+            children: List.generate(items.length, (i) {
+              final (icon, label, isCenter) = items[i];
               final active = currentIndex == i;
 
               if (isCenter) {
