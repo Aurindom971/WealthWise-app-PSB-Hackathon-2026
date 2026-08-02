@@ -7,15 +7,21 @@ class AIService {
   static Future<String> getChatReply({
     required String message,
     required String cusId,
+    bool guestMode = false,
   }) async {
     if (PanicModeService.instance.isPanicMode) {
       return PanicModeService.instance.getMockAIChatReply(message);
     }
-    final payload = {"message": message, "cus_id": cusId};
+    final payload = {
+      "message": message,
+      "cus_id": cusId,
+      "guestMode": guestMode,
+    };
     try {
       print("[SAGE REQUEST]");
       print("message=$message");
       print("cus_id=$cusId");
+      print("guestMode=$guestMode");
 
       print("[AI Service Request] Payload: $payload");
       final response = await ApiService.instance

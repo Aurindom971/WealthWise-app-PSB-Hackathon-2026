@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../screens/otp_confirmation_screen.dart';
 import '../../../services/local_db_service.dart';
+import '../../../providers/auth_provider.dart';
 
 class SettingsModal extends StatefulWidget {
   final int cardId;
@@ -62,7 +63,8 @@ class _SettingsModalState extends State<SettingsModal> {
   }
 
   Future<void> _loadUpiLimit() async {
-    final settings = await LocalDbService.getSettings('upi_limit_setting');
+    final currentCusId = AuthProvider.instance.currentUser?['cus_id'] ?? 'default';
+    final settings = await LocalDbService.getSettings('upi_limit_setting_$currentCusId');
     if (settings != null && settings['upi_slider'] != null) {
       if (mounted) {
         setState(() => upiValue = (settings['upi_slider'] as num).toDouble());
@@ -89,8 +91,9 @@ class _SettingsModalState extends State<SettingsModal> {
         'lim_online': (onlineValue * 500000).toInt(),
       });
 
-      // Persist UPI limit locally
-      await LocalDbService.saveSettings('upi_limit_setting', {
+      // Persist UPI limit locally (scoped per customer)
+      final currentCusId = AuthProvider.instance.currentUser?['cus_id'] ?? 'default';
+      await LocalDbService.saveSettings('upi_limit_setting_$currentCusId', {
         'upi_slider': upiValue,
         'upi_max_amount': (upiValue * 100000).toInt(),
       });

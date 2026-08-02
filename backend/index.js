@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 const { detectFraud } = require('./fraudDetection');
 const {
   saveTransaction,
@@ -159,7 +159,7 @@ Reasons: ${fraud.reasons.join(', ')}
 // ======================================================
 async function detectIntent(message) {
   const lower = message.toLowerCase();
-  
+
   // Keyword overrides to guarantee correct intent detection
   if (lower.includes('savings advice') || lower.includes('save money') || lower.includes('saving advice') || lower.includes('savings recommendations') || lower.includes('overspending advice') || lower.includes('how can i save')) {
     return 'SAVINGS_ADVICE';
@@ -235,12 +235,39 @@ User message: "${message}"`;
   }
 }
 
+// Helper functions for Guest Mode Access Control
+function isGuestPersonalDataRequest(text) {
+  const lower = text.toLowerCase();
+  
+  // Specific phrases
+  const exactPatterns = [
+    /\bwhat is my balance\b/,
+    /\bmy (balance|account|accounts|transaction|transactions|spending|spend|savings|portfolio|investment|investments|mutual fund|mutual funds|stock|stocks|loan|loans|credit score|score|fraud|alerts|card|cards|returns|holdings)\b/,
+    /\b(show|view|check|get|calculate) my\b/,
+    /\bhow much (did i|have i|do i) (spend|spent|have|owe)\b/,
+    /\bcalculate my financial health\b/,
+    /\bmy financial health\b/
+  ];
+
+  return exactPatterns.some(pattern => pattern.test(lower));
+}
+
+function isGuestPersonalizedInvestmentQuery(text) {
+  const lower = text.toLowerCase();
+  const patterns = [
+    /\bwhich (stock|stocks|fund|funds|share|shares|investment|investments) should i (buy|invest|sell|pick|choose)\b/,
+    /\bshould i (buy|sell|invest in)\b/,
+    /\bhow is my portfolio (performing|doing)\b/
+  ];
+  return patterns.some(pattern => pattern.test(lower));
+}
+
 // ======================================================
-// 🧠 AI CHAT (INTEGRATED INTENTS)
+// 💬 AI CHAT & COPILOT ENDPOINT
 // ======================================================
 app.post('/ai-chat', async (req, res) => {
   try {
-    const { message, cus_id } = req.body;
+    const { message, cus_id, guestMode } = req.body;
 
     if (!message) {
       return res.status(400).json({
@@ -249,16 +276,36 @@ app.post('/ai-chat', async (req, res) => {
       });
     }
 
-    console.log('AI Query:', message);
+    const isGuest = guestMode === true || !cus_id;
+    console.log(`AI Query (${isGuest ? 'GUEST MODE' : 'AUTHENTICATED'}):`, message);
 
     const lower = message.toLowerCase();
 
+    // 🛡️ GUEST MODE ACCESS CONTROL & REFUSALS
+    if (isGuest) {
+      if (isGuestPersonalDataRequest(lower)) {
+        console.log('GUEST MODE SECURITY: Personal data query refused');
+        return res.json({
+          success: true,
+          reply: "I can help with general banking questions in Guest Mode.\n\nPlease sign in securely to access your personalized banking information."
+        });
+      }
+
+      if (isGuestPersonalizedInvestmentQuery(lower)) {
+        console.log('GUEST MODE SECURITY: Personalized investment query refused');
+        return res.json({
+          success: true,
+          reply: "Personalized investment analysis is available only after secure sign-in."
+        });
+      }
+    }
+
     // 🛡️ 1. SECURITY FILTER: Detect Action Requests (not informational/advisory queries)
     const actionKeywords = ['send', 'transfer', 'pay', 'invest', 'withdraw', 'deposit', 'purchase', 'buy', 'sell'];
-    
+
     // Check if the user is asking a question or seeking advice/information rather than executing an action
     const isInformational = /\b(should|how|what|why|which|whether|recommend|suggest|advice|opinion|tell|explain|predict|forecast|info|analysis|compare|difference|list|show|view|status|eligibility)\b/.test(lower);
-    
+
     const isActionRequest = actionKeywords.some(word => lower.includes(word)) && !isInformational;
 
     if (isActionRequest) {
@@ -270,7 +317,7 @@ app.post('/ai-chat', async (req, res) => {
     }
 
     // 🤖 2. Detect Intent
-    const detectedIntent = await detectIntent(message);
+    const detectedIntent = isGuest ? 'GENERAL_BANKING' : await detectIntent(message);
     console.log(`Detected Intent: ${detectedIntent}`);
 
     // 📚 3. Always Retrieve Relevant Knowledge Chunks (RAG)
@@ -294,8 +341,8 @@ app.post('/ai-chat', async (req, res) => {
     let investmentSummaryContext = 'No investment summary requested.';
     let financialHealthContext = 'No financial health score requested.';
 
-    // 💰 Query accounts if cus_id is available (used for BALANCE, SAVINGS_ADVICE, FINANCIAL_HEALTH, etc.)
-    if (cus_id) {
+    // 💰 Query accounts ONLY if NOT in Guest Mode and cus_id is available
+    if (!isGuest && cus_id) {
       try {
         const accountsRes = await pool.query(
           `SELECT account_id, account_type, balance FROM accounts WHERE cus_id = $1`,
@@ -328,7 +375,7 @@ app.post('/ai-chat', async (req, res) => {
         }
 
         // --- DYNAMIC INTENT CONTEXT AGGREGATION ---
-        
+
         // 1. SPENDING_ANALYSIS
         if (detectedIntent === 'SPENDING_ANALYSIS') {
           const weekly = await financialInsightsService.getWeeklySpending(cus_id);
@@ -370,7 +417,7 @@ Average Daily Spend:
         if (detectedIntent === 'SAVINGS_ADVICE') {
           const bal = accountContextObj ? accountContextObj.total_balance : 0;
           const savings = await financialInsightsService.getSavingsInsights(cus_id, bal);
-          
+
           let overspendStr = 'No category overspending trends detected.';
           if (savings.overspending.length > 0) {
             overspendStr = savings.overspending.map(o => `- ${o.category} spending increased by ${o.increasePercent}% (+₹${o.amountIncrease.toLocaleString('en-IN')})`).join('\n');
@@ -432,7 +479,7 @@ Transaction ID: ${s.transaction_id}
               dailyTransactionCount: profile.dailyTransactionCount + 1
             };
             const fraud = detectFraud(txnData, profile);
-            
+
             // Reconstruct scoring rules
             const contributionList = [];
             let simulatedScore = 0;

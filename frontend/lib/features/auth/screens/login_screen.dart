@@ -15,6 +15,7 @@ import '../screens/findatm_screen.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../core/services/biometric_service.dart';
 import '../../../core/services/otp_security_service.dart';
+import '../../ai_assistant/screens/wealthwise_ai_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -1075,7 +1076,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     // 🔥 AI BUTTON
                     Center(
                       child: OutlinedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => WealthWiseAIScreen(
+                                onBack: () => Navigator.pop(context),
+                                guestMode: true,
+                              ),
+                            ),
+                          );
+                        },
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFF1F5D3A),
                           side: const BorderSide(

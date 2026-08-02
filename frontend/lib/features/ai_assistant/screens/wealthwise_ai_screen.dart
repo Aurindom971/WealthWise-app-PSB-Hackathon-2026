@@ -22,8 +22,13 @@ class ChatMessage {
 
 class WealthWiseAIScreen extends StatefulWidget {
   final VoidCallback onBack;
+  final bool guestMode;
 
-  const WealthWiseAIScreen({super.key, required this.onBack});
+  const WealthWiseAIScreen({
+    super.key,
+    required this.onBack,
+    this.guestMode = false,
+  });
 
   @override
   State<WealthWiseAIScreen> createState() => _WealthWiseAIScreenState();
@@ -41,7 +46,9 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
   @override
   void initState() {
     super.initState();
-    _loadCustomerId();
+    if (!widget.guestMode) {
+      _loadCustomerId();
+    }
   }
 
   Future<void> _loadCustomerId() async {
@@ -153,7 +160,8 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
           try {
             final reply = await AIService.getChatReply(
               message: "Recommend how to diversify my portfolio based on my current and previous holdings. My risk appetite is ${_selectedRisk ?? 'moderate'}.",
-              cusId: _cusId,
+              cusId: widget.guestMode ? "GUEST" : _cusId,
+              guestMode: widget.guestMode,
             );
             if (mounted) {
               setState(() {
@@ -285,8 +293,8 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
       _isTyping = true;
     });
 
-    // Check if this is an investment suggestion request
-    if (_isInvestmentQuery(userMessage)) {
+    // Check if this is an investment suggestion request (only in authenticated mode)
+    if (!widget.guestMode && _isInvestmentQuery(userMessage)) {
       Future.delayed(const Duration(milliseconds: 600), () {
         if (mounted) {
           setState(() {
@@ -315,7 +323,8 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
     // 2. Call Backend AI Chat
     final reply = await AIService.getChatReply(
       message: userMessage,
-      cusId: _cusId,
+      cusId: widget.guestMode ? "GUEST" : _cusId,
+      guestMode: widget.guestMode,
     );
 
     // 3. Add AI reply to UI
@@ -371,19 +380,29 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: kAccent.withValues(alpha: 0.12),
+                                color: widget.guestMode
+                                    ? Colors.amber.shade700.withValues(alpha: 0.15)
+                                    : kAccent.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: kAccent.withValues(alpha: 0.3)),
+                                border: Border.all(
+                                  color: widget.guestMode
+                                      ? Colors.amber.shade700.withValues(alpha: 0.4)
+                                      : kAccent.withValues(alpha: 0.3),
+                                ),
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.verified_user_rounded, color: kAccent, size: 10),
-                                  SizedBox(width: 3),
+                                  Icon(
+                                    widget.guestMode ? Icons.person_outline_rounded : Icons.verified_user_rounded,
+                                    color: widget.guestMode ? Colors.amber.shade800 : kAccent,
+                                    size: 10,
+                                  ),
+                                  const SizedBox(width: 3),
                                   Text(
-                                    'SECURE',
+                                    widget.guestMode ? 'GUEST MODE' : 'SECURE',
                                     style: TextStyle(
-                                      color: kAccent,
+                                      color: widget.guestMode ? Colors.amber.shade900 : kAccent,
                                       fontSize: 8,
                                       fontWeight: FontWeight.w900,
                                       letterSpacing: 0.5,
@@ -394,9 +413,11 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
                             ),
                           ],
                         ),
-                        const Text(
-                          'Ask anything about your finances',
-                          style: TextStyle(
+                        Text(
+                          widget.guestMode
+                              ? 'General banking & security assistant'
+                              : 'Ask anything about your finances',
+                          style: const TextStyle(
                             color: kSub,
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
@@ -408,6 +429,30 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
                 ],
               ),
             ),
+
+            // --- Guest Mode Banner ---
+            if (widget.guestMode)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                color: const Color(0xFFFFF8E1),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFFB45309)),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "Guest Mode — Sign in to access personalized financial insights.",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFB45309),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
             Expanded(
               child: _messages.isEmpty ? _buildEmptyState() : _buildChatList(),
@@ -425,22 +470,39 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
                       scrollDirection: Axis.horizontal,
                       physics: const BouncingScrollPhysics(),
                       child: Row(
-                        children: [
-                          _SuggestionChip(
-                            text: 'Why was my last transaction risky?',
-                            onTap: () => _onSuggestionTap('Why was my last transaction risky?'),
-                          ),
-                          const SizedBox(width: 10),
-                          _SuggestionChip(
-                            text: 'How much did I spend this week?',
-                            onTap: () => _onSuggestionTap('How much did I spend this week?'),
-                          ),
-                          const SizedBox(width: 10),
-                          _SuggestionChip(
-                            text: 'Check my savings',
-                            onTap: () => _onSuggestionTap('Check my savings'),
-                          ),
-                        ],
+                        children: widget.guestMode
+                            ? [
+                                _SuggestionChip(
+                                  text: 'What is a mutual fund?',
+                                  onTap: () => _onSuggestionTap('What is a mutual fund?'),
+                                ),
+                                const SizedBox(width: 10),
+                                _SuggestionChip(
+                                  text: 'Safe banking tips',
+                                  onTap: () => _onSuggestionTap('Safe banking tips'),
+                                ),
+                                const SizedBox(width: 10),
+                                _SuggestionChip(
+                                  text: 'How to open an account?',
+                                  onTap: () => _onSuggestionTap('How to open an account?'),
+                                ),
+                              ]
+                            : [
+                                _SuggestionChip(
+                                  text: 'Why was my last transaction risky?',
+                                  onTap: () => _onSuggestionTap('Why was my last transaction risky?'),
+                                ),
+                                const SizedBox(width: 10),
+                                _SuggestionChip(
+                                  text: 'How much did I spend this week?',
+                                  onTap: () => _onSuggestionTap('How much did I spend this week?'),
+                                ),
+                                const SizedBox(width: 10),
+                                _SuggestionChip(
+                                  text: 'Check my savings',
+                                  onTap: () => _onSuggestionTap('Check my savings'),
+                                ),
+                              ],
                       ),
                     ),
                   if (_messages.isEmpty) const SizedBox(height: 16),
@@ -556,29 +618,66 @@ class _WealthWiseAIScreenState extends State<WealthWiseAIScreen> {
                   ),
                 ],
               ),
-              child: const Column(
-                children: [
-                  Text(
-                    'How can I help you today?',
-                    style: TextStyle(
-                      color: kForest,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'You can ask about transactions, security, spending, and more.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: kSub,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
+              child: Column(
+                crossAxisAlignment: widget.guestMode ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+                children: widget.guestMode
+                    ? const [
+                        Text(
+                          "Hello! I'm SAGE.",
+                          style: TextStyle(
+                            color: kForest,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          "I can help you with:\n\n"
+                          "• Account opening\n"
+                          "• Banking services\n"
+                          "• KYC\n"
+                          "• Fixed Deposits\n"
+                          "• Interest rates\n"
+                          "• Branch information\n"
+                          "• ATM services\n"
+                          "• UPI basics\n"
+                          "• Debit/Credit cards\n"
+                          "• Loans (general)\n"
+                          "• Security awareness\n"
+                          "• RBI guidelines\n"
+                          "• Banking FAQs\n\n"
+                          "Please sign in for investment advice, account details and personalized financial insights.",
+                          style: TextStyle(
+                            color: kSub,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            height: 1.5,
+                          ),
+                        ),
+                      ]
+                    : const [
+                        Text(
+                          'How can I help you today?',
+                          style: TextStyle(
+                            color: kForest,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          'You can ask about transactions, security, spending, and more.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: kSub,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
               ),
             ),
           ],

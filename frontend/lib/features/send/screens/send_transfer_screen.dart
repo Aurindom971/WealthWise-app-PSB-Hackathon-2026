@@ -13,6 +13,7 @@ import '../../../services/security_service.dart';
 import '../../../core/utils/security_validator.dart';
 import '../../../core/services/panic_mode_service.dart';
 import '../../../services/local_db_service.dart';
+import '../../../providers/auth_provider.dart';
 
 const primaryGreen = kForest;
 const lightGreen = kAccent;
@@ -3025,13 +3026,15 @@ class _UpiScreenState extends State<UpiScreen> {
                                     .replaceAll(',', '');
 
                                 // Check daily UPI limit (user-configurable via Card Settings)
+                                // Scope by cus_id so each customer has independent limits
+                                final currentCusId = AuthProvider.instance.currentUser?['cus_id'] ?? 'default';
                                 final todayStr = DateTime.now().toIso8601String().substring(0, 10);
-                                final dailySettings = await LocalDbService.getSettings('upi_daily_limit') ?? {};
+                                final dailySettings = await LocalDbService.getSettings('upi_daily_limit_$currentCusId') ?? {};
                                 final dailyTotal = (dailySettings[todayStr] as num?)?.toDouble() ?? 0.0;
                                 final currentAmount = double.tryParse(rawAmount) ?? 0.0;
 
                                 // Read configured max from Card Settings slider (default 1 Lakh)
-                                final upiLimitSettings = await LocalDbService.getSettings('upi_limit_setting');
+                                final upiLimitSettings = await LocalDbService.getSettings('upi_limit_setting_$currentCusId');
                                 final upiMaxLimit = (upiLimitSettings != null && upiLimitSettings['upi_max_amount'] != null)
                                     ? (upiLimitSettings['upi_max_amount'] as num).toDouble()
                                     : 100000.0;
@@ -3617,12 +3620,13 @@ class _PinScreenState extends State<PinScreen> {
                                 }
 
                                 if (isUpi) {
+                                  final currentCusId = AuthProvider.instance.currentUser?['cus_id'] ?? 'default';
                                   final todayStr = DateTime.now().toIso8601String().substring(0, 10);
-                                  final settings = await LocalDbService.getSettings('upi_daily_limit') ?? {};
+                                  final settings = await LocalDbService.getSettings('upi_daily_limit_$currentCusId') ?? {};
                                   final dailyTotal = (settings[todayStr] as num?)?.toDouble() ?? 0.0;
                                   final currentAmount = double.tryParse(amount ?? "") ?? 0.0;
                                   settings[todayStr] = dailyTotal + currentAmount;
-                                  await LocalDbService.saveSettings('upi_daily_limit', settings);
+                                  await LocalDbService.saveSettings('upi_daily_limit_$currentCusId', settings);
                                 }
 
                                 Navigator.pushReplacement(
