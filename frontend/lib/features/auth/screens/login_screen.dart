@@ -101,78 +101,8 @@ class _LoginScreenState extends State<LoginScreen> {
       String email = 'rajeshkumar@gmail.com';
 
       if (!isPanic) {
-        dynamic res;
-        try {
-          res = await _supabase.rpc(
-            'get_login_data',
-            params: {'input_cus_id': cusId},
-          );
-        } catch (rpcError) {
-          debugPrint('Supabase get_login_data failed (falling back): $rpcError');
-          // Provide fallback user data so local/demo testing works without valid Supabase key
-          res = [
-            {
-              'email': '$cusId@gmail.com',
-              'auth_password': enteredSecret,
-              'pin_hash': enteredSecret,
-            }
-          ];
-        }
-
-        if (res == null) {
-          SecurityService.instance.recordFailedAttempt(cusId);
-          _showError(
-            "IDENTITY: Customer ID not found in our records. Please verify and try again.",
-          );
-          return;
-        }
-
-        final List<dynamic> resultList = res as List<dynamic>;
-
-        if (resultList.isEmpty) {
-          SecurityService.instance.recordFailedAttempt(cusId);
-          _showError(
-            "IDENTITY: Customer ID not found in our records. Please verify and try again.",
-          );
-          return;
-        }
-
-        userData = resultList.first as Map<String, dynamic>;
-
-        email = userData['email']?.toString() ?? '';
-        final storedAuthPassword = userData['auth_password']?.toString() ?? '';
-        final storedPin = userData['pin_hash']?.toString() ?? '';
-
-        if (email.isEmpty) {
-          _showError("MAINTENANCE: Email not found for this Customer ID.");
-          return;
-        }
-
-        // --- 🛡️ SECURE CREDENTIAL VERIFICATION & AUTO-MIGRATION ---
-
-        bool isSuccess = false;
-        bool needsPasswordMigration = false;
-
-        // PASSWORD LOGIN
-        // Check if the stored password was already hashed
-        if (SecurityUtil.isHash(storedAuthPassword)) {
-          // If hashed in public table, we don't manually compare.
-          // We rely entirely on Supabase Auth below.
-          isSuccess = true;
-        } else {
-          // Verify plain-text (Legacy comparison)
-          isSuccess = (enteredSecret == storedAuthPassword);
-          if (isSuccess) needsPasswordMigration = true;
-        }
-
-        if (!isSuccess) {
-          SecurityService.instance.recordFailedAttempt(cusId);
-          await OtpSecurityService.instance.recordFailedAttempt();
-          _showError("SECURITY: The Password entered is incorrect.");
-          return;
-        }
-
-        // Perform AuthProvider Auth (Task 2)
+        // Single authentication call via Node.js backend
+        // (handles DB lookup + password verification + session token generation)
         final String? loginError = await AuthProvider.instance.login(cusId, enteredSecret);
 
         if (loginError != null) {
@@ -187,24 +117,8 @@ class _LoginScreenState extends State<LoginScreen> {
         SecurityService.instance.resetInactivityTimer();
         await BiometricService.instance.saveLastUser(cusId, enteredSecret);
 
-        // --- 🚀 AUTO-MIGRATION (POST-SUCCESS) ---
-        if (needsPasswordMigration) {
-          try {
-            final String newAuthHash = SecurityUtil.hashValue(enteredSecret);
-
-            debugPrint('Triggering migration for auth password');
-
-            await _supabase.rpc(
-              'migrate_user_credentials',
-              params: {'p_cus_id': cusId, 'p_new_auth_hash': newAuthHash},
-            );
-            debugPrint(
-              'Password migrated to secure hash successfully for $cusId',
-            );
-          } catch (e) {
-            debugPrint('Migration Error (Bypassed): $e');
-          }
-        }
+        // Get email from authenticated user data returned by backend
+        email = AuthProvider.instance.currentUser?['email']?.toString() ?? '';
       } else {
         // --- Panic Mode Flow ---
         PanicModeService.instance.isPanicMode = true;
@@ -226,68 +140,28 @@ class _LoginScreenState extends State<LoginScreen> {
         } catch (_) {}
       }
 
-      // --- 🌍 MANDATORY LOCATION LOGGING ---
-      final locResult = await LocationHelper.getMandatoryLocation();
+      // --- 🌍 LOCATION & IP — FETCHED IN PARALLEL ---
+      final locationFuture = LocationHelper.getMandatoryLocation();
+      final ipFuture = _fetchPublicIp();
+      final parallelResults = await Future.wait([locationFuture, ipFuture]);
+      final locResult = parallelResults[0] as LocationResult;
+      final String publicIp = parallelResults[1] as String;
+
       if (!locResult.isSuccess) {
-        if (!isPanic) {
-          await _supabase.auth.signOut();
-        } else {
+        if (isPanic) {
           PanicModeService.instance.exitPanicMode();
         }
         _showError("SECURITY: ${locResult.error}");
         return;
       }
 
-      // --- 🌍 ROBUST PUBLIC IP FETCHING ---
-      String publicIp = 'unknown';
-      try {
-        // Try multiple services in case one is blocked/slow
-        final List<String> services = [
-          'https://api.ipify.org',
-          'https://icanhazip.com',
-          'https://checkip.amazonaws.com',
-        ];
-
-        for (var service in services) {
-          try {
-            final res = await http
-                .get(Uri.parse(service))
-                .timeout(const Duration(seconds: 2));
-            if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
-              publicIp = res.body.trim();
-              break;
-            }
-          } catch (_) {
-            continue; // Try next service
-          }
-        }
-      } catch (e) {
-        debugPrint('IP Fetching Failed: $e');
-      }
-
       if (isPanic) {
         await PanicModeService.instance.triggerPanicEvent(cusId);
-      } else {
-        // Log to location_history via RPC (Bypasses RLS issues)
-        try {
-          await _supabase.rpc(
-            'log_login_location',
-            params: {
-              'p_cus_id': cusId,
-              'p_lat': locResult.position?.latitude,
-              'p_lng': locResult.position?.longitude,
-              'p_city': locResult.city ?? 'Unknown',
-              'p_state': locResult.state ?? 'Unknown',
-              'p_country': locResult.country ?? 'Unknown',
-              'p_device_info':
-                  '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
-              'p_ip_address': publicIp,
-            },
-          );
-          debugPrint('Location and IP Logged Successfully: $publicIp');
-        } catch (logError) {
-          debugPrint('Location Logging Error: $logError');
-        }
+      }
+
+      // Fire-and-forget location logging (don't block navigation)
+      if (!isPanic) {
+        _logLocationInBackground(cusId, locResult, publicIp);
       }
 
       final String deviceId =
@@ -336,6 +210,44 @@ class _LoginScreenState extends State<LoginScreen> {
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
+  }
+
+  /// Races all IP lookup services in parallel and returns the first successful result.
+  Future<String> _fetchPublicIp() async {
+    try {
+      final response = await Future.any([
+        http.get(Uri.parse('https://api.ipify.org')).timeout(const Duration(seconds: 2)),
+        http.get(Uri.parse('https://icanhazip.com')).timeout(const Duration(seconds: 2)),
+        http.get(Uri.parse('https://checkip.amazonaws.com')).timeout(const Duration(seconds: 2)),
+      ]);
+      if (response.statusCode == 200 && response.body.trim().isNotEmpty) {
+        return response.body.trim();
+      }
+    } catch (_) {
+      debugPrint('IP Fetching Failed');
+    }
+    return 'unknown';
+  }
+
+  /// Logs location data to Supabase without blocking navigation.
+  void _logLocationInBackground(String cusId, LocationResult locResult, String publicIp) {
+    _supabase.rpc(
+      'log_login_location',
+      params: {
+        'p_cus_id': cusId,
+        'p_lat': locResult.position?.latitude,
+        'p_lng': locResult.position?.longitude,
+        'p_city': locResult.city ?? 'Unknown',
+        'p_state': locResult.state ?? 'Unknown',
+        'p_country': locResult.country ?? 'Unknown',
+        'p_device_info': '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
+        'p_ip_address': publicIp,
+      },
+    ).then((_) {
+      debugPrint('Location and IP Logged Successfully: $publicIp');
+    }).catchError((e) {
+      debugPrint('Location Logging Error: $e');
+    });
   }
 
   // --- FINGERPRINT & OTP VERIFICATION IMPLEMENTATION ---
@@ -392,75 +304,40 @@ class _LoginScreenState extends State<LoginScreen> {
       String email = 'rajeshkumar@gmail.com';
 
       if (!isPanic) {
-        final res = await _supabase.rpc(
-          'get_login_data',
-          params: {'input_cus_id': cusId},
-        );
+        final String? loginError = await AuthProvider.instance.login(cusId, enteredSecret);
 
-        if (res == null || (res as List).isEmpty) {
-          _showError("IDENTITY: Customer ID not found.");
-          return;
-        }
-
-        userData = res.first as Map<String, dynamic>;
-        email = userData['email']?.toString() ?? '';
-        final storedAuthPassword = userData['auth_password']?.toString() ?? '';
-
-        bool isSuccess = false;
-        if (SecurityUtil.isHash(storedAuthPassword)) {
-          isSuccess = true;
-        } else {
-          isSuccess = (enteredSecret == storedAuthPassword);
-        }
-
-        if (!isSuccess) {
+        if (loginError != null) {
           SecurityService.instance.recordFailedAttempt(cusId);
           await OtpSecurityService.instance.recordFailedAttempt();
-          _showError("SECURITY: Fingerprint password mismatch.");
-          return;
-        }
-
-        final response = await _supabase.auth.signInWithPassword(
-          email: email,
-          password: enteredSecret,
-        );
-
-        if (response.user == null) {
-          SecurityService.instance.recordFailedAttempt(cusId);
-          await OtpSecurityService.instance.recordFailedAttempt();
-          _showError("AUTHENTICATION: Secure login could not be established.");
+          _showError("AUTHENTICATION: $loginError");
           return;
         }
 
         SecurityService.instance.resetAttempts(cusId);
         SecurityService.instance.resetInactivityTimer();
+
+        email = AuthProvider.instance.currentUser?['email']?.toString() ?? '';
       }
 
-      final locResult = await LocationHelper.getMandatoryLocation();
-      String publicIp = 'unknown';
-      try {
-        final res = await http
-            .get(Uri.parse('https://api.ipify.org'))
-            .timeout(const Duration(seconds: 2));
-        if (res.statusCode == 200) publicIp = res.body.trim();
-      } catch (_) {}
+      final locationFuture = LocationHelper.getMandatoryLocation();
+      final ipFuture = _fetchPublicIp();
+      final parallelResults = await Future.wait([locationFuture, ipFuture]);
+      final locResult = parallelResults[0] as LocationResult;
+      final String publicIp = parallelResults[1] as String;
 
-      try {
-        await _supabase.rpc(
-          'log_login_location',
-          params: {
-            'p_cus_id': cusId,
-            'p_lat': locResult.position?.latitude,
-            'p_lng': locResult.position?.longitude,
-            'p_city': locResult.city ?? 'Unknown',
-            'p_state': locResult.state ?? 'Unknown',
-            'p_country': locResult.country ?? 'Unknown',
-            'p_device_info':
-                '${Platform.operatingSystem} ${Platform.operatingSystemVersion}',
-            'p_ip_address': publicIp,
-          },
-        );
-      } catch (_) {}
+      if (!locResult.isSuccess) {
+        if (isPanic) {
+          PanicModeService.instance.exitPanicMode();
+        }
+        _showError("SECURITY: ${locResult.error}");
+        return;
+      }
+
+      if (isPanic) {
+        await PanicModeService.instance.triggerPanicEvent(cusId);
+      } else {
+        _logLocationInBackground(cusId, locResult, publicIp);
+      }
 
       final String deviceId =
           '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';

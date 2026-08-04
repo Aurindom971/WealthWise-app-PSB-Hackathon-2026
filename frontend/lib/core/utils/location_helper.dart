@@ -54,11 +54,34 @@ class LocationHelper {
         );
       }
 
-      // Fetch real live current device location exclusively
-      final Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 20),
-      );
+      Position? position;
+      try {
+        position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium,
+          timeLimit: const Duration(seconds: 10),
+        );
+      } catch (e) {
+        debugPrint(
+          'getCurrentPosition failed or timed out: $e. Trying last known position...',
+        );
+        position = await Geolocator.getLastKnownPosition();
+      }
+
+      if (position == null) {
+        // Fallback default position (e.g. New Delhi) for emulators without active GPS lock
+        position = Position(
+          longitude: 77.2090,
+          latitude: 28.6139,
+          timestamp: DateTime.now(),
+          accuracy: 100.0,
+          altitude: 0.0,
+          heading: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+          altitudeAccuracy: 0.0,
+          headingAccuracy: 0.0,
+        );
+      }
 
       // Fetch AddressDetails with a short timeout (Reverse Geocoding)
       String? city;

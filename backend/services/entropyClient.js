@@ -11,7 +11,14 @@ async function generateSessionToken() {
     const url = `${PYTHON_TOKEN_SERVICE}/generate-session-token`;
     const response = await axios.post(url, {}, { timeout: 5000 });
     
-    if (response.data && response.data.success && response.data.token) {
+    if (response.data && response.data.session_token) {
+      return {
+        token: response.data.session_token,
+        algorithm: 'ChaCha20-CSPRNG',
+        generated_at: new Date().toISOString(),
+        expires_in: 3600
+      };
+    } else if (response.data && response.data.success && response.data.token) {
       return {
         token: response.data.token,
         algorithm: response.data.algorithm,
