@@ -44,7 +44,7 @@ class WhatsNewPage extends StatelessWidget {
                   const SizedBox(height: 20),
                   _buildUpdateCard(
                     Icons.shield_outlined,
-                    'Added Secure Wealth AI',
+                    'Added WealthWise AI',
                     'AI-powered financial insights and fraud detection',
                   ),
                   _buildUpdateCard(

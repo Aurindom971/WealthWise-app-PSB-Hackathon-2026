@@ -22,10 +22,13 @@ class LanguageProvider extends ChangeNotifier {
       if (settings != null && settings['code'] != null) {
         final code = settings['code'] as String;
         _locale = Locale(code);
-        notifyListeners();
+      } else {
+        _locale = const Locale('en');
       }
+      notifyListeners();
     } catch (e) {
       debugPrint('Error initializing language: $e');
+      _locale = const Locale('en');
     }
   }
 

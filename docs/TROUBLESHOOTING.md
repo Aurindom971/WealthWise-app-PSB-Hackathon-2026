@@ -1,6 +1,6 @@
 # Troubleshooting & Debugging Guide
 
-This document lists common issues developers encounter when setting up or running the Secure Wealth application, along with steps to resolve them.
+This document lists common issues developers encounter when setting up or running the WealthWise application, along with steps to resolve them.
 
 ---
 

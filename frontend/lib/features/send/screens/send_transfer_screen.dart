@@ -2054,7 +2054,7 @@ class _UpiScreenState extends State<UpiScreen> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         content: const Text(
-          "Allow Secure Wealth to access your contacts to easily find and pay your friends?",
+          "Allow WealthWise to access your contacts to easily find and pay your friends?",
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
@@ -3171,7 +3171,7 @@ class _QRScreenState extends State<QRScreen> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         content: const Text(
-          "Allow Secure Wealth to take pictures and record video to scan QR codes?",
+          "Allow WealthWise to take pictures and record video to scan QR codes?",
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [

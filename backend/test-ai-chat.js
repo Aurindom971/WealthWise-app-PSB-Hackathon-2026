@@ -4,7 +4,7 @@ async function testAIChat() {
   console.log('[Test] Testing /ai-chat endpoint with RAG...');
   try {
     const response = await axios.post('http://localhost:3000/ai-chat', {
-      message: 'What is a velocity attack and how does Secure Wealth prevent it?',
+      message: 'What is a velocity attack and how does WealthWise prevent it?',
       cus_id: '1' // Using customer ID 1
     });
 

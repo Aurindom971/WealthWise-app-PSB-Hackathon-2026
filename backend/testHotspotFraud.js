@@ -1,7 +1,7 @@
 const { detectFraud } = require('./fraudDetection');
 
 console.log('===============================================================');
-console.log('🛡️  SECUREWEALTH - FRAUD HOTSPOT INTELLIGENCE ENGINE TESTS');
+console.log('🛡️  WEALTHWISE - FRAUD HOTSPOT INTELLIGENCE ENGINE TESTS');
 console.log('===============================================================\n');
 
 const baseProfile = {

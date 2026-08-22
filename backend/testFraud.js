@@ -10,7 +10,7 @@
 const { detectFraud } = require('./fraudDetection');
 
 console.log('===============================================================');
-console.log('🛡️  SECUREWEALTH TWIN - TRANSACTION VELOCITY MONITOR TEST SUITE');
+console.log('🛡️  WEALTHWISE TWIN - TRANSACTION VELOCITY MONITOR TEST SUITE');
 console.log('===============================================================\n');
 
 // -------------------------------------------------------------

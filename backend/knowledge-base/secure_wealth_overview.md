@@ -1,11 +1,11 @@
-# Secure Wealth - Product Overview Manual
+# WealthWise - Product Overview Manual
 
-Secure Wealth is a next-generation banking, wealth management, and automated transaction monitoring platform. It combines robust retail banking services, dynamic investment tracking, spending analytics, and an integrated AI fraud-detection engine with an interactive security assistant called SAGE. This document serves as a comprehensive system summary for technical audits, support team onboarding, and vector database retrieval.
+WealthWise is a next-generation banking, wealth management, and automated transaction monitoring platform. It combines robust retail banking services, dynamic investment tracking, spending analytics, and an integrated AI fraud-detection engine with an interactive security assistant called SAGE. This document serves as a comprehensive system summary for technical audits, support team onboarding, and vector database retrieval.
 
 ---
 
-## 1. What Secure Wealth Does
-Secure Wealth is designed to bridge the gap between traditional retail banking and modern automated wealth management while ensuring cybersecurity. The platform allows users to:
+## 1. What WealthWise Does
+WealthWise is designed to bridge the gap between traditional retail banking and modern automated wealth management while ensuring cybersecurity. The platform allows users to:
 * Manage savings accounts, process instant UPI/IMPS transfers, and schedule NEFT/RTGS payments.
 * Purchase and monitor equity listings, mutual funds, dynamic option chains, and upcoming IPO offerings.
 * Access automated transaction classification, category-level budgeting, and recurring payment analytics.
@@ -15,7 +15,7 @@ Secure Wealth is designed to bridge the gap between traditional retail banking a
 ---
 
 ## 2. Major Modules
-The architecture of Secure Wealth is structured around four primary application modules:
+The architecture of WealthWise is structured around four primary application modules:
 1. **Core Banking & Transactions Gateway**: Handles balance checks, beneficiary limits, card locks, and outbound payments (UPI, IMPS, NEFT, RTGS).
 2. **Investment & Market Data Module**: Fetches live equity prices, NAV calculations, option chain tables, and IPO application details from public and cached market APIs.
 3. **Transaction Monitoring & Fraud Engine**: Processes incoming transaction metadata in real-time, executing deterministic and statistical checks to flag malicious requests.
@@ -24,7 +24,7 @@ The architecture of Secure Wealth is structured around four primary application 
 ---
 
 ## 3. How Fraud Detection Works
-Secure Wealth's fraud engine uses a dual-layer validation model:
+WealthWise's fraud engine uses a dual-layer validation model:
 * **Deterministic Rules Layer**: Validates transaction inputs against strict operational policies, such as checking for rooted operating systems (jailbreaks), checking for blacklisted IP segments/Tor nodes, and verifying SIM card hardware bindings.
 * **Statistical Anomaly Layer**: Matches current transaction parameters against the user's historical profile baseline. The system tracks spending values, transaction time windows, geographic travel velocity, daily transaction frequency, and high-speed multi-transaction bursts (velocity attacks).
 If a transaction triggers a high-severity anomaly (such as a velocity burst of more than 3 transactions in 5 minutes), the engine locks the transaction and sets a re-authentication flag (`reauth_required`), prompting the user to complete biometric or video verification.
@@ -32,7 +32,7 @@ If a transaction triggers a high-severity anomaly (such as a velocity burst of m
 ---
 
 ## 4. How Investments are Tracked
-Asset tracking within Secure Wealth is handled by dedicated integration services:
+Asset tracking within WealthWise is handled by dedicated integration services:
 * **Stocks**: Leverages `yahoo-finance2` to query active quotes for major symbols like INFY, TCS, RELIANCE, HDFCBANK, and WIPRO. The system caches these quotes for 5 minutes.
 * **Mutual Funds**: Connects with the free public MFAPI system (`api.mfapi.in`) to retrieve daily Net Asset Value (NAV) statistics for listed schemes, utilizing a 30-minute cache window.
 * **Option Chains**: Accesses NSE option tables for NIFTY and BANKNIFTY. In cases of API rate-limiting or network issues, the system automatically runs a realistic fallback generator that maps spot indexes to ATM strike brackets with synthetic Open Interest (OI) numbers.

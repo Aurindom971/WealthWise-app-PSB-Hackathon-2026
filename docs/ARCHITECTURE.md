@@ -1,6 +1,6 @@
 # System Architecture Manual
 
-This document details the high-level architecture, dynamic pipelines, and request lifecycles of the Secure Wealth application with its upgraded AI Financial Copilot engine.
+This document details the high-level architecture, dynamic pipelines, and request lifecycles of the WealthWise application with its upgraded AI Financial Copilot engine.
 
 ---
 

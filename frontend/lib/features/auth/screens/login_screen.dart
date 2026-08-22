@@ -16,6 +16,8 @@ import '../../../providers/auth_provider.dart';
 import '../../../core/services/biometric_service.dart';
 import '../../../core/services/otp_security_service.dart';
 import '../../ai_assistant/screens/wealthwise_ai_screen.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/language_provider.dart';
 import '../../../l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -696,6 +698,102 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _showLanguageSelectionBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      backgroundColor: Colors.white,
+      builder: (context) {
+        final languageProvider = Provider.of<LanguageProvider>(context);
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: const [
+                  Icon(Icons.language_rounded, color: Color(0xFF1F5D3A)),
+                  SizedBox(width: 10),
+                  Text(
+                    "Select Language",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1F5D3A),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ...LanguageProvider.supportedLanguages.map((lang) {
+                final code = lang['code']!;
+                final name = lang['name']!;
+                final isSelected = languageProvider.languageCode == code;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: isSelected
+                            ? const Color(0xFF1F5D3A)
+                            : Colors.grey.shade300,
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    tileColor: isSelected
+                        ? const Color(0xFF1F5D3A).withOpacity(0.06)
+                        : Colors.transparent,
+                    leading: Icon(
+                      isSelected
+                          ? Icons.radio_button_checked_rounded
+                          : Icons.radio_button_off_rounded,
+                      color: isSelected
+                          ? const Color(0xFF1F5D3A)
+                          : Colors.grey.shade600,
+                    ),
+                    title: Text(
+                      name,
+                      style: TextStyle(
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    onTap: () {
+                      languageProvider.setLanguage(code);
+                      Navigator.pop(context);
+                    },
+                  ),
+                );
+              }),
+              const SizedBox(height: 10),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _showError(String message) {
     if (!mounted) return;
 
@@ -991,7 +1089,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(width: 10),
-                             Text(
+                            Text(
                               AppLocalizations.of(context)?.talkToSage ?? "Talk to SAGE",
                               style: const TextStyle(
                                 fontSize: 13,
@@ -999,6 +1097,44 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    // 🌐 LANGUAGE CHANGE BUTTON BELOW TALK TO SAGE
+                    Center(
+                      child: TextButton.icon(
+                        onPressed: () {
+                          _showLanguageSelectionBottomSheet(context);
+                        },
+                        icon: const Icon(
+                          Icons.language_rounded,
+                          size: 18,
+                          color: Color(0xFF1F5D3A),
+                        ),
+                        label: Text(
+                          LanguageProvider.supportedLanguages.firstWhere(
+                            (lang) =>
+                                lang['code'] ==
+                                Provider.of<LanguageProvider>(context).languageCode,
+                            orElse: () => {'name': 'English'},
+                          )['name']!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1F5D3A),
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          backgroundColor:
+                              const Color(0xFF1F5D3A).withOpacity(0.08),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                         ),
                       ),
                     ),

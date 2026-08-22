@@ -10,7 +10,7 @@ const COLLECTION_NAME = 'banking_knowledge';
 const BATCH_SIZE = 20; // Size of batches to upsert to Qdrant
 
 async function runIngestion() {
-  console.log('[Ingest] Starting Secure Wealth Knowledge Base Ingestion...');
+  console.log('[Ingest] Starting WealthWise Knowledge Base Ingestion...');
   
   try {
     // 1. Ensure collection exists with correct config
